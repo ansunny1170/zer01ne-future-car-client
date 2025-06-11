@@ -14,10 +14,10 @@ export default function LeftPage() {
 
     return (
         <main className="min-h-screen flex items-center justify-center bg-blue-50">
-        <div className="text-center">
-            <h1 className="text-4xl font-bold text-blue-600 mb-4">Left Page</h1>
-            <p className="text-gray-600">{message}</p>
-        </div>
+            <div className="text-center">
+                <h1 className="text-4xl font-bold text-blue-600 mb-4">Left Page</h1>
+                <p className="text-gray-600">{message}</p>
+            </div>
         </main>
     );
 } 
