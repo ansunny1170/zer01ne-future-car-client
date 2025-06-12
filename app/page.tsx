@@ -36,7 +36,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col items-center justify-center h-screen cursor-none123 overflow-hidden">
-      <VideoPlayer message={message} direction="center" />
+      <VideoPlayer message={message || "a"} direction="center" />
       <div className="text-center p-4">
           <h1 className="text-4xl font-bold text-red-600 mb-4">Center Page</h1>
           <p className="text-gray-600">{message}</p>
