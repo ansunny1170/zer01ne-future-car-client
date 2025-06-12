@@ -35,14 +35,16 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen cursor-none overflow-hidden">
+    <div className="flex flex-col items-center justify-center h-screen cursor-none123 overflow-hidden">
       <VideoPlayer message={message} direction="center" />
-      <h1>Hello World</h1>
-      <p>This is a test</p>
+      <div className="text-center p-4">
+          <h1 className="text-4xl font-bold text-red-600 mb-4">Center Page</h1>
+          <p className="text-gray-600">{message}</p>
+      </div>
 
       <div className="
         flex flex-row gap-4 
-        *:p-2 *:bg-gray-200 *:text-gray-800 *:rounded-md *:transition-all *:duration-500 *:cursor-none
+        *:p-2 *:bg-gray-200 *:text-gray-800 *:rounded-md *:transition-all *:duration-500 *:cursor-none123
         *:hover:bg-gray-400 *:hover:scale-110 *:hover:text-white *:hover:font-bold
         *:focus:bg-gray-400 *:focus:scale-110 *:focus:text-white *:focus:font-bold *:focus:outline-none
       ">
