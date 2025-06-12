@@ -1,90 +1,51 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import VideoPlayer from "./components/video-player";
-import Speech from "./components/speech";
+import Step0 from "./components/steps/step0";
+import Step1 from "./components/steps/step1";
+import useBroadcast from "./hooks/useBroadcast";
 
 export default function Home() {
-  const options = ["a", "b", "c"];
-  const [message, setMessage] = useState<string|null>(null);
-
-  // 클라이언트 사이드에서만 랜덤 값 설정
-  useEffect(() => {
-    const randomMessage = options[Math.floor(Math.random() * options.length)];
-    setMessage(randomMessage);
-  }, []);
-
-  // BroadcastChannel 이용해서 여러 탭에 메시지 전송
-  const channel = new BroadcastChannel("my-channel");
-  
-
-  const handleClick = (value: string) => {
-    channel.postMessage(value);
-    setMessage(value);
-  };
-
-  const handleMessage = (event: MessageEvent) => {
-    setMessage(event.data);
-  };
+  const { channel, step, category, handlePostMessage } = useBroadcast();
 
   useEffect(() => {
-    channel.addEventListener("message", handleMessage);
+    channel.addEventListener("message", (event) => {
+      handlePostMessage(event.data);
+    });
     return () => {
-      channel.removeEventListener("message", handleMessage);
+      channel.removeEventListener("message", (event) => {
+        handlePostMessage(event.data);
+      });
       channel.close();
     };
   }, []);
 
+  const renderStep = () => {
+    switch (step) {
+      case 0:
+        return <Step0 handleNextStep={() => handlePostMessage({step: 1, category: "a"})} />;
+      case 1:
+        return <Step1 category={category} handleClick={(selectedCategory) => handlePostMessage({step: 2, category: selectedCategory})} />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="flex flex-col items-start justify-center text-left h-screen cursor-none123 overflow-hidden">
-      <VideoPlayer message={message || "a"} direction="center" />
-
-      <div className="pl-8">
-        <div className="pb-4">
-            <h1 className="text-4xl font-bold text-red-600 mb-4">Center Page</h1>
-            <p className="text-gray-600">{message}</p>
-        </div>
-
-        <div className="
-          flex flex-row gap-4 
-          *:p-2 *:bg-gray-200 *:text-gray-800 *:rounded-md *:transition-all *:duration-500 *:cursor-none123
-          *:hover:bg-gray-400 *:hover:scale-110 *:hover:text-white *:hover:font-bold
-          *:focus:bg-gray-400 *:focus:scale-110 *:focus:text-white *:focus:font-bold *:focus:outline-none
-        ">
-          <button
-            className={`w-20 h-20 rounded-full bg-white/80 backdrop-blur-sm`}
-            onClick={() => handleClick("a")}
-          >
-            A
-          </button>
-          <button
-            className={`w-20 h-20 rounded-full bg-white/80 backdrop-blur-sm`}
-            onClick={() => handleClick("b")}
-          >
-            B
-          </button>
-          <button
-            className={`w-20 h-20 rounded-full bg-white/80 backdrop-blur-sm`}
-            onClick={() => handleClick("c")}
-          >
-            C
-          </button>
-        </div>
-      </div>
-
-      <div className="">
-        <Speech />
-      </div>
-
+      <VideoPlayer step={step} category={category} direction="center" />
       <div className="hidden">
         <audio 
-          key={message}
-          src={`/audios/${message}_music.m4a`} 
+          key={category}
+          src={`/audios/${category}_music.m4a`} 
           autoPlay
-          loop 
-          onError={(e) => console.error('Audio failed to load:', e)}
+          loop
         />
       </div>
+
+      {renderStep()}
+
     </div>
   );
 }

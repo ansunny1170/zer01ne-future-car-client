@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 
-export default function VideoPlayer({ message, direction }: { message: string, direction: "left" | "right" | "center" }) {
-    const [currentVideo, setCurrentVideo] = useState(`${message}_${direction}`);
+export default function VideoPlayer({ step, category, direction }: { step: number, category: string, direction: "left" | "right" | "center" }) {
+    const [currentVideo, setCurrentVideo] = useState(`${step}_${category}_${direction}`);
     const [previousVideo, setPreviousVideo] = useState('');
 
     useEffect(() => {
-        const newVideo = `${message}_${direction}`;
+        const newVideo = `${step}_${category}_${direction}`;
         if (currentVideo !== newVideo) {
             setPreviousVideo(currentVideo);
             setCurrentVideo(newVideo);
@@ -16,15 +16,15 @@ export default function VideoPlayer({ message, direction }: { message: string, d
 
             return () => clearTimeout(timer);
         }
-    }, [message, direction]);
+    }, [step, category, direction]);
 
     return (
-        <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden -z-10">
             {/* Current video - always visible */}
             <video 
                 key={currentVideo}
-                src={`/videos/${currentVideo}.mp4`}
-                poster={`/images/thumbnails/${currentVideo}.jpg`}
+                src={`/videos/step${step}/${currentVideo}.mp4`}
+                poster={`/images/thumbnails/step${step}/${currentVideo}.jpg`}
                 autoPlay 
                 loop 
                 muted 
