@@ -1,4 +1,5 @@
-import type { Metadata } from "next";
+'use client';
+
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -12,15 +13,6 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Zero One",
-  description: "인포테인먼트UX개발팀 프로젝트입니다.",
-  robots: {
-    index: false,
-    follow: false,
-  },
-};
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -32,9 +24,7 @@ export default function RootLayout({
         <meta name="robots" content="noindex,nofollow" />
         <meta name="googlebot" content="noindex,nofollow" />
       </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {children}
       </body>
     </html>
