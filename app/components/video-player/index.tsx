@@ -24,6 +24,7 @@ export default function VideoPlayer({ message, direction }: { message: string, d
             <video 
                 key={currentVideo}
                 src={`/videos/${currentVideo}.mp4`}
+                poster={`/images/thumbnails/${currentVideo}.jpg`}
                 autoPlay 
                 loop 
                 muted 
