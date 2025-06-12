@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function useBroadcast() {
     const channel = new BroadcastChannel("my-channel");
@@ -10,14 +10,12 @@ export default function useBroadcast() {
         setCategory(event.data.category);
     };
 
-    const handlePostMessage = ({step, category}: {step: number, category: string}) => {
+    useEffect(() => {
         channel.postMessage({
             step,
             category
         });
-        setStep(step);
-        setCategory(category);
-    };
+    }, [step, category]);
 
-    return { channel, step, category, handlePostMessage };
+    return { channel, step, category, setStep, setCategory };
 }

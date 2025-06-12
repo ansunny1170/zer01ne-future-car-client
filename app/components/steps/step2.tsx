@@ -1,6 +1,6 @@
 import CategorySelector from "../category-selector";
 
-export default function Step1({ category, setCategory }: { category: string, setCategory: (category: string) => void }) {
+export default function Step2({ category, setCategory }: { category: string, setCategory: (category: string) => void }) {
   return (
     <div>
       <h1>Step 2</h1>
