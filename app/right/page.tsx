@@ -14,7 +14,7 @@ export default function RightPage() {
     };
 
     return (
-        <main className="min-h-screen flex items-center justify-center">
+        <main className="min-h-screen flex items-center justify-center overflow-hidden">
             <VideoPlayer message={message} direction="right" />
             <div className="text-center">
                 <h1 className="text-4xl font-bold text-blue-600 mb-4">Right Page</h1>

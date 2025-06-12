@@ -14,7 +14,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen cursor-none">
+    <div className="flex flex-col items-center justify-center h-screen cursor-none overflow-hidden">
       <VideoPlayer message={message} direction="center" />
       <h1>Hello World</h1>
       <p>This is a test</p>
