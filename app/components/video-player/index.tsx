@@ -5,7 +5,7 @@ export default function VideoPlayer({ step, category, direction }: { step: numbe
     const [previousVideo, setPreviousVideo] = useState('');
 
     useEffect(() => {
-        const newVideo = `${step}_${category}_${direction}`;
+        const newVideo = `${step}_${step === 0 ? "a" : category}_${direction}`;
         if (currentVideo !== newVideo) {
             setPreviousVideo(currentVideo);
             setCurrentVideo(newVideo);
