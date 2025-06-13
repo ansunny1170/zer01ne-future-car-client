@@ -5,6 +5,7 @@ export default function VideoPlayer({ step, category, direction }: { step: numbe
     const [previousVideo, setPreviousVideo] = useState<string | null>(null);
     const [isTransitioning, setIsTransitioning] = useState(false);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const BASE_URL = "https://pub-4114e99d6d9b4e79a59dff9e8e904235.r2.dev";
 
     useEffect(() => {
         const newVideo = `${step}_${category}_${direction}`;
@@ -34,8 +35,8 @@ export default function VideoPlayer({ step, category, direction }: { step: numbe
             {/* New video (always below) */}
             <video
                 key={currentVideo}
-                src={`/videos/step${step}/${currentVideo}.mp4`}
-                poster={`/images/thumbnails/step${step}/${currentVideo}.jpg`}
+                src={`${BASE_URL}/videos/step${step}/${currentVideo}.mp4`}
+                poster={`${BASE_URL}/images/thumbnails/step${step}/${currentVideo}.jpg`}
                 autoPlay
                 loop
                 muted
@@ -49,7 +50,8 @@ export default function VideoPlayer({ step, category, direction }: { step: numbe
                 return (
                     <video
                         key={previousVideo}
-                        src={`/videos/step${stepStr}/${previousVideo}.mp4`}
+                        src={`${BASE_URL}/videos/step${stepStr}/${previousVideo}.mp4`}
+                        poster={`${BASE_URL}/images/thumbnails/step${stepStr}/${previousVideo}.jpg`}
                         autoPlay
                         loop
                         muted
