@@ -41,7 +41,7 @@ export default function VideoPlayer({ step, category, direction }: { step: numbe
                 muted
                 playsInline
                 preload='auto'
-                className="w-full h-full object-cover absolute inset-0 -z-20"
+                className="w-full h-full object-cover absolute inset-0 "
             />
             {/* Previous video (fades out above) */}
             {previousVideo && (() => {
@@ -55,12 +55,19 @@ export default function VideoPlayer({ step, category, direction }: { step: numbe
                         muted
                         playsInline
                         preload='auto'
-                        className={`w-full h-full object-cover absolute inset-0 z-10 transition-all duration-800
-                            ${isTransitioning ? 'opacity-0 scale-110' : 'opacity-100 scale-100'}`}
+                        className={`w-full h-full object-cover absolute inset-0 transition-all duration-800 z-10
+                            ${isTransitioning ? 'opacity-0 scale-150' : 'opacity-100 scale-100'}`}
                     />
                 );
             })()}
 
+            <div className={
+                `w-full h-full flex items-center justify-center absolute inset-0 z-20 transition-all duration-1200
+                ${isTransitioning ? 'bg-white/50 backdrop-blur-sm' : 'bg-none backdrop-blur-none'}`
+            }>
+                <p className="text-white text-2xl font-bold">로딩중...</p>  
+            </div>
+            
             <p className="absolute right-4 top-1/2 translate-y-1/2 z-20 bg-black/50 text-white text-2xl font-bold">
                 isTransitioning: {isTransitioning ? 'true' : 'false'}<br /> 
                 currentVideo: {currentVideo}<br />
