@@ -7,7 +7,7 @@ export default function VideoPlayer({ step, category, direction }: { step: numbe
     const timerRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
-        const newVideo = `${step}_${step === 0 ? "a" : category}_${direction}`;
+        const newVideo = `${step}_${category}_${direction}`;
         if (currentVideo !== newVideo) {
             if (timerRef.current) clearTimeout(timerRef.current);
 

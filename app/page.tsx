@@ -9,7 +9,7 @@ import Step2 from "./components/steps/step2";
 import Step3 from "./components/steps/step3";
 
 export default function Home() {
-  const { channel, step, category, setStep, setCategory } = useBroadcast();
+  const { channel, step, category, setStep, setCategory, lastStep } = useBroadcast();
 
   useEffect(() => {
     channel.addEventListener("message", (event) => {
@@ -55,12 +55,19 @@ export default function Home() {
       {renderStep()}
 
       <div>
-        <button className="absolute top-4 left-4 bg-white text-black px-4 py-2 rounded-md" onClick={() => setStep(step - 1)}>
-          이전 스텝
-        </button>
+        {
+          step > 0 && (
+          <button className="absolute top-4 left-4 bg-white text-black px-4 py-2 rounded-md" onClick={() => setStep(step - 1)}>
+            이전 스텝
+          </button>
+        )}
+
         <span className="absolute top-4 left-1/2 -translate-x-1/2 text-white text-2xl font-bold">{step}</span>
+
         <button className="absolute top-4 right-4 bg-white text-black px-4 py-2 rounded-md" onClick={() => setStep(step + 1)}>
-          다음 스텝
+          {
+            step === lastStep ? "처음으로" : "다음 스텝"
+          }
         </button>
       </div>
     </div>

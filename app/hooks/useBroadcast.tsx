@@ -4,10 +4,18 @@ export default function useBroadcast() {
     const channel = new BroadcastChannel("my-channel");
     const [step, setStep] = useState<number>(0);
     const [category, setCategory] = useState<string>("a");
+    const lastStep = 3;
 
     channel.onmessage = (event) => {
-        setStep(event.data.step);
-        setCategory(event.data.category);
+        if (event.data.step > lastStep) {
+            setStep(0);
+            setCategory("a");
+        } else if (event.data.step < 0) {
+            setStep(lastStep);
+        } else {
+            setStep(event.data.step);
+            setCategory(event.data.category);
+        }
     };
 
     useEffect(() => {
@@ -17,5 +25,5 @@ export default function useBroadcast() {
         });
     }, [step, category]);
 
-    return { channel, step, category, setStep, setCategory };
+    return { channel, step, category, setStep, setCategory, lastStep };
 }
