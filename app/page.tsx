@@ -37,9 +37,6 @@ export default function Home() {
   return (
     <div className="flex flex-col items-start justify-center text-left h-screen cursor-none123 overflow-hidden">
       <VideoPlayer
-        // sceneNumber={sceneNumber}
-        // category={category}
-        // categoryNumber={categoryNumber}
         direction="center"
       />
 
