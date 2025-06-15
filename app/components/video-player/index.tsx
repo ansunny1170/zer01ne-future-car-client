@@ -77,10 +77,8 @@ export default function VideoPlayer({ direction }:
             {isValidPath(currentVideoPath) && (
                 <video
                     key={currentVideoPath}
-                    // src={`${BASE_URL}/videos/scene${sceneNumber}/${currentVideo}.mp4`}
                     src={`${BASE_URL}/${currentVideoPath}.mp4`}
                     poster={`${BASE_URL}/images/thumbnails/scene${sceneNumber}/${currentVideoPath}.jpg`}
-                    data-scene={"new"}
                     autoPlay
                     loop
                     muted
@@ -91,12 +89,11 @@ export default function VideoPlayer({ direction }:
                 />
             )}
             {/* Previous video (fades out above) */}
-            {(previousVideoPath && !isValidPath(previousVideoPath)) && (
+            {previousVideoPath && isValidPath(previousVideoPath) && (
                 <video
                     key={`${previousVideoPath}`}
                     src={`${BASE_URL}/${previousVideoPath}.mp4`}
                     poster={`${BASE_URL}/images/thumbnails/scene${sceneNumber}/${previousVideoPath}.jpg`}
-                    data-scene={"old"}
                     autoPlay
                     loop
                     muted
