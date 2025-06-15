@@ -4,6 +4,11 @@ import VideoPlayer from "./components/video-player";
 import Scene1 from "./components/scenes/scene1";
 import Scene2 from "./components/scenes/scene2";
 import { useScene } from "./context/scene-context";
+import Scene3 from "./components/scenes/scene3";
+import Scene4 from "./components/scenes/scene4";
+import Scene5 from "./components/scenes/scene5";
+import Scene6 from "./components/scenes/scene6";
+import Scene7 from "./components/scenes/scene7";
 
 export default function Home() {
   const { sceneNumber, category, categoryNumber, setSceneNumber, setCategory, setCategoryNumber, lastSceneNumber } = useScene();
@@ -14,10 +19,16 @@ export default function Home() {
         return <Scene1/>;
       case 2:
         return <Scene2/>;
-      // case 3:
-      //   return <Scene3 setVideoPath={setVideoPath} />;
-      // case 4:
-      //   return <Scene4 setVideoPath={setVideoPath} />;
+      case 3:
+        return <Scene3/>;
+      case 4:
+        return <Scene4 />;
+      case 5:
+        return <Scene5 />;
+      case 6:
+        return <Scene6 />;
+      case 7:
+        return <Scene7 />;
       default:
         return null;
     }
@@ -61,9 +72,17 @@ export default function Home() {
 
         <span className="absolute top-4 left-1/2 -translate-x-1/2 text-white text-2xl font-bold">{sceneNumber}</span>
 
-        <button className="absolute top-4 right-4 bg-white text-black px-4 py-2 rounded-md" onClick={() => setSceneNumber(sceneNumber + 1)}>
+        <button
+          className="absolute top-4 right-4 bg-white text-black px-4 py-2 rounded-md"
+          onClick={() => {
+            if (sceneNumber < lastSceneNumber) {
+              setSceneNumber(sceneNumber + 1);
+            } else {
+              setSceneNumber(1);
+            }
+          }}>
           {
-            sceneNumber === lastSceneNumber ? "처음으로" : "다음 스텝"
+            sceneNumber < lastSceneNumber ? "다음 스텝" : "처음으로"
           }
         </button>
       </div>

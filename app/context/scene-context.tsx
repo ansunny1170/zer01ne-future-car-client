@@ -24,7 +24,7 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
     () => (typeof window !== "undefined" ? new window.BroadcastChannel("my-channel") : null),
     []
   );
-  const lastSceneNumber = 6;
+  const lastSceneNumber = 7;
 
   // 메시지 수신: 다른 탭/페이지에서 온 메시지로 상태 동기화
   useEffect(() => {

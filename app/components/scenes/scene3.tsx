@@ -1,11 +1,48 @@
-import SelectButtons from "../buttons/question-buttons";
+import { random } from "@/app/utils";
+import { SCENE_LIST, STEP_QUESTION_LIST } from "@/app/utils/constants";
+import { useEffect, useRef, useState } from "react";
+import QuestionArea from "./question-area";
+import { useScene } from "@/app/context/scene-context";
 
-export default function Scene3({ setCategory }: { setCategory: (category: string) => void }) {
+type Scene4Category = keyof typeof SCENE_LIST.scene4;
+
+export default function Scene3() {
+  const { category, setCategoryNumber } = useScene();
+  const scene = STEP_QUESTION_LIST?.scene3;
+  const initialCategoryNumber = useRef(false);
+  const [dialogTimeOut, setDialogTimeOut] = useState(false);
+
+  useEffect(() => {
+    if (!initialCategoryNumber.current) {
+      const value = SCENE_LIST?.scene4?.[category as Scene4Category];
+      if (value !== undefined) {
+        const randomNumber = random(value);
+        setCategoryNumber(randomNumber);
+      }
+      initialCategoryNumber.current = true;
+    }
+
+    // 마운트 되고 1.5초 후에 dialogTimeOut.current를 true로 변경
+    setTimeout(() => {
+      setDialogTimeOut(true);
+    }, 1500);
+
+    return () => {
+      initialCategoryNumber.current = false;
+    }
+  }, []);
+
   return (
-    <div>
-      <div className="pl-8">
-        <SelectButtons sceneNumber={3} setCategory={setCategory} />
-      </div>
+    <div className="pl-8">
+      {
+        dialogTimeOut && (
+          <QuestionArea
+            mainText={scene?.mainText}
+            subText={scene?.subText}
+            buttons={scene?.category}
+          />
+        )
+      }
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { cn } from "@/app/utils/cn";
 import QuestionButtons from "../buttons/question-buttons";
+import { motion } from "framer-motion";
 
 export default function QuestionArea({
     mainText,
@@ -14,23 +15,58 @@ export default function QuestionArea({
         [key: string]: string;
     };
 }) {
+    // 한 글자씩 배열로 분리
+    const mainChars = mainText ? mainText.split('') : [];
+    const subChars = subText ? subText.split('') : [];
+
+    // Framer Motion variants
+    const container = {
+        hidden: {},
+        visible: {
+            transition: {
+                staggerChildren: 0.04 // 글자 간 딜레이
+            }
+        }
+    };
+    const char = {
+        hidden: { opacity: 0 },
+        visible: { opacity: 1 }
+    };
 
     return (
-        <div className={
-            cn("absolute bottom-1/2 translate-y-1/2 left-8 z-10 flex flex-col gap-4", className)
-        }>
-            {
-                mainText && (
-                    <h1 className="text-2xl font-bold">{mainText}</h1>
-                )
-            }
-            {
-                subText && (
-                    <p className="text-sm text-gray-500">{subText}</p>
-                )
-            }
-
+        <div className={cn("absolute bottom-1/2 translate-y-1/2 left-2 z-10 flex flex-col gap-4", className)}>
+            <div>
+                {mainChars.length > 0 && (
+                    <motion.h1
+                        className="text-2xl font-bold text-white"
+                        variants={container}
+                        initial="hidden"
+                        animate="visible"
+                    >
+                        {mainChars.map((c, idx) => (
+                            <motion.span key={idx} variants={char}>
+                                {c === '\n' ? <br /> : c}
+                            </motion.span>
+                        ))}
+                    </motion.h1>
+                )}
+                {subChars.length > 0 && (
+                    <motion.p
+                        className="text-lg text-gray-500 pt-2"
+                        variants={container}
+                        initial="hidden"
+                        animate="visible"
+                        transition={{ delayChildren: 1.5 }}
+                    >
+                        {subChars.map((c, idx) => (
+                            <motion.span key={idx} variants={char}>
+                                {c === '\n' ? <br /> : c}
+                            </motion.span>
+                        ))}
+                    </motion.p>
+                )}
+            </div>
             <QuestionButtons buttons={buttons} />
         </div>
-    )
+    );
 }
