@@ -1,36 +1,42 @@
 import { useEffect, useRef, useState } from 'react';
 
-export default function VideoPlayer({ step, category, direction }: { step: number, category: string, direction: "left" | "right" | "center" }) {
-    const [currentVideo, setCurrentVideo] = useState(`${step}_${category}_${direction}`);
-    const [previousVideo, setPreviousVideo] = useState<string | null>(null);
+export default function VideoPlayer({ sceneNumber, category, categoryNumber, direction }:
+    {
+        sceneNumber: number,
+        category: string,
+        categoryNumber: number,
+        direction: "left" | "right" | "center"
+    }) {
+    const [currentVideoPath, setCurrentVideoPath] = useState(`scene${sceneNumber}/${sceneNumber}_${category}${categoryNumber}_${direction}`);
+    const [previousVideoPath, setPreviousVideoPath] = useState<string | null>(null);
     const [isTransitioning, setIsTransitioning] = useState(false);
     const [isCurrentReady, setIsCurrentReady] = useState(false);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
-    const BASE_URL = "https://pub-4114e99d6d9b4e79a59dff9e8e904235.r2.dev";
+    // const BASE_URL = "https://pub-4114e99d6d9b4e79a59dff9e8e904235.r2.dev";
+    const BASE_URL = "/videos";
 
     useEffect(() => {
-        const newVideo = `${step}_${category}_${direction}`;
-        if (currentVideo !== newVideo) {
+        if (currentVideoPath !== `scene${sceneNumber}/${sceneNumber}_${category}${categoryNumber}_${direction}`) {
             if (timerRef.current) clearTimeout(timerRef.current);
 
-            setPreviousVideo(currentVideo);
-            setCurrentVideo(newVideo);
+            setPreviousVideoPath(currentVideoPath);
+            setCurrentVideoPath(`scene${sceneNumber}/${sceneNumber}_${category}${categoryNumber}_${direction}`);
             setIsCurrentReady(false);
             setIsTransitioning(false);
         }
         // eslint-disable-next-line
-    }, [step, category, direction, currentVideo]);
+    }, [sceneNumber, category, categoryNumber, direction]);
 
     // 새 비디오가 준비되면 crossfade 시작
     useEffect(() => {
-        if (isCurrentReady && previousVideo) {
+        if (isCurrentReady && previousVideoPath) {
             setIsTransitioning(true);
             timerRef.current = setTimeout(() => {
-                setPreviousVideo(null);
+                setPreviousVideoPath(null);
                 setIsTransitioning(false);
             }, 800);
         }
-    }, [isCurrentReady, previousVideo]);
+    }, [isCurrentReady, previousVideoPath]);
 
     useEffect(() => {
         return () => {
@@ -42,8 +48,15 @@ export default function VideoPlayer({ step, category, direction }: { step: numbe
         <div className="absolute inset-0 overflow-hidden isolate">
             {
                 isTransitioning && (
+                    <div className="absolute inset-0 flex items-center bg-white/50 backdrop-blur-sm justify-center z-20 animate-fadeInOut">
+                        {/* <p className="text-white text-2xl font-bold">Loading...</p> */}
+                    </div>
+                )
+            }
+            {
+                isTransitioning && (
                     <video
-                        src={`${BASE_URL}/videos/loading.mp4`}
+                        src={`${BASE_URL}/loading.mp4`}
                         // poster={`${BASE_URL}/images/thumbnails/step${step}/${currentVideo}.jpg`}
                         autoPlay
                         loop
@@ -57,9 +70,10 @@ export default function VideoPlayer({ step, category, direction }: { step: numbe
 
             {/* New video (always below) */}
             <video
-                key={currentVideo}
-                src={`${BASE_URL}/videos/step${step}/${currentVideo}.mp4`}
-                poster={`${BASE_URL}/images/thumbnails/step${step}/${currentVideo}.jpg`}
+                key={currentVideoPath}
+                // src={`${BASE_URL}/videos/scene${sceneNumber}/${currentVideo}.mp4`}
+                src={`${BASE_URL}/${currentVideoPath}.mp4`}
+                poster={`${BASE_URL}/images/thumbnails/scene${sceneNumber}/${currentVideoPath}.jpg`}
                 autoPlay
                 loop
                 muted
@@ -69,13 +83,12 @@ export default function VideoPlayer({ step, category, direction }: { step: numbe
                 className="w-full h-full object-cover absolute inset-0 -z-20"
             />
             {/* Previous video (fades out above) */}
-            {previousVideo && (() => {
-                const [stepStr] = previousVideo.split('_');
+            {previousVideoPath && (() => {
                 return (
                     <video
-                        key={previousVideo}
-                        src={`${BASE_URL}/videos/step${stepStr}/${previousVideo}.mp4`}
-                        poster={`${BASE_URL}/images/thumbnails/step${stepStr}/${previousVideo}.jpg`}
+                        key={`${previousVideoPath}`}
+                        src={`${BASE_URL}/${previousVideoPath}.mp4`}
+                        poster={`${BASE_URL}/images/thumbnails/scene${sceneNumber}/${previousVideoPath}.jpg`}
                         autoPlay
                         loop
                         muted

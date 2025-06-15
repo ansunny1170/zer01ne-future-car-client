@@ -1,29 +1,51 @@
-import { useEffect, useState } from "react";
+import { useRef, useEffect, useState, useMemo } from "react";
 
 export default function useBroadcast() {
-    const channel = new BroadcastChannel("my-channel");
-    const [step, setStep] = useState<number>(0);
-    const [category, setCategory] = useState<string>("a");
-    const lastStep = 3;
+    const senderId = useRef(Date.now() + Math.random()).current;
+    const channel = useMemo(() => new BroadcastChannel("my-channel"), []);
+    const [sceneNumber, setSceneNumber] = useState(1);
+    const [category, setCategory] = useState('a');
+    const [categoryNumber, setCategoryNumber] = useState(1);
+    const lastSceneNumber = 6;
 
-    channel.onmessage = (event) => {
-        if (event.data.step > lastStep) {
-            setStep(0);
-            setCategory("a");
-        } else if (event.data.step < 0) {
-            setStep(lastStep);
-        } else {
-            setStep(event.data.step);
-            setCategory(event.data.category);
-        }
-    };
+    // 메시지 수신: 다른 탭/페이지에서 온 메시지로 상태 동기화
+    useEffect(() => {
+        channel.onmessage = (event) => {
+            if (event.data.senderId === senderId) return;
+            if (event.data.sceneNumber > lastSceneNumber) {
+                if (sceneNumber !== 1) setSceneNumber(1);
+                if (categoryNumber !== event.data.categoryNumber) setCategoryNumber(event.data.categoryNumber);
+            } else if (event.data.sceneNumber < 1) {
+                if (sceneNumber !== lastSceneNumber) setSceneNumber(lastSceneNumber);
+                if (categoryNumber !== 1) setCategoryNumber(1);
+            } else {
+                if (sceneNumber !== event.data.sceneNumber) setSceneNumber(event.data.sceneNumber);
+                if (category !== event.data.category) setCategory(event.data.category);
+                if (categoryNumber !== event.data.categoryNumber) setCategoryNumber(event.data.categoryNumber);
+            }
+        };
+        // cleanup
+        return () => { channel.onmessage = null; };
+    }, [channel, senderId, sceneNumber, category, categoryNumber, lastSceneNumber]);
 
+    // 상태가 바뀐 뒤에만 메시지 전파 (모든 페이지에서 동기화)
     useEffect(() => {
         channel.postMessage({
-            step,
-            category
+            senderId,
+            sceneNumber,
+            category,
+            categoryNumber
         });
-    }, [step, category]);
+    }, [sceneNumber, category, categoryNumber, channel, senderId]);
 
-    return { channel, step, category, setStep, setCategory, lastStep };
+    return {
+        channel,
+        sceneNumber,
+        category,
+        categoryNumber,
+        setCategory,
+        setCategoryNumber,
+        setSceneNumber,
+        lastSceneNumber
+    };
 }
