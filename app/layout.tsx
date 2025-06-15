@@ -2,6 +2,7 @@
 
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { SceneProvider } from "./context/scene-context";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,7 +26,9 @@ export default function RootLayout({
         <meta name="googlebot" content="noindex,nofollow" />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {children}
+        <SceneProvider>
+          {children}
+        </SceneProvider>
       </body>
     </html>
   );

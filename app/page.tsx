@@ -3,19 +3,17 @@
 import VideoPlayer from "./components/video-player";
 import Scene1 from "./components/scenes/scene1";
 import Scene2 from "./components/scenes/scene2";
-import useBroadcast from "./hooks/useBroadcast";
-// import Scene3 from "./components/scenes/scene3";
-// import Scene4 from "./components/scenes/scene4";
+import { useScene } from "./context/scene-context";
 
 export default function Home() {
-  const { sceneNumber, category, categoryNumber, setCategory, setCategoryNumber, setSceneNumber, lastSceneNumber } = useBroadcast();
+  const { sceneNumber, category, categoryNumber, setSceneNumber, setCategory, setCategoryNumber, lastSceneNumber } = useScene();
 
   const renderStep = () => {
     switch (sceneNumber) {
       case 1:
-        return <Scene1 setSceneNumber={setSceneNumber} setCategory={setCategory} setCategoryNumber={setCategoryNumber} />;
+        return <Scene1/>;
       case 2:
-        return <Scene2 setSceneNumber={setSceneNumber} setCategory={setCategory} setCategoryNumber={setCategoryNumber} />;
+        return <Scene2/>;
       // case 3:
       //   return <Scene3 setVideoPath={setVideoPath} />;
       // case 4:
@@ -28,9 +26,9 @@ export default function Home() {
   return (
     <div className="flex flex-col items-start justify-center text-left h-screen cursor-none123 overflow-hidden">
       <VideoPlayer
-        sceneNumber={sceneNumber}
-        category={category}
-        categoryNumber={categoryNumber}
+        // sceneNumber={sceneNumber}
+        // category={category}
+        // categoryNumber={categoryNumber}
         direction="center"
       />
 
@@ -48,7 +46,15 @@ export default function Home() {
       <div>
         {
           sceneNumber > 0 && (
-          <button className="absolute top-4 left-4 bg-white text-black px-4 py-2 rounded-md" onClick={() => setSceneNumber(sceneNumber - 1)}>
+          <button
+            className="absolute top-4 left-4 bg-white text-black px-4 py-2 rounded-md z-10"
+            onClick={() => {
+              setSceneNumber(sceneNumber - 1);
+              setCategory("a");
+              setCategoryNumber(1);
+            }}
+            disabled={sceneNumber === 1}
+          >
             이전 스텝 / {sceneNumber} / {category} / {categoryNumber}
           </button>
         )}

@@ -1,12 +1,10 @@
-import { useRef, useEffect, useState, useMemo } from "react";
+import { useRef, useEffect, useMemo } from "react";
+import { useScene } from "../context/scene-context";
 
 export default function useBroadcast() {
     const senderId = useRef(Date.now() + Math.random()).current;
     const channel = useMemo(() => new BroadcastChannel("my-channel"), []);
-    const [sceneNumber, setSceneNumber] = useState(1);
-    const [category, setCategory] = useState('a');
-    const [categoryNumber, setCategoryNumber] = useState(1);
-    const lastSceneNumber = 6;
+    const { sceneNumber, category, categoryNumber, setSceneNumber, setCategory, setCategoryNumber, lastSceneNumber } = useScene();
 
     // 메시지 수신: 다른 탭/페이지에서 온 메시지로 상태 동기화
     useEffect(() => {

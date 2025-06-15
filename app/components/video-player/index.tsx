@@ -1,13 +1,13 @@
+import { useScene } from '@/app/context/scene-context';
 import { useEffect, useRef, useState } from 'react';
 
-export default function VideoPlayer({ sceneNumber, category, categoryNumber, direction }:
+export default function VideoPlayer({ direction }:
     {
-        sceneNumber: number,
-        category: string,
-        categoryNumber: number,
         direction: "left" | "right" | "center"
     }) {
-    const [currentVideoPath, setCurrentVideoPath] = useState(`scene${sceneNumber}/${sceneNumber}_${category}${categoryNumber}_${direction}`);
+    const { sceneNumber, category, categoryNumber } = useScene();
+    const nextVideoPath = `scene${sceneNumber}/${sceneNumber}_${category}${categoryNumber}_${direction}`;
+    const [currentVideoPath, setCurrentVideoPath] = useState(nextVideoPath);
     const [previousVideoPath, setPreviousVideoPath] = useState<string | null>(null);
     const [isTransitioning, setIsTransitioning] = useState(false);
     const [isCurrentReady, setIsCurrentReady] = useState(false);
@@ -16,16 +16,15 @@ export default function VideoPlayer({ sceneNumber, category, categoryNumber, dir
     const BASE_URL = "/videos";
 
     useEffect(() => {
-        if (currentVideoPath !== `scene${sceneNumber}/${sceneNumber}_${category}${categoryNumber}_${direction}`) {
+        if (currentVideoPath !== nextVideoPath) {
             if (timerRef.current) clearTimeout(timerRef.current);
 
             setPreviousVideoPath(currentVideoPath);
-            setCurrentVideoPath(`scene${sceneNumber}/${sceneNumber}_${category}${categoryNumber}_${direction}`);
+            setCurrentVideoPath(nextVideoPath);
             setIsCurrentReady(false);
             setIsTransitioning(false);
         }
-        // eslint-disable-next-line
-    }, [sceneNumber, category, categoryNumber, direction]);
+    }, [sceneNumber, category, categoryNumber, direction, nextVideoPath, currentVideoPath]);
 
     // 새 비디오가 준비되면 crossfade 시작
     useEffect(() => {
@@ -44,16 +43,22 @@ export default function VideoPlayer({ sceneNumber, category, categoryNumber, dir
         };
     }, []);
 
+    // categoryNumber가 null이면 렌더링하지 않음 (모든 훅 호출 이후)
+    if (categoryNumber == null) return null;
+
+    // categoryNumber가 null이 포함된 비디오 경로는 렌더링하지 않음
+    const isValidPath = (path: string) => !path.includes('null');
+
     return (
         <div className="absolute inset-0 overflow-hidden isolate">
             {
-                isTransitioning && (
-                    <div className="absolute inset-0 flex items-center bg-white/50 backdrop-blur-sm justify-center z-20 animate-fadeInOut">
-                        {/* <p className="text-white text-2xl font-bold">Loading...</p> */}
-                    </div>
-                )
+                // isTransitioning && (
+                //     <div className="absolute inset-0 flex items-center bg-white/50 backdrop-blur-sm justify-center z-[1] animate-fadeInOut">
+                //         {/* <p className="text-white text-2xl font-bold">Loading...</p> */}
+                //     </div>
+                // )
             }
-            {
+            {/* {
                 isTransitioning && (
                     <video
                         src={`${BASE_URL}/loading.mp4`}
@@ -63,42 +68,55 @@ export default function VideoPlayer({ sceneNumber, category, categoryNumber, dir
                         muted
                         playsInline
                         preload='auto'
-                        className="w-full h-full object-cover absolute inset-0 opacity-0 fadeIn duration-800 -z-10"
+                        className="w-full h-full object-cover absolute inset-0 opacity-0 fadeIn duration-800 -z-[1]"
                     />
                 )
-            }
+            } */}
 
             {/* New video (always below) */}
-            <video
-                key={currentVideoPath}
-                // src={`${BASE_URL}/videos/scene${sceneNumber}/${currentVideo}.mp4`}
-                src={`${BASE_URL}/${currentVideoPath}.mp4`}
-                poster={`${BASE_URL}/images/thumbnails/scene${sceneNumber}/${currentVideoPath}.jpg`}
-                autoPlay
-                loop
-                muted
-                playsInline
-                preload='auto'
-                onCanPlay={() => setIsCurrentReady(true)}
-                className="w-full h-full object-cover absolute inset-0 -z-20"
-            />
+            {isValidPath(currentVideoPath) && (
+                <video
+                    key={currentVideoPath}
+                    // src={`${BASE_URL}/videos/scene${sceneNumber}/${currentVideo}.mp4`}
+                    src={`${BASE_URL}/${currentVideoPath}.mp4`}
+                    poster={`${BASE_URL}/images/thumbnails/scene${sceneNumber}/${currentVideoPath}.jpg`}
+                    data-scene={"new"}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    preload='auto'
+                    onCanPlay={() => setIsCurrentReady(true)}
+                    className="w-full h-full object-cover absolute inset-0 -z-[1]"
+                />
+            )}
             {/* Previous video (fades out above) */}
-            {previousVideoPath && (() => {
-                return (
-                    <video
-                        key={`${previousVideoPath}`}
-                        src={`${BASE_URL}/${previousVideoPath}.mp4`}
-                        poster={`${BASE_URL}/images/thumbnails/scene${sceneNumber}/${previousVideoPath}.jpg`}
-                        autoPlay
-                        loop
-                        muted
-                        playsInline
-                        preload='auto'
-                        className={`w-full h-full object-cover absolute inset-0 transition-all duration-800 z-10
-                            ${isTransitioning ? 'opacity-0 scale-110' : 'opacity-100 scale-100'}`}
-                    />
-                );
-            })()}
+            {(previousVideoPath && !isValidPath(previousVideoPath)) && (
+                <video
+                    key={`${previousVideoPath}`}
+                    src={`${BASE_URL}/${previousVideoPath}.mp4`}
+                    poster={`${BASE_URL}/images/thumbnails/scene${sceneNumber}/${previousVideoPath}.jpg`}
+                    data-scene={"old"}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    preload='auto'
+                    className={`w-full h-full object-cover absolute inset-0 transition-all duration-800 z-1
+                        ${isTransitioning ? 'opacity-0 scale-110' : 'opacity-100 scale-100'}`}
+                />
+            )}
+
+            {/* <div className='absolute bottom-0 left-0 text-right p-20 bg-white/50 backdrop-blur-sm z-20'>
+                <p>previousVideoPath: {previousVideoPath}</p>
+                <p>currentVideoPath: {currentVideoPath}</p>
+                <p>nextVideoPath: {nextVideoPath}</p>
+                <p>isTransitioning: {isTransitioning ? "true" : "false"}</p>
+                <p>isCurrentReady: {isCurrentReady ? "true" : "false"}</p>
+                <p>sceneNumber: {sceneNumber}</p>
+                <p>category: {category}</p>
+                <p>categoryNumber: {categoryNumber}</p>
+            </div> */}
         </div>
     );
 }
