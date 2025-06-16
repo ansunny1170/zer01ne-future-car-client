@@ -12,19 +12,25 @@ export default function VideoPlayer({ direction }:
     const [isTransitioning, setIsTransitioning] = useState(false);
     const [isCurrentReady, setIsCurrentReady] = useState(false);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const prevSceneNumberRef = useRef(sceneNumber);
     // const BASE_URL = "https://pub-4114e99d6d9b4e79a59dff9e8e904235.r2.dev";
     const BASE_URL = "/videos";
 
     useEffect(() => {
-        if (currentVideoPath !== nextVideoPath) {
+        // sceneNumber가 변경될 때만 비디오 전환
+        if (prevSceneNumberRef.current !== sceneNumber) {
             if (timerRef.current) clearTimeout(timerRef.current);
 
             setPreviousVideoPath(currentVideoPath);
             setCurrentVideoPath(nextVideoPath);
             setIsCurrentReady(false);
             setIsTransitioning(false);
+            prevSceneNumberRef.current = sceneNumber;
+        } else if (currentVideoPath !== nextVideoPath) {
+            // sceneNumber가 같을 때는 현재 비디오를 바로 업데이트
+            setCurrentVideoPath(nextVideoPath);
         }
-    }, [sceneNumber, category, categoryNumber, direction, nextVideoPath, currentVideoPath]);
+    }, [sceneNumber, nextVideoPath, currentVideoPath]);
 
     // 새 비디오가 준비되면 crossfade 시작
     useEffect(() => {

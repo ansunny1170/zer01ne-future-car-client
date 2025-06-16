@@ -25,7 +25,7 @@ export default function Scene1() {
     // 마운트 되고 1.5초 후에 dialogTimeOut.current를 true로 변경
     setTimeout(() => {
       setDialogTimeOut(true);
-    }, 1500);
+    }, 0);
 
     return () => {
       initialCategoryNumber.current = false;
