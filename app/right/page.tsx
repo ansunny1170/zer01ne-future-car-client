@@ -1,10 +1,10 @@
 "use client";
 
 import VideoPlayer from "../components/video-player";
-import useBroadcast from "../hooks/useBroadcast";
+import { useScene } from "../context/scene-context";
 
 export default function RightPage() {
-    const { sceneNumber, category, categoryNumber } = useBroadcast();
+    const { sceneNumber, category, categoryNumber } = useScene();
 
     return (
         <main className="min-h-screen flex items-center justify-center overflow-hidden">
