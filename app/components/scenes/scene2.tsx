@@ -4,16 +4,20 @@ import { useEffect, useRef, useState } from "react";
 import QuestionArea from "./question-area";
 import { useScene } from "@/app/context/scene-context";
 
+type Scene2Category = keyof typeof SCENE_LIST.scene2;
 export default function Scene2() {
-  const { setCategoryNumber } = useScene();
+  const { setCategoryNumber, category } = useScene();
   const scene = STEP_QUESTION_LIST?.scene2;
   const initialCategoryNumber = useRef(false);
   const [dialogTimeOut, setDialogTimeOut] = useState(false);
 
   useEffect(() => {
     if (!initialCategoryNumber.current) {
-      const randomNumber = random(SCENE_LIST?.scene2?.a);
-      setCategoryNumber(randomNumber);
+      const value = SCENE_LIST?.scene2?.[category as Scene2Category];
+      if (value !== undefined) {
+        const randomNumber = random(value);
+        setCategoryNumber(randomNumber);
+      }
       initialCategoryNumber.current = true;
     }
 
