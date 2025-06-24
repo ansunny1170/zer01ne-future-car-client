@@ -48,15 +48,25 @@ declare global {
   }
 }
 
-export default function SpeechPage() {
+export default function Speech({ keyword, onTrigger }: { keyword: string, onTrigger: () => void }) {
   const [isListening, setIsListening] = useState(false);
   const [finalTranscript, setFinalTranscript] = useState('');
   const [interimTranscript, setInterimTranscript] = useState('');
   const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
   const [hasAlertedSilence, setHasAlertedSilence] = useState(false);
+  const [keywordDetected, setKeywordDetected] = useState(false);
 
   const lastSpeechTimeRef = useRef<number | null>(null);
   const SILENCE_TIMEOUT = 3000; // 타임 버퍼
+
+  // 키워드 감지 함수
+  const checkKeyword = useCallback((text: string) => {
+    if (keyword && text.toLowerCase().includes(keyword.toLowerCase())) {
+      setKeywordDetected(true);
+      onTrigger();
+      console.log(`키워드 "${keyword}" 감지됨!`);
+    }
+  }, [keyword, onTrigger]);
 
   // 음성 인식 초기화
   useEffect(() => {
@@ -76,6 +86,7 @@ export default function SpeechPage() {
     recognition.onstart = () => {
       console.log('Speech recognition started');
       setIsListening(true);
+      setKeywordDetected(false);
       lastSpeechTimeRef.current = Date.now();
     };
 
@@ -96,14 +107,21 @@ export default function SpeechPage() {
           const last = lastSpeechTimeRef.current;
           const shouldStartNew = last && now - last > SILENCE_TIMEOUT;
 
-          setFinalTranscript((prev) =>
-            shouldStartNew ? prev + '\n' + transcript : prev + transcript
-          );
+          const newFinalTranscript = shouldStartNew 
+            ? finalTranscript + '\n' + transcript 
+            : finalTranscript + transcript;
+
+          setFinalTranscript(newFinalTranscript);
+
+          // 최종 결과에서 키워드 확인
+          checkKeyword(newFinalTranscript);
 
           lastSpeechTimeRef.current = now;
           setHasAlertedSilence(false); // 다시 말했으므로 알림 상태 초기화
         } else {
           interimText += transcript;
+          // 임시 결과에서도 키워드 확인 (선택사항)
+          checkKeyword(interimText);
         }
       }
 
@@ -120,7 +138,7 @@ export default function SpeechPage() {
     return () => {
       recognition.stop();
     };
-  }, []);
+  }, [checkKeyword]);
 
   // 5초 정적 상태 감지
   useEffect(() => {
@@ -147,13 +165,13 @@ export default function SpeechPage() {
     if (!recognition) return;
 
     if (isListening) {
-      recognition.stop();
       setIsListening(false);
     } else {
       try {
         setFinalTranscript('');
         setInterimTranscript('');
         setHasAlertedSilence(false);
+        setKeywordDetected(false);
         lastSpeechTimeRef.current = null;
         
         // 약간의 지연을 주어 이전 세션이 완전히 종료되도록 함
@@ -167,7 +185,7 @@ export default function SpeechPage() {
   }, [recognition, isListening]);
 
   return (
-    <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-4 p-4">
+    <div className="flex items-center gap-4 p-4">
       <button
         onClick={toggleListening}
         className={`w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 ${
@@ -190,16 +208,22 @@ export default function SpeechPage() {
         </svg>
       </button>
 
-      {isListening && (
-        <div className="text-red-500 font-bold animate-pulse">음성입력 받는 중...</div>
+      {keywordDetected && (
+        <div className="text-green-500 font-bold animate-pulse">키워드 감지됨!</div>
       )}
 
-      <div className="max-w-md p-4 bg-white/80 backdrop-blur-sm rounded-lg shadow-lg min-h-[100px] whitespace-pre-wrap">
-        <p className="text-gray-800">{finalTranscript}</p>
-        {interimTranscript && (
-          <p className="text-gray-500 inline-block">{interimTranscript}</p>
-        )}
-      </div>
+    {
+      isListening && (
+          <div className="max-w-md p-4 bg-white/80 backdrop-blur-sm rounded-lg shadow-lg whitespace-pre-wrap">
+            {finalTranscript && (
+              <p className="text-gray-800">{finalTranscript}</p>
+            )}
+            {interimTranscript && (
+              <p className="text-gray-500 inline-block">{interimTranscript} </p>
+            )}
+          </div>
+      )
+    }
     </div>
   );
 }

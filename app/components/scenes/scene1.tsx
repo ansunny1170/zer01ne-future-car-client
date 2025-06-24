@@ -3,14 +3,20 @@ import QuestionArea from "./question-area";
 import { SCENE_LIST, STEP_QUESTION_LIST } from "@/app/utils/constants";
 import { useEffect, useRef, useState } from "react";
 import { useScene } from "@/app/context/scene-context";
+import Speech from "../speech";
 
 type Scene1Category = keyof typeof SCENE_LIST.scene1;
 
 export default function Scene1() {
-  const { setCategoryNumber, category } = useScene();
+  const { setCategoryNumber, category, setSceneNumber, setCategory } = useScene();
   const buttons = STEP_QUESTION_LIST?.scene1?.category;
   const initialCategoryNumber = useRef(false);
   const [dialogTimeOut, setDialogTimeOut] = useState(false);
+
+  const handleSpeechTrigger = () => {
+    setSceneNumber(2);
+    setCategory("a");
+  }
 
   useEffect(() => {
     if (!initialCategoryNumber.current) {
@@ -36,14 +42,20 @@ export default function Scene1() {
     <div className="pl-8">
       {
         dialogTimeOut && (
-          <QuestionArea
-            mainText={STEP_QUESTION_LIST?.scene1?.mainText}
-            subText={STEP_QUESTION_LIST?.scene1?.subText}
-            buttons={buttons}
-            className="center"
-          />
+          <div className="absolute inset-0">
+            <QuestionArea
+              mainText={STEP_QUESTION_LIST?.scene1?.mainText}
+              subText={STEP_QUESTION_LIST?.scene1?.subText}
+              buttons={buttons}
+              className="center"
+            />
+            <div className="absolute top-1/2 translate-y-full left-0 ">
+              <Speech keyword="시작" onTrigger={handleSpeechTrigger}/>
+            </div>
+          </div>
         )
       }
+
     </div>
   );
 }
