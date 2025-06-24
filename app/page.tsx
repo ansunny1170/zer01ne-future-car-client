@@ -67,21 +67,18 @@ export default function Home() {
           </button>
         )}
 
-        <span className="absolute top-4 left-1/2 -translate-x-1/2 text-white text-2xl font-bold">{sceneNumber}</span>
-
-        <button
-          className="absolute top-4 right-4 bg-white text-black px-4 py-2 rounded-md"
-          onClick={() => {
-            if (sceneNumber < lastSceneNumber) {
-              setSceneNumber(sceneNumber + 1);
-            } else {
-              setSceneNumber(1);
-            }
-          }}>
-          {
-            sceneNumber < lastSceneNumber ? "다음 스텝" : "처음으로"
-          }
-        </button>
+        {
+          sceneNumber === lastSceneNumber && (
+            <button
+              className="absolute top-4 right-4 bg-white text-black px-4 py-2 rounded-md"
+              onClick={() => {
+                setSceneNumber(1);
+              }}
+            >
+              처음으로
+            </button>
+          )
+        }
       </div>
     </div>
   );
