@@ -18,7 +18,7 @@ export default function RightPage() {
     }, [channel, setSceneNumber, setCategory, setCategoryNumber]);
 
     return (
-        <main className="min-h-screen flex items-center justify-center overflow-hidden">
+        <main className="min-h-screen flex items-center justify-center overflow-hidden relative">
             <VideoPlayer direction="right" className="scale-150 blur-xs" />
             <div className="text-center">
                 <h1 className="text-4xl font-bold text-blue-600 mb-4">Right Page</h1>

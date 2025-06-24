@@ -52,7 +52,7 @@ export default function QuestionArea({
                 )}
                 {subChars.length > 0 && (
                     <motion.p
-                        className="text-lg text-gray-500 pt-2"
+                        className="text-lg text-white/60 font-bold pt-2"
                         variants={container}
                         initial="hidden"
                         animate="visible"
