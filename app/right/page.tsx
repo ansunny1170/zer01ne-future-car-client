@@ -19,7 +19,7 @@ export default function RightPage() {
 
     return (
         <main className="min-h-screen flex items-center justify-center overflow-hidden">
-            <VideoPlayer direction="right" />
+            <VideoPlayer direction="right" className="scale-150 blur-xs" />
             <div className="text-center">
                 <h1 className="text-4xl font-bold text-blue-600 mb-4">Right Page</h1>
                 <p className="text-gray-600">{sceneNumber} / {category} / {categoryNumber}</p>
