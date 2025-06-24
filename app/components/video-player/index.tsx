@@ -1,9 +1,11 @@
 import { useScene } from '@/app/context/scene-context';
+import { cn } from '@/app/utils/cn';
 import { useEffect, useRef, useState } from 'react';
 
-export default function VideoPlayer({ direction }:
+export default function VideoPlayer({ direction, className }:
     {
-        direction: "left" | "right" | "center"
+        direction: "left" | "right" | "center",
+        className?: string
     }) {
     const { sceneNumber, category, categoryNumber } = useScene();
     const nextVideoPath = `scene${sceneNumber}/${sceneNumber}_${category}${categoryNumber}_${direction}`;
@@ -56,7 +58,7 @@ export default function VideoPlayer({ direction }:
     const isValidPath = (path: string) => !path.includes('null');
 
     return (
-        <div className="absolute inset-0 overflow-hidden isolate">
+        <div className={cn("absolute inset-0 overflow-hidden isolate", className)}>
             {
                 // isTransitioning && (
                 //     <div className="absolute inset-0 flex items-center bg-white/50 backdrop-blur-sm justify-center z-[1] animate-fadeInOut">
