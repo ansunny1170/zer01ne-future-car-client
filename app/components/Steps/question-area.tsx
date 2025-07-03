@@ -34,7 +34,7 @@ export default function QuestionArea({
     };
 
     return (
-        <div className={cn("absolute bottom-1/2 translate-y-1/2 left-4 z-10 flex flex-col gap-4", className)}>
+        <div className={cn("flex flex-col items-center justify-center gap-16", className)}>
             <div>
                 {mainChars.length > 0 && (
                     <motion.h1

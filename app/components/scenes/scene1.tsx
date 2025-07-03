@@ -49,7 +49,7 @@ export default function Scene1() {
               buttons={buttons}
               className="center"
             />
-            <div className="absolute top-1/2 translate-y-full left-0 ">
+            <div className="absolute top-0 -translate-x-full left-1/2 ">
               <Speech keyword="시작" onTrigger={handleSpeechTrigger}/>
             </div>
           </div>

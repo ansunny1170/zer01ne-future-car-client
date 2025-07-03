@@ -52,3 +52,31 @@ export const SCENE_LIST = {
     scene6 : { a: 1, b: 1, c: 1 },
     scene7 : { a: 3 }
 }
+
+
+export const STEP_DUMMY = {
+    1: {
+        "ui": "navigation_alert",
+        "bgm": "pop_dance",
+        "sfx": "car_alert", 
+        "video": "city_night",
+        "text": `현재 시각 19시 30분. 차량이 뮤지컬 공연장까지 실시간 경로를 분석합니다.\n\nHUD에 도심 야경 배경과 함께 빠른 경로 탐색 알림이 표시됩니다.\n\n비서: "예상 도착 시간 20시 02분. 공연 시작까지 30분 이내로 이동해야 합니다."`,
+        "question": {
+            "title": "지금 차량에서 어떤 기능을 실행할까요?",
+            "content": [
+                {
+                    "main_text": "우회 경로 탐색",
+                    "sub_text": "예상 시간보다 빠른 길이 있는지 실시간 재탐색"
+                },
+                {
+                    "main_text": "공연장 주차장 예약", 
+                    "sub_text": "가까운 주차 자리 사전 확보로 주차 시간 단축"
+                },
+                {
+                    "main_text": "긴장 완화 모드",
+                    "sub_text": "심호흡 가이드 + 잔잔한 BGM으로 마음 안정"
+                }
+            ]
+        }
+    }
+}

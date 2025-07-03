@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 // Web Speech API 타입 정의
 interface SpeechRecognitionEvent extends Event {
@@ -49,181 +49,89 @@ declare global {
 }
 
 export default function Speech({ keyword, onTrigger }: { keyword: string, onTrigger: () => void }) {
-  const [isListening, setIsListening] = useState(false);
-  const [finalTranscript, setFinalTranscript] = useState('');
-  const [interimTranscript, setInterimTranscript] = useState('');
-  const [recognition, setRecognition] = useState<SpeechRecognition | null>(null);
-  const [hasAlertedSilence, setHasAlertedSilence] = useState(false);
-  const [keywordDetected, setKeywordDetected] = useState(false);
+  const [finalText, setFinalText] = useState<string | null>(null)
+  const [keywordDetected, setKeywordDetected] = useState(false)
 
-  const lastSpeechTimeRef = useRef<number | null>(null);
-  const SILENCE_TIMEOUT = 3000; // 타임 버퍼
+  const recognitionRef = useRef<SpeechRecognition | null>(null)
+  const silenceTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   // 키워드 감지 함수
-  const checkKeyword = useCallback((text: string) => {
+  const checkKeyword = (text: string) => {
     if (keyword && text.toLowerCase().includes(keyword.toLowerCase())) {
       setKeywordDetected(true);
       onTrigger();
+      console.log(`🎯 키워드 &quot;${keyword}&quot; 감지됨!`);
       console.log(`키워드 "${keyword}" 감지됨!`);
     }
-  }, [keyword, onTrigger]);
+  };
 
-  // 음성 인식 초기화
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
     if (!SpeechRecognition) {
-      alert('이 브라우저는 음성 인식을 지원하지 않습니다.');
-      return;
+      return
     }
 
-    const recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'ko-KR';
+    const recognition = new SpeechRecognition()
+    recognition.continuous = true
+    recognition.interimResults = true
+    recognition.lang = 'ko-KR'
 
     recognition.onstart = () => {
-      console.log('Speech recognition started');
-      setIsListening(true);
-      setKeywordDetected(false);
-      lastSpeechTimeRef.current = Date.now();
-    };
+      setKeywordDetected(false)
+    }
+
+    recognition.onresult = (event) => {
+      const transcript = Array.from(event.results)
+        .map((r) => r[0].transcript)
+        .join('')
+
+      setFinalText(transcript)
+
+      // 키워드 확인
+      checkKeyword(transcript)
+
+      // 무음 타이머 리셋
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current)
+      silenceTimerRef.current = setTimeout(() => {
+        recognition.stop()
+        onTrigger()
+      }, 3000)
+    }
+
+    recognition.onerror = (event) => {
+      console.log(event)
+    }
 
     recognition.onend = () => {
-      console.log('Speech recognition ended');
-      setIsListening(false);
-    };
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current)
+      console.log("음성 인식 종료")
+    }
 
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      let interimText = '';
+    recognitionRef.current = recognition
 
-      for (let i = event.resultIndex; i < event.results.length; ++i) {
-        const result = event.results[i];
-        const transcript = result[0].transcript;
-
-        if (result.isFinal) {
-          const now = Date.now();
-          const last = lastSpeechTimeRef.current;
-          const shouldStartNew = last && now - last > SILENCE_TIMEOUT;
-
-          const newFinalTranscript = shouldStartNew 
-            ? finalTranscript + '\n' + transcript 
-            : finalTranscript + transcript;
-
-          setFinalTranscript(newFinalTranscript);
-
-          // 최종 결과에서 키워드 확인
-          checkKeyword(newFinalTranscript);
-
-          lastSpeechTimeRef.current = now;
-          setHasAlertedSilence(false); // 다시 말했으므로 알림 상태 초기화
-        } else {
-          interimText += transcript;
-          // 임시 결과에서도 키워드 확인 (선택사항)
-          checkKeyword(interimText);
-        }
-      }
-
-      setInterimTranscript(interimText);
-    };
-
-    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-      console.error('Speech recognition error:', event.error);
-      setIsListening(false);
-    };
-
-    setRecognition(recognition);
+    // 자동 시작: 1초 후
+    const startTimer = setTimeout(() => {
+      recognition.start()
+    }, 1000)
 
     return () => {
-      recognition.stop();
-    };
-  }, [checkKeyword]);
-
-  // 5초 정적 상태 감지
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const now = Date.now();
-      const last = lastSpeechTimeRef.current;
-
-      if (
-        isListening &&
-        last &&
-        now - last > SILENCE_TIMEOUT &&
-        !hasAlertedSilence
-      ) {
-        recognition?.stop();
-        setHasAlertedSilence(true);
-      }
-    }, 1000); // 매초 확인
-
-    return () => clearInterval(interval);
-  }, [isListening, hasAlertedSilence]);
-
-  // 마이크 on/off
-  const toggleListening = useCallback(() => {
-    if (!recognition) return;
-
-    if (isListening) {
-      setIsListening(false);
-    } else {
-      try {
-        setFinalTranscript('');
-        setInterimTranscript('');
-        setHasAlertedSilence(false);
-        setKeywordDetected(false);
-        lastSpeechTimeRef.current = null;
-        
-        // 약간의 지연을 주어 이전 세션이 완전히 종료되도록 함
-        setTimeout(() => {
-          recognition.start();
-        }, 100);
-      } catch (error) {
-        console.error('Failed to start recognition:', error);
-      }
+      clearTimeout(startTimer)
+      recognition.stop()
     }
-  }, [recognition, isListening]);
+  }, [keyword, onTrigger])
 
   return (
-    <div className="flex items-center gap-4 p-4">
-      <button
-        onClick={toggleListening}
-        className={`w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 ${
-          isListening ? 'bg-red-500 animate-pulse' : 'bg-gray-400 hover:bg-gray-500'
-        }`}
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          strokeWidth={1.5}
-          stroke="currentColor"
-          className="w-8 h-8"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z"
-          />
-        </svg>
-      </button>
-
+    <div className="p-6 space-y-4">
       {keywordDetected && (
-        <div className="text-green-500 font-bold animate-pulse">키워드 감지됨!</div>
+        <div className="p-4 bg-green-100 text-green-800 rounded animate-pulse">
+          🎯 키워드 &quot;{keyword}&quot; 감지됨!
+        </div>
       )}
 
-    {
-      isListening && (
-          <div className="max-w-md p-4 bg-white/80 backdrop-blur-sm rounded-lg shadow-lg whitespace-pre-wrap">
-            {finalTranscript && (
-              <p className="text-gray-800">{finalTranscript}</p>
-            )}
-            {interimTranscript && (
-              <p className="text-gray-500 inline-block">{interimTranscript} </p>
-            )}
-          </div>
-      )
-    }
+      <div className="p-4 bg-green-100 text-green-800 rounded">
+        ✅ 음성인식 :<br />
+        <strong>{finalText}</strong>
+      </div>
     </div>
-  );
+  )
 }

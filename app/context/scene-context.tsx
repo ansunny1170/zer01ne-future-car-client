@@ -10,6 +10,8 @@ export type SceneContextType = {
   categoryNumber: number | null;
   setCategoryNumber: (n: number | null) => void;
   lastSceneNumber: number;
+  stepNumber: number;
+  setStepNumber: (n: number) => void;
 };
 
 const SceneContext = createContext<SceneContextType | undefined>(undefined);
@@ -18,6 +20,7 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
   const [sceneNumber, setSceneNumber] = useState(1);
   const [category, setCategory] = useState("a");
   const [categoryNumber, setCategoryNumber] = useState<number | null>(1);
+  const [stepNumber, setStepNumber] = useState(0);
 
   // BroadcastChannel 동기화 로직 추가
   const senderId = useRef(Date.now() + Math.random()).current;
@@ -34,9 +37,10 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
       senderId,
       sceneNumber,
       category,
-      categoryNumber
+      categoryNumber,
+      stepNumber
     });
-  }, [sceneNumber, category, categoryNumber, channel, senderId]);
+  }, [sceneNumber, category, categoryNumber, channel, senderId, stepNumber]);
 
   return (
     <SceneContext.Provider
@@ -48,7 +52,9 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
         setCategory,
         categoryNumber,
         setCategoryNumber,
-        lastSceneNumber
+        lastSceneNumber,
+        stepNumber,
+        setStepNumber
       }}
     >
       {children}

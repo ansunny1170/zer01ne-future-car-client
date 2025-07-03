@@ -15,8 +15,8 @@ export default function VideoPlayer({ direction, className }:
     const [isCurrentReady, setIsCurrentReady] = useState(false);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
     const prevSceneNumberRef = useRef(sceneNumber);
-    const BASE_URL = "https://pub-4114e99d6d9b4e79a59dff9e8e904235.r2.dev/videos";
-    // const BASE_URL = "/videos";
+    // const BASE_URL = "https://pub-4114e99d6d9b4e79a59dff9e8e904235.r2.dev/videos";
+    const BASE_URL = "/videos";
 
     useEffect(() => {
         // sceneNumber가 변경될 때만 비디오 전환

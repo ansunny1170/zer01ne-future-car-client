@@ -15,6 +15,8 @@ export default function Home() {
 
   const renderStep = () => {
     switch (sceneNumber) {
+      case 0:
+        return <Scene1/>;
       case 1:
         return <Scene1/>;
       case 2:
