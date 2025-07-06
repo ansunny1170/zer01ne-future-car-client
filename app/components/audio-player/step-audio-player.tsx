@@ -122,17 +122,22 @@ export default function StepAudioPlayer({
         if (isCurrentReady && previousAudioPath && isUserInteracted && !hasError) {
             console.log('🎵 크로스페이드 시작');
             
-            // 이전 오디오 페이드아웃
+            // 이전 오디오 즉시 일시정지 및 빠른 페이드아웃
             if (previousAudioRef.current) {
+                // 즉시 볼륨을 낮춰서 겹침 현상 방지
+                previousAudioRef.current.volume = 0.2;
+                
                 const fadeOutInterval = setInterval(() => {
                     if (previousAudioRef.current) {
-                        previousAudioRef.current.volume = Math.max(0, previousAudioRef.current.volume - 0.03); // 0.6 / 20 = 0.03
+                        previousAudioRef.current.volume = Math.max(0, previousAudioRef.current.volume - 0.05); // 더 빠른 페이드아웃
                         if (previousAudioRef.current.volume <= 0) {
                             clearInterval(fadeOutInterval);
-                            console.log('🎵 이전 오디오 페이드아웃 완료');
+                            // 페이드아웃 완료 후 일시정지
+                            previousAudioRef.current.pause();
+                            console.log('🎵 이전 오디오 페이드아웃 완료 및 일시정지');
                         }
                     }
-                }, 40);
+                }, 20); // 더 빠른 인터벌 (40ms -> 20ms)
             }
             
             // 현재 오디오 페이드인
@@ -140,18 +145,18 @@ export default function StepAudioPlayer({
                 currentAudioRef.current.volume = 0;
                 const fadeInInterval = setInterval(() => {
                     if (currentAudioRef.current) {
-                        currentAudioRef.current.volume = Math.min(0.6, currentAudioRef.current.volume + 0.03); // 최대 60%까지
-                        if (currentAudioRef.current.volume >= 0.6) {
+                        currentAudioRef.current.volume = Math.min(DEFAULT_VOLUME, currentAudioRef.current.volume + 0.04); // 페이드인 속도 조정
+                        if (currentAudioRef.current.volume >= DEFAULT_VOLUME) {
                             clearInterval(fadeInInterval);
                             console.log('🎵 새 오디오 페이드인 완료');
                         }
                     }
-                }, 40);
+                }, 20); // 더 빠른 인터벌
             }
             
             timerRef.current = setTimeout(() => {
                 setPreviousAudioPath(null);
-            }, 800);
+            }, 400); // 시간 단축 (800ms -> 400ms)
         }
     }, [isCurrentReady, previousAudioPath, isUserInteracted, hasError]);
 
@@ -185,6 +190,14 @@ export default function StepAudioPlayer({
                         hasError,
                         muted: currentAudioRef.current?.muted
                     });
+                    
+                    // 새 오디오가 준비되면 이전 오디오 즉시 처리
+                    if (previousAudioRef.current) {
+                        previousAudioRef.current.volume = 0;
+                        previousAudioRef.current.currentTime = 0; // 시간을 처음으로 리셋
+                        console.log('🎵 이전 오디오 즉시 음소거 및 시간 리셋');
+                    }
+                    
                     setIsCurrentReady(true);
                     setHasError(false);
                 }}
