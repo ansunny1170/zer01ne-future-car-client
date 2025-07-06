@@ -8,8 +8,8 @@ export default function QuestionArea({
     buttons,
     className,
 }: {
-    mainText: string;
-    subText?: string;
+    mainText: string | null;
+    subText?: string | null;
     className?: string;
     buttons: {
         [key: string]: string;

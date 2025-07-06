@@ -2,14 +2,13 @@
 
 import Step0 from "../components/Steps/step0";
 import Step1 from "../components/Steps/step1";
-import Step2 from "../components/Steps/step2";
+import StepRepeat from "../components/Steps/step-repeat";
 import StepVideoPlayer from "../components/video-player/step-video-player";
 import { useScene } from "../context/scene-context";
 import { AnimatePresence, motion } from "framer-motion";
 import { STEP_DUMMY } from "../utils/constants";
 import { StepInfo } from "../\btype";
 import StepAudioPlayer from "../components/audio-player/step-audio-player";
-
 
 export default function Home() {
   const { stepNumber, setStepNumber, lastSceneNumber, videoPath, bgmPath, goPrevStep } = useScene();
@@ -48,20 +47,21 @@ export default function Home() {
             <Step1/>
           </motion.div>
         );
-      case 2:
-        return (
-          <motion.div
-            key="step2"
-            variants={fadeVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={{ duration: 0.2 }}
-          >
-            <Step2/>
-          </motion.div>
-        );
       default:
+        if (stepNumber >= 2 && stepNumber <= 6) {
+          return (
+            <motion.div
+              key={`step${stepNumber}`}
+              variants={fadeVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ duration: 0.2 }}
+            >
+              <StepRepeat stepInfo={STEP_DUMMY[stepNumber as keyof typeof STEP_DUMMY] as StepInfo}/>
+            </motion.div>
+          );
+        }
         return null;
     }
   };

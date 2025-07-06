@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useRef, useEffect, useMemo } from "react";
 import { StepInfo } from "../\btype";
+import { STEP_DUMMY } from "../utils/constants";
 
 // Context에서 사용할 타입 정의
 export type SceneContextType = {
@@ -34,6 +35,8 @@ export type SceneContextType = {
   setBgmPath: (b: string | null) => void;
   sfxPath: string | null;
   setSfxPath: (s: string | null) => void;
+  stepInfo: StepInfo | null;
+  setStepInfo: (s: StepInfo | null) => void;
 
   setAnswers: (a: {
     step1: string;
@@ -57,6 +60,8 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
   const [uiPath, setUiPath] = useState<string | null>(null);
   const [bgmPath, setBgmPath] = useState<string | null>("night_synth.m4a");
   const [sfxPath, setSfxPath] = useState<string | null>(null);
+  const [stepInfo, setStepInfo] = useState<StepInfo | null>(null);
+  const lastStepNumber = 6;
 
 
   const [persona, setPersona] = useState<string | null>(null);
@@ -98,20 +103,23 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
     });
   }, [sceneNumber, category, categoryNumber, channel, senderId, stepNumber]);
 
-  const goPrevStep = (stepInfo: StepInfo) => {
+  useEffect(() => {
+    setVideoPath(STEP_DUMMY[stepNumber as keyof typeof STEP_DUMMY]?.video || null);
+    setUiPath(STEP_DUMMY[stepNumber as keyof typeof STEP_DUMMY]?.ui || null);
+    setBgmPath(STEP_DUMMY[stepNumber as keyof typeof STEP_DUMMY]?.bgm || null);
+    setSfxPath(STEP_DUMMY[stepNumber as keyof typeof STEP_DUMMY]?.sfx || null);
+
+    if (stepNumber > lastStepNumber) {
+      setStepNumber(0);
+    }
+  }, [stepNumber]);
+
+  const goPrevStep = () => {
     setStepNumber(stepNumber - 1);
-    setVideoPath(stepInfo.video);
-    setUiPath(stepInfo.ui);
-    setBgmPath(stepInfo.bgm);
-    setSfxPath(stepInfo.sfx);
   }
 
-  const goNextStep = (stepInfo: StepInfo) => {
+  const goNextStep = () => {
     setStepNumber(stepNumber + 1);
-    setVideoPath(stepInfo.video);
-    setUiPath(stepInfo.ui);
-    setBgmPath(stepInfo.bgm);
-    setSfxPath(stepInfo.sfx);
   }
 
   return (
@@ -140,7 +148,9 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
         sfxPath,
         setSfxPath,
         answers,
-        setAnswers
+        setAnswers,
+        stepInfo,
+        setStepInfo
       }}
     >
       {children}

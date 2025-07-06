@@ -1,12 +1,15 @@
-import { STEP_DUMMY } from "@/app/utils/constants";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import QuestionArea from "./question-area";
 import TextAnimation from "./text-animation";
+import { StepInfo } from "@/app/\btype";
 
-export default function Step2() {
-    const stepInfo = STEP_DUMMY[2];
+export default function StepRepeat({stepInfo}: {stepInfo: StepInfo}) {
     const { ui, bgm, sfx, video, text, question } = stepInfo;
     const [questionFlag, setQuestionFlag] = useState(false);
+
+    useEffect(() => {
+        console.log(stepInfo);
+    }, [stepInfo]);
     
     const handleAnimationComplete = () => {
         // 나레이션이 끝난 후 1.5초 뒤에 질문 표시
@@ -27,15 +30,15 @@ export default function Step2() {
             <div className="text-2xl">
                 {questionFlag ? (
                     <QuestionArea 
-                        mainText={question.title} 
-                        buttons={question.content.reduce((acc, item) => {
+                        mainText={question?.title || ""} 
+                        buttons={question?.content?.reduce((acc, item) => {
                             acc[item.main_text] = item.sub_text;
                             return acc;
-                        }, {} as { [key: string]: string })} 
+                        }, {} as { [key: string]: string }) || {}} 
                     />
                 ) : (
                     <TextAnimation 
-                        text={text}
+                        text={text || ""}
                         onComplete={handleAnimationComplete}
                         groupSize={2}
                         hideDuration={1800}
