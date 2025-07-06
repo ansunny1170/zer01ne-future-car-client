@@ -32,7 +32,7 @@ export default function StepVideoPlayer({ direction, className }:
             // nextVideoPath가 null이면 현재 비디오 유지
             prevNextVideoPathRef.current = nextVideoPath;
         }
-    }, [nextVideoPath, currentVideoPath]);
+    }, [nextVideoPath]);
 
     // 새 비디오가 준비되면 crossfade 시작
     useEffect(() => {
@@ -58,7 +58,7 @@ export default function StepVideoPlayer({ direction, className }:
         <div className={cn("absolute inset-0 overflow-hidden isolate", className)}>
             {/* New video (always below) */}
             <video
-                key={`current-${currentVideoPath}`}
+                key={currentVideoPath}
                 src={`${BASE_URL}${currentVideoPath}`}
                 autoPlay
                 loop
@@ -66,19 +66,19 @@ export default function StepVideoPlayer({ direction, className }:
                 playsInline
                 preload='auto'
                 onCanPlay={() => setIsCurrentReady(true)}
-                className="w-full h-full object-cover absolute inset-0 -z-[1]"
+                className="w-full h-full object-cover absolute inset-0 z-0"
             />
             {/* Previous video (fades out above) */}
             {previousVideoPath && (
                 <video
-                    key={`prev-${previousVideoPath}`}
+                    key={previousVideoPath}
                     src={`${BASE_URL}${previousVideoPath}`}
                     autoPlay
                     loop
                     muted
                     playsInline
                     preload='auto'
-                    className={`w-full h-full object-cover absolute inset-0 transition-all duration-800 z-1
+                    className={`w-full h-full object-cover absolute inset-0 transition-all duration-800 z-10
                         ${isTransitioning ? 'opacity-0 scale-150' : 'opacity-100 scale-100'}`}
                 />
             )}
