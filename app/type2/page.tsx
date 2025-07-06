@@ -5,21 +5,58 @@ import Step1 from "../components/Steps/step1";
 import Step2 from "../components/Steps/step2";
 import VideoPlayer from "../components/video-player";
 import { useScene } from "../context/scene-context";
-
+import { AnimatePresence, motion } from "framer-motion";
 
 export default function Home() {
-  const { stepNumber, setStepNumber, setCategory, setCategoryNumber, lastSceneNumber, persona } = useScene();
+  const { stepNumber, setStepNumber, setCategory, setCategoryNumber, lastSceneNumber } = useScene();
+
+  const fadeVariants = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    exit: { opacity: 0 }
+  };
 
   const renderStep = () => {
     switch (stepNumber) {
       case 0:
-        return <Step0/>;
+        return (
+          <motion.div
+            key="step0"
+            variants={fadeVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 0.2 }}
+          >
+            <Step0/>
+          </motion.div>
+        );
       case 1:
-        return <Step1/>;
+        return (
+          <motion.div
+            key="step1"
+            variants={fadeVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 0.2 }}
+          >
+            <Step1/>
+          </motion.div>
+        );
       case 2:
-        return <Step2/>;
-      case 3:
-        return <Step1/>;
+        return (
+          <motion.div
+            key="step2"
+            variants={fadeVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 0.2 }}
+          >
+            <Step2/>
+          </motion.div>
+        );
       default:
         return null;
     }
@@ -40,9 +77,9 @@ export default function Home() {
         />
       </div> */}
 
-      <div className="absolute top-0 left-0 text-white z-10">[DEBUG] persona : {persona} / stepNumber : {stepNumber}</div>
-
-      {renderStep()}
+      <AnimatePresence mode="wait">
+        {renderStep()}
+      </AnimatePresence>
 
       <div>
         {

@@ -53,16 +53,39 @@ export const SCENE_LIST = {
     scene7 : { a: 3 }
 }
 
-
 export const STEP_DUMMY = {
+    0: {
+        "ui": null,
+        "bgm": "night_synth.m4a",
+        "sfx": null, 
+        "video": "prologue",
+        "question": {
+            "title": "시작하시겠어요?",
+            "subtitle": "음성으로 입력해주세요",
+            "content": [
+                {
+                    "main_text": "시작"
+                }
+            ]
+        }
+    },
     1: {
-        "ui": "navigation_alert",
-        "bgm": "pop_dance",
+        "ui": null,
+        "bgm": null,
+        "sfx": null, 
+        "video": null,
+        "text": `당신은 오늘 어떤 경험을 하고 싶으신가요?`,
+        "question": null
+    },
+    2: {
+        "ui": "navigation_alert.png",
+        "bgm": "pop_dance.m4a",
         "sfx": "car_alert", 
-        "video": "city_night",
-        "text": `현재 시각 19시 30분. 차량이 뮤지컬 공연장까지 실시간 경로를 분석합니다.\n\nHUD에 도심 야경 배경과 함께 빠른 경로 탐색 알림이 표시됩니다.\n\n비서: "예상 도착 시간 20시 02분. 공연 시작까지 30분 이내로 이동해야 합니다."`,
+        "video": "city_day",
+        "text": `현재 시각 15시 30분. 차량이 뮤지컬 공연장까지 실시간 경로를 분석합니다.\n\nHUD에 도심 배경과 함께 빠른 경로 탐색 알림이 표시됩니다.\n\n비서: "예상 도착 시간 16시 02분. 공연 시작까지 30분 이내로 이동해야 합니다."`,
         "question": {
             "title": "지금 차량에서 어떤 기능을 실행할까요?",
+            "subtitle": null,
             "content": [
                 {
                     "main_text": "우회 경로 탐색",
@@ -78,7 +101,23 @@ export const STEP_DUMMY = {
                 }
             ]
         }
-    }
+    },
 }
 
-export const N8N_BASE_URL = "https://rockskotch.app.n8n.cloud/webhook-test"
+export const PERSONA_LIST = [
+    "도심에서 힐링해요",
+    "반려견과 드라이브",
+    "연인과 데이트",
+    "친구와 모험",
+    "신혼여행 중",
+    "아이와 안전하게",
+    "문화생활 즐겨요",
+    "전국 여행 중",
+    "황금기를 즐겨요",
+    "추억 만들기",
+    "둘만의 시간",
+    "가족과 함께",
+    "음악이 전부",
+    "안정적 이동",
+    "첫 출근길"
+]

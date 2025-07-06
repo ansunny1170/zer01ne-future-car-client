@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useScene } from "@/app/context/scene-context";
 import Speech from "../speech";
 import QuestionArea from "../Steps/question-area";
+import { STEP_DUMMY } from "@/app/utils/constants";
 
 
 export default function Step0() {
@@ -25,8 +26,8 @@ export default function Step0() {
         dialogTimeOut && (
           <div className="absolute inset-0">
             <QuestionArea
-              mainText="시작하시겠어요?"
-              subText="음성으로 입력해주세요"
+              mainText={STEP_DUMMY[0].question?.title}
+              subText={STEP_DUMMY[0].question?.subtitle}
               buttons={
                 {
                   "시작": "시작"

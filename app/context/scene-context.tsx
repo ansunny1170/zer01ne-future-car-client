@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useRef, useEffect, useMemo } from "react";
+import { StepInfo } from "../\btype";
 
 // Context에서 사용할 타입 정의
 export type SceneContextType = {
@@ -14,7 +15,7 @@ export type SceneContextType = {
   setStepNumber: (n: number) => void;
   persona: string | null;
   setPersona: (p: string | null) => void;
-  goNextStep: () => void;
+  goNextStep: (stepInfo: StepInfo) => void;
   answers: {
     step1: string;
     step2: string;
@@ -24,6 +25,15 @@ export type SceneContextType = {
     step6: string;
     step7: string;
   };
+  videoPath: string | null;
+  setVideoPath: (v: string | null) => void;
+  uiPath: string | null;
+  setUiPath: (u: string | null) => void;
+  bgmPath: string | null;
+  setBgmPath: (b: string | null) => void;
+  sfxPath: string | null;
+  setSfxPath: (s: string | null) => void;
+
   setAnswers: (a: {
     step1: string;
     step2: string;
@@ -42,6 +52,12 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
   const [category, setCategory] = useState("a");
   const [categoryNumber, setCategoryNumber] = useState<number | null>(1);
   const [stepNumber, setStepNumber] = useState(0);
+  const [videoPath, setVideoPath] = useState<string | null>(null);
+  const [uiPath, setUiPath] = useState<string | null>(null);
+  const [bgmPath, setBgmPath] = useState<string | null>(null);
+  const [sfxPath, setSfxPath] = useState<string | null>(null);
+
+
   const [persona, setPersona] = useState<string | null>(null);
   const [answers, setAnswers] = useState<{
     step1: string;
@@ -81,8 +97,12 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
     });
   }, [sceneNumber, category, categoryNumber, channel, senderId, stepNumber]);
 
-  const goNextStep = () => {
+  const goNextStep = (stepInfo: StepInfo) => {
     setStepNumber(stepNumber + 1);
+    setVideoPath(stepInfo.video);
+    setUiPath(stepInfo.ui);
+    setBgmPath(stepInfo.bgm);
+    setSfxPath(stepInfo.sfx);
   }
 
   return (
@@ -101,6 +121,14 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
         persona,
         setPersona,
         goNextStep,
+        videoPath,
+        setVideoPath,
+        uiPath,
+        setUiPath,
+        bgmPath,
+        setBgmPath,
+        sfxPath,
+        setSfxPath,
         answers,
         setAnswers
       }}
