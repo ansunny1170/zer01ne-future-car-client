@@ -47,6 +47,19 @@ export default function Home() {
             <Step1/>
           </motion.div>
         );
+      case 7:
+        return (
+          <motion.div
+            key="step7"
+            variants={fadeVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 0.2 }}
+          >
+            <StepRepeat stepInfo={STEP_DUMMY[7 as keyof typeof STEP_DUMMY] as StepInfo}/>
+          </motion.div>
+        );
       default:
         if (stepNumber >= 2 && stepNumber <= 6) {
           return (

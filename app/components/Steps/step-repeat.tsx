@@ -12,10 +12,12 @@ export default function StepRepeat({stepInfo}: {stepInfo: StepInfo}) {
     }, [stepInfo]);
     
     const handleAnimationComplete = () => {
-        // 나레이션이 끝난 후 1.5초 뒤에 질문 표시
-        setTimeout(() => {
-            setQuestionFlag(true);
-        }, 1500);
+        // question이 있을 때만 나레이션이 끝난 후 1.5초 뒤에 질문 표시
+        if (question) {
+            setTimeout(() => {
+                setQuestionFlag(true);
+            }, 1500);
+        }
     };
     
     return (

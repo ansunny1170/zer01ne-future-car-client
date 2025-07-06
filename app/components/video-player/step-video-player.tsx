@@ -24,15 +24,18 @@ export default function StepVideoPlayer({ direction, className }:
 
             // nextVideoPath가 있을 때만 새 비디오로 전환
             if (nextVideoPath) {
-                setPreviousVideoPath(currentVideoPath);
-                setCurrentVideoPath(nextVideoPath);
-                setIsCurrentReady(false);
-                setIsTransitioning(false);
+                // 현재 비디오와 다음 비디오가 같다면 전환하지 않음
+                if (currentVideoPath !== nextVideoPath) {
+                    setPreviousVideoPath(currentVideoPath);
+                    setCurrentVideoPath(nextVideoPath);
+                    setIsCurrentReady(false);
+                    setIsTransitioning(false);
+                }
             }
             // nextVideoPath가 null이면 현재 비디오 유지
             prevNextVideoPathRef.current = nextVideoPath;
         }
-    }, [nextVideoPath]);
+    }, [nextVideoPath, currentVideoPath]);
 
     // 새 비디오가 준비되면 crossfade 시작
     useEffect(() => {
@@ -51,11 +54,13 @@ export default function StepVideoPlayer({ direction, className }:
         };
     }, []);
 
-    // 현재 재생 중인 비디오가 없으면 아무것도 렌더링하지 않음
-    if (!currentVideoPath) return null;
+    // 현재 재생 중인 비디오가 없으면 어두운 배경만 보여줌
+    if (!currentVideoPath) {
+        return <div className={cn("absolute inset-0 overflow-hidden isolate bg-gray-900", className)} />;
+    }
 
     return (
-        <div className={cn("absolute inset-0 overflow-hidden isolate", className)}>
+        <div className={cn("absolute inset-0 overflow-hidden isolate bg-gray-900", className)}>
             {/* New video (always below) */}
             <video
                 key={currentVideoPath}

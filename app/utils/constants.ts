@@ -193,6 +193,14 @@ export const STEP_DUMMY = {
             }
           ]
         }
+      },
+      7: {
+        "ui": null,
+        "bgm": "night_synth.m4a",
+        "sfx": null,
+        "video": "prologue",
+        "text": "",
+        "question": null
       }
 }
 

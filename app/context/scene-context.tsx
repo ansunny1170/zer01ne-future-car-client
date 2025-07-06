@@ -61,8 +61,6 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
   const [bgmPath, setBgmPath] = useState<string | null>("night_synth.m4a");
   const [sfxPath, setSfxPath] = useState<string | null>(null);
   const [stepInfo, setStepInfo] = useState<StepInfo | null>(null);
-  const lastStepNumber = 6;
-
 
   const [persona, setPersona] = useState<string | null>(null);
   const [answers, setAnswers] = useState<{
@@ -109,8 +107,11 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
     setBgmPath(STEP_DUMMY[stepNumber as keyof typeof STEP_DUMMY]?.bgm || null);
     setSfxPath(STEP_DUMMY[stepNumber as keyof typeof STEP_DUMMY]?.sfx || null);
 
-    if (stepNumber > lastStepNumber) {
-      setStepNumber(0);
+    // step 6에서 다음으로 넘어가면 (step 7) 부드러운 전환 후 0으로 이동
+    if (stepNumber === 7) {
+      setTimeout(() => {
+        setStepNumber(0);
+      }, 1000); // 1초 후 처음으로 돌아가기
     }
   }, [stepNumber]);
 
