@@ -71,9 +71,9 @@ export const STEP_DUMMY = {
     },
     1: {
         "ui": null,
-        "bgm": null,
+        "bgm": "night_synth.m4a",
         "sfx": null, 
-        "video": null,
+        "video": "prologue",
         "text": `당신은 오늘 어떤 경험을 하고 싶으신가요?`,
         "question": null
     },

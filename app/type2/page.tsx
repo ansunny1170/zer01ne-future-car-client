@@ -3,12 +3,15 @@
 import Step0 from "../components/Steps/step0";
 import Step1 from "../components/Steps/step1";
 import Step2 from "../components/Steps/step2";
-import VideoPlayer from "../components/video-player";
+import StepVideoPlayer from "../components/video-player/step-video-player";
 import { useScene } from "../context/scene-context";
 import { AnimatePresence, motion } from "framer-motion";
+import { STEP_DUMMY } from "../utils/constants";
+import { StepInfo } from "../\btype";
+
 
 export default function Home() {
-  const { stepNumber, setStepNumber, setCategory, setCategoryNumber, lastSceneNumber } = useScene();
+  const { stepNumber, setStepNumber, lastSceneNumber, videoPath, goPrevStep } = useScene();
 
   const fadeVariants = {
     initial: { opacity: 0 },
@@ -64,7 +67,12 @@ export default function Home() {
 
   return (
     <div className="flex flex-col items-start justify-center text-left h-screen cursor-none123 overflow-hidden">
-      <VideoPlayer
+
+      <div className="absolute top-4 right-4 text-white z-10 bg-amber-200">
+        [DEBUG] videoPath: {videoPath}
+      </div>
+      
+      <StepVideoPlayer
         direction="center"
       />
 
@@ -87,9 +95,10 @@ export default function Home() {
           <button
             className="absolute top-4 left-4 bg-white text-black px-4 py-2 rounded-md z-10"
             onClick={() => {
-              setStepNumber(stepNumber - 1);
-              setCategory("a");
-              setCategoryNumber(1);
+              const prevStep = STEP_DUMMY[stepNumber - 1 as keyof typeof STEP_DUMMY];
+              if (prevStep) {
+                goPrevStep(prevStep as StepInfo);
+              }
             }}
             disabled={stepNumber === 0}
           >

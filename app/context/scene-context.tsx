@@ -15,6 +15,7 @@ export type SceneContextType = {
   setStepNumber: (n: number) => void;
   persona: string | null;
   setPersona: (p: string | null) => void;
+  goPrevStep: (stepInfo: StepInfo) => void;
   goNextStep: (stepInfo: StepInfo) => void;
   answers: {
     step1: string;
@@ -52,9 +53,9 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
   const [category, setCategory] = useState("a");
   const [categoryNumber, setCategoryNumber] = useState<number | null>(1);
   const [stepNumber, setStepNumber] = useState(0);
-  const [videoPath, setVideoPath] = useState<string | null>(null);
+  const [videoPath, setVideoPath] = useState<string | null>("prologue");
   const [uiPath, setUiPath] = useState<string | null>(null);
-  const [bgmPath, setBgmPath] = useState<string | null>(null);
+  const [bgmPath, setBgmPath] = useState<string | null>("night_synth.m4a");
   const [sfxPath, setSfxPath] = useState<string | null>(null);
 
 
@@ -97,6 +98,14 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
     });
   }, [sceneNumber, category, categoryNumber, channel, senderId, stepNumber]);
 
+  const goPrevStep = (stepInfo: StepInfo) => {
+    setStepNumber(stepNumber - 1);
+    setVideoPath(stepInfo.video);
+    setUiPath(stepInfo.ui);
+    setBgmPath(stepInfo.bgm);
+    setSfxPath(stepInfo.sfx);
+  }
+
   const goNextStep = (stepInfo: StepInfo) => {
     setStepNumber(stepNumber + 1);
     setVideoPath(stepInfo.video);
@@ -120,6 +129,7 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
         setStepNumber,
         persona,
         setPersona,
+        goPrevStep,
         goNextStep,
         videoPath,
         setVideoPath,
