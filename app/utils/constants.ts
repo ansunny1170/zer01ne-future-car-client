@@ -79,7 +79,7 @@ export const STEP_DUMMY = {
     },
     2: {
         "ui": "navigation_alert.png",
-        "bgm": "pop_dance.m4a",
+        "bgm": "bosanova.m4a",
         "sfx": "car_alert", 
         "video": "city_day",
         "text": `현재 시각 15시 30분. 차량이 뮤지컬 공연장까지 실시간 경로를 분석합니다.\n\nHUD에 도심 배경과 함께 빠른 경로 탐색 알림이 표시됩니다.\n\n비서: "예상 도착 시간 16시 02분. 공연 시작까지 30분 이내로 이동해야 합니다."`,

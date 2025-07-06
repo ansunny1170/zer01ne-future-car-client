@@ -8,10 +8,11 @@ import { useScene } from "../context/scene-context";
 import { AnimatePresence, motion } from "framer-motion";
 import { STEP_DUMMY } from "../utils/constants";
 import { StepInfo } from "../\btype";
+import StepAudioPlayer from "../components/audio-player/step-audio-player";
 
 
 export default function Home() {
-  const { stepNumber, setStepNumber, lastSceneNumber, videoPath, goPrevStep } = useScene();
+  const { stepNumber, setStepNumber, lastSceneNumber, videoPath, bgmPath, goPrevStep } = useScene();
 
   const fadeVariants = {
     initial: { opacity: 0 },
@@ -69,12 +70,14 @@ export default function Home() {
     <div className="flex flex-col items-start justify-center text-left h-screen cursor-none123 overflow-hidden">
 
       <div className="absolute top-4 right-4 text-white z-10 bg-amber-200">
-        [DEBUG] videoPath: {videoPath}
+        [DEBUG] videoPath: {videoPath} / bgmPath: {bgmPath}
       </div>
       
       <StepVideoPlayer
         direction="center"
       />
+
+      <StepAudioPlayer/>
 
       {/* <div className="hidden">
         <audio 
