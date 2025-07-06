@@ -2,12 +2,13 @@
 
 import Step0 from "../components/Steps/step0";
 import Step1 from "../components/Steps/step1";
+import Step2 from "../components/Steps/step2";
 import VideoPlayer from "../components/video-player";
 import { useScene } from "../context/scene-context";
 
 
 export default function Home() {
-  const { stepNumber, setStepNumber, setCategory, setCategoryNumber, lastSceneNumber } = useScene();
+  const { stepNumber, setStepNumber, setCategory, setCategoryNumber, lastSceneNumber, persona } = useScene();
 
   const renderStep = () => {
     switch (stepNumber) {
@@ -16,7 +17,7 @@ export default function Home() {
       case 1:
         return <Step1/>;
       case 2:
-        return <Step1/>;
+        return <Step2/>;
       case 3:
         return <Step1/>;
       default:
@@ -38,6 +39,8 @@ export default function Home() {
           loop
         />
       </div> */}
+
+      <div className="absolute top-0 left-0 text-white z-10">[DEBUG] persona : {persona} / stepNumber : {stepNumber}</div>
 
       {renderStep()}
 

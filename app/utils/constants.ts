@@ -80,3 +80,5 @@ export const STEP_DUMMY = {
         }
     }
 }
+
+export const N8N_BASE_URL = "https://rockskotch.app.n8n.cloud/webhook-test"

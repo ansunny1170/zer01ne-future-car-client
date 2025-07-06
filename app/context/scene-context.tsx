@@ -12,6 +12,27 @@ export type SceneContextType = {
   lastSceneNumber: number;
   stepNumber: number;
   setStepNumber: (n: number) => void;
+  persona: string | null;
+  setPersona: (p: string | null) => void;
+  goNextStep: () => void;
+  answers: {
+    step1: string;
+    step2: string;
+    step3: string;
+    step4: string;
+    step5: string;
+    step6: string;
+    step7: string;
+  };
+  setAnswers: (a: {
+    step1: string;
+    step2: string;
+    step3: string;
+    step4: string;
+    step5: string;
+    step6: string;
+    step7: string;
+  }) => void;
 };
 
 const SceneContext = createContext<SceneContextType | undefined>(undefined);
@@ -21,6 +42,24 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
   const [category, setCategory] = useState("a");
   const [categoryNumber, setCategoryNumber] = useState<number | null>(1);
   const [stepNumber, setStepNumber] = useState(0);
+  const [persona, setPersona] = useState<string | null>(null);
+  const [answers, setAnswers] = useState<{
+    step1: string;
+    step2: string;
+    step3: string;
+    step4: string;
+    step5: string;
+    step6: string;
+    step7: string;
+  }>({
+    step1: "",
+    step2: "",
+    step3: "",
+    step4: "",
+    step5: "",
+    step6: "",
+    step7: "",
+  });
 
   // BroadcastChannel 동기화 로직 추가
   const senderId = useRef(Date.now() + Math.random()).current;
@@ -42,6 +81,10 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
     });
   }, [sceneNumber, category, categoryNumber, channel, senderId, stepNumber]);
 
+  const goNextStep = () => {
+    setStepNumber(stepNumber + 1);
+  }
+
   return (
     <SceneContext.Provider
       value={{
@@ -54,7 +97,12 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
         setCategoryNumber,
         lastSceneNumber,
         stepNumber,
-        setStepNumber
+        setStepNumber,
+        persona,
+        setPersona,
+        goNextStep,
+        answers,
+        setAnswers
       }}
     >
       {children}
