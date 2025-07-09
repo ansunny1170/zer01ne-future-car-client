@@ -22,6 +22,16 @@ export default function Step0() {
 
   return (
     <div className="pl-8">
+      <div className="absolute w-[230px] h-[230px] rounded-2xl">
+        {/* bg layer */}
+        <div className="w-full h-full rounded-2xl relative">
+          <p className="absolute inset-0 bg-radial-[at_50%_75%] from-indigo-400 to-sky-900/0 to-90% mix-blend-difference"></p>
+          <p className="absolute inset-0 bg-white/10 p-16 rounded-2xl backdrop-blur-md z-[1]"></p>
+        </div>
+
+        {/* content layer */}
+        <p className="text-center text-white absolute inset-0 flex items-center justify-center z-[2]">1234</p>
+      </div>
       {
         dialogTimeOut && (
           <div className="absolute inset-0">
