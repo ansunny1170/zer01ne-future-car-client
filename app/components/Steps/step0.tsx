@@ -25,10 +25,10 @@ export default function Step0() {
       <div className="relative w-fit">
         
         {/* 배경 블러 효과 */}
-        <div className="absolute inset-0 rounded-[32px] bg-linear-to-t from-sky-500 to-indigo-500 mix-blend-overlay">1234</div>
+        <div className="absolute inset-0 scale-90 rounded-[32px] bg-gradient-to-t from-sky-500 to-indigo-500 mix-blend-overlay"></div>
         
         {/* 그라데이션 테두리 */}
-        <div className="relative rounded-[32px] p-[1.5px] bg-[linear-gradient(to_right_top,rgba(255,255,255,0.8)_0%,rgba(255,255,255,0.4)_20%,rgba(255,255,255,0.2)_40%,rgba(255,255,255,0.1)_60%,rgba(255,255,255,0.2)_80%)]">
+        <div className="relative rounded-[32px] p-[1.5px] bg-[linear-gradient(to_top,rgba(255,255,255,0.95)_0%,rgba(255,255,255,0.8)_10%,rgba(255,255,255,0.2)_40%,rgba(255,255,255,0.1)_60%,rgba(255,255,255,0.2)_80%)]">
           {/* 내용 + 배경 */}
           <div className="animate-fade-in relative z-10 rounded-[31px] backdrop-blur-lg bg-white/5 px-8 py-6">
             
