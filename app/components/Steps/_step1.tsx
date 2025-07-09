@@ -1,12 +1,11 @@
 import { useScene } from "@/app/context/scene-context";
-import { N8N_BASE_URL } from "@/app/utils/constants";
 import { useState, useEffect } from "react";
 
 export default function Step1() {
     const personaUrl = "https://rockskotch.app.n8n.cloud/webhook/persona"
     const storyUrl = "https://rockskotch.app.n8n.cloud/webhook/storyteller"
     const [inputText, setInputText] = useState<string>("");
-    const { stepNumber, persona, setPersona, goNextStep } = useScene();
+    const { stepNumber, persona, setPersona } = useScene();
 
     const getPersona = async () => {
         const res = await fetch(personaUrl, {

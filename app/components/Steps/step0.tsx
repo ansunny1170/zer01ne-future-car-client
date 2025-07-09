@@ -22,36 +22,39 @@ export default function Step0() {
 
   return (
     <div className="pl-8">
-      <div className="absolute w-[230px] h-[230px] rounded-2xl">
-        {/* bg layer */}
-        <div className="w-full h-full rounded-2xl relative">
-          <p className="absolute inset-0 bg-radial-[at_50%_75%] from-indigo-400 to-sky-900/0 to-90% mix-blend-difference"></p>
-          <p className="absolute inset-0 bg-white/10 p-16 rounded-2xl backdrop-blur-md z-[1]"></p>
-        </div>
-
-        {/* content layer */}
-        <p className="text-center text-white absolute inset-0 flex items-center justify-center z-[2]">1234</p>
-      </div>
-      {
-        dialogTimeOut && (
-          <div className="absolute inset-0">
-            <QuestionArea
-              mainText={STEP_DUMMY[0].question?.title}
-              subText={STEP_DUMMY[0].question?.subtitle}
-              buttons={
-                {
-                  "시작": "시작"
-                }
-              }
-              className="center"
-            />
-            <div className="absolute top-0 -translate-x-full left-1/2 ">
-              <Speech keyword="시작" onTrigger={handleSpeechTrigger}/>
-            </div>
+      <div className="relative w-fit">
+        
+        {/* 배경 블러 효과 */}
+        <div className="absolute inset-0 rounded-[32px] bg-linear-to-t from-sky-500 to-indigo-500 mix-blend-overlay">1234</div>
+        
+        {/* 그라데이션 테두리 */}
+        <div className="relative rounded-[32px] p-[1.5px] bg-[linear-gradient(to_right_top,rgba(255,255,255,0.8)_0%,rgba(255,255,255,0.4)_20%,rgba(255,255,255,0.2)_40%,rgba(255,255,255,0.1)_60%,rgba(255,255,255,0.2)_80%)]">
+          {/* 내용 + 배경 */}
+          <div className="animate-fade-in relative z-10 rounded-[31px] backdrop-blur-lg bg-white/5 px-8 py-6">
+            
+            <div className="text-white text-6xl font-bold mb-2">78%</div>
+            <div className="text-white/80 text-xl">브레이크 패드 마모도</div>
+          
+            
           </div>
-        )
-      }
+        </div>
+      </div>
 
+      {dialogTimeOut && (
+        <div className="absolute inset-0">
+          <QuestionArea
+            mainText={STEP_DUMMY[0].question?.title}
+            subText={STEP_DUMMY[0].question?.subtitle}
+            buttons={{
+              "시작": "시작"
+            }}
+            className="center"
+          />
+          <div className="absolute top-0 -translate-x-full left-1/2">
+            <Speech keyword="시작" onTrigger={handleSpeechTrigger}/>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
