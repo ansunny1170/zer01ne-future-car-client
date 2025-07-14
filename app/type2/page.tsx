@@ -9,6 +9,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { STEP_DUMMY } from "../utils/constants";
 import { StepInfo } from "../\btype";
 import StepAudioPlayer from "../components/audio-player/step-audio-player";
+import PopupUI from "../components/ui/popup-ui";
 
 export default function Home() {
   const { stepNumber, setStepNumber, lastSceneNumber, videoPath, bgmPath, goPrevStep } = useScene();
@@ -91,6 +92,11 @@ export default function Home() {
       />
 
       <StepAudioPlayer/>
+
+      <PopupUI>
+        <div className="text-white text-6xl font-bold mb-2">99%</div>
+        <div className="text-white/80 text-xl">브레이크 패드 마모도</div>
+      </PopupUI>
 
       {/* <div className="hidden">
         <audio 
