@@ -48,22 +48,10 @@ declare global {
   }
 }
 
-export default function Speech({ keyword, onTrigger }: { keyword: string, onTrigger: () => void }) {
+export default function Speech({ onTrigger }: { onTrigger: (text: string) => void }) {
   const [finalText, setFinalText] = useState<string | null>(null)
-  const [keywordDetected, setKeywordDetected] = useState(false)
-
   const recognitionRef = useRef<SpeechRecognition | null>(null)
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null)
-
-  // 키워드 감지 함수
-  const checkKeyword = (text: string) => {
-    if (keyword && text.toLowerCase().includes(keyword.toLowerCase())) {
-      setKeywordDetected(true);
-      onTrigger();
-      console.log(`🎯 키워드 &quot;${keyword}&quot; 감지됨!`);
-      console.log(`키워드 "${keyword}" 감지됨!`);
-    }
-  };
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
@@ -77,7 +65,7 @@ export default function Speech({ keyword, onTrigger }: { keyword: string, onTrig
     recognition.lang = 'ko-KR'
 
     recognition.onstart = () => {
-      setKeywordDetected(false)
+      console.log("음성 인식 시작")
     }
 
     recognition.onresult = (event) => {
@@ -87,14 +75,11 @@ export default function Speech({ keyword, onTrigger }: { keyword: string, onTrig
 
       setFinalText(transcript)
 
-      // 키워드 확인
-      checkKeyword(transcript)
-
       // 무음 타이머 리셋
       if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current)
       silenceTimerRef.current = setTimeout(() => {
         recognition.stop()
-        onTrigger()
+        onTrigger(transcript)
       }, 3000)
     }
 
@@ -118,16 +103,10 @@ export default function Speech({ keyword, onTrigger }: { keyword: string, onTrig
       clearTimeout(startTimer)
       recognition.stop()
     }
-  }, [keyword, onTrigger])
+  }, [onTrigger])
 
   return (
     <div className="p-6 space-y-4">
-      {keywordDetected && (
-        <div className="p-4 bg-green-100 text-green-800 rounded animate-pulse">
-          🎯 키워드 &quot;{keyword}&quot; 감지됨!
-        </div>
-      )}
-
       <div className="p-4 bg-green-100 text-green-800 rounded">
         ✅ 음성인식 :<br />
         <strong>{finalText}</strong>

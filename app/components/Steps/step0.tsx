@@ -10,10 +10,10 @@ export default function Step0() {
   const [dialogTimeOut, setDialogTimeOut] = useState(false);
   const { mutateAsync: processSpeech } = useSpeechProcessing();
 
-  const handleSpeechTrigger = async () => {
+  const handleSpeechTrigger = async (ttsText: string) => {
     const session_id = new Date().getTime().toString();
     const is_new_session = true;
-    const user_message = "시작";
+    const user_message = ttsText;
 
     try {
       await processSpeech({session_id, user_message, is_new_session});
@@ -43,7 +43,7 @@ export default function Step0() {
             className="center"
           />
           <div className="absolute top-0 -translate-x-full left-1/2">
-            <Speech keyword="시작" onTrigger={handleSpeechTrigger}/>
+            <Speech onTrigger={handleSpeechTrigger}/>
           </div>
         </div>
       )}
