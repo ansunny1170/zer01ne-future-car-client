@@ -3,14 +3,24 @@ import { useScene } from "@/app/context/scene-context";
 import Speech from "../speech";
 import QuestionArea from "../Steps/question-area";
 import { STEP_DUMMY } from "@/app/utils/constants";
-
+import { useSpeechProcessing } from "@/app/hooks/useSpeechProcessing";
 
 export default function Step0() {
   const { setStepNumber } = useScene();
   const [dialogTimeOut, setDialogTimeOut] = useState(false);
+  const { mutateAsync: processSpeech } = useSpeechProcessing();
 
-  const handleSpeechTrigger = () => {
-    setStepNumber(1);
+  const handleSpeechTrigger = async () => {
+    const session_id = new Date().getTime().toString();
+    const is_new_session = true;
+    const user_message = "시작";
+
+    try {
+      await processSpeech({session_id, user_message, is_new_session});
+      setStepNumber(1);
+    } catch (error) {
+      console.error('Speech processing failed:', error);
+    }
   }
 
   useEffect(() => {

@@ -1,0 +1,30 @@
+import axios from 'axios';
+
+const axiosInstance = axios.create({
+  baseURL: '/api',
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json',
+  }
+});
+
+export interface SpeechResponse {
+  success: boolean;
+  response: string;
+}
+
+export const speechApi = {
+  processSpeech: async ({
+    session_id, user_message, is_new_session
+  }: {
+    session_id: string, user_message: string, is_new_session: boolean
+  }): Promise<SpeechResponse> => {
+    try {
+      const response = await axiosInstance.post('/scenario', { session_id, user_message, is_new_session });
+      return response.data;
+    } catch (error) {
+      console.error('Speech processing error:', error);
+      throw error;
+    }
+  },
+}; 
