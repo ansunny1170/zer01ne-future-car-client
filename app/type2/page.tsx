@@ -1,8 +1,8 @@
 "use client";
 
-import Step0 from "../components/Steps/step0";
-import Step1 from "../components/Steps/step1";
-import StepRepeat from "../components/Steps/step-repeat";
+import Step0 from "../components/steps/step0";
+import Step1 from "../components/steps/step1";
+import StepRepeat from "../components/steps/step-repeat";
 import StepVideoPlayer from "../components/video-player/step-video-player";
 import { useScene } from "../context/scene-context";
 import { AnimatePresence, motion } from "framer-motion";

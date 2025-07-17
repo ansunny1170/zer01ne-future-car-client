@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react";
 import { useScene } from "@/app/context/scene-context";
 import Speech from "../speech";
-import QuestionArea from "../Steps/question-area";
+import QuestionArea from "./question-area";
 import { STEP_DUMMY } from "@/app/utils/constants";
 import { useSpeechProcessing } from "@/app/hooks/useSpeechProcessing";
+import Loading from "../loading";
 
 export default function Step0() {
   const { setStepNumber } = useScene();
   const [dialogTimeOut, setDialogTimeOut] = useState(false);
-  const { mutateAsync: processSpeech } = useSpeechProcessing();
+  const { mutateAsync: processSpeech, isPending: isProcessing } = useSpeechProcessing();
 
   const handleSpeechTrigger = async (ttsText: string) => {
     const session_id = new Date().getTime().toString();
@@ -17,7 +18,7 @@ export default function Step0() {
 
     try {
       await processSpeech({session_id, user_message, is_new_session});
-      setStepNumber(1);
+      // setStepNumber(1);
     } catch (error) {
       console.error('Speech processing failed:', error);
     }
@@ -46,6 +47,10 @@ export default function Step0() {
             <Speech onTrigger={handleSpeechTrigger}/>
           </div>
         </div>
+      )}
+
+      {isProcessing && (
+        <Loading />
       )}
     </div>
   );
