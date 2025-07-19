@@ -36,12 +36,14 @@ export default function Step0() {
         <CloneTalk
           text={`안녕하세요. 저는 클론-21g입니다.\n저와 함께 미래차 경험을 시작해보시겠어요?`}
           keepLastLine={true}
-          onComplete={() => alert('complete')}
+          onComplete={() => setTalkingEnd(true)}
         />
 
-        <div className="">
-          <Speech onTrigger={handleSpeechTrigger}/>
-        </div>
+        {talkingEnd && (
+          <div className="animate-fade-in">
+            <Speech onTrigger={handleSpeechTrigger}/>
+          </div>
+        )}
       </div>
 
       {isProcessing && (

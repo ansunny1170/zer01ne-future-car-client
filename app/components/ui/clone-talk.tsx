@@ -15,7 +15,17 @@ export default function CloneTalk({text, keepLastLine = false, onComplete}: {tex
   const [currentIndex, setCurrentIndex] = useState(0);
   const lines = text.split("\n");
   
+  // 모든 timeout을 clear하는 유틸리티 함수
+  const clearAllTimeouts = () => {
+    let id = window.setTimeout(() => {}, 0);
+    while (id) {
+      window.clearTimeout(id);
+      id--;
+    }
+  };
+  
   useEffect(() => {
+    clearAllTimeouts();
     setMessages([]);
     setCurrentIndex(0);
     setIsComplete(false);
@@ -55,7 +65,11 @@ export default function CloneTalk({text, keepLastLine = false, onComplete}: {tex
     };
     
     showNextMessage();
-  }, [currentIndex]);
+
+    return () => {
+      clearAllTimeouts();
+    };
+  }, [currentIndex, lines.length, keepLastLine, onComplete]);
 
   return (
     <motion.div 
