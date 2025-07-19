@@ -1,10 +1,15 @@
+import { cn } from "@/app/utils/cn";
 import MusicIcon from "../icons/musix";
 import PlayerButtons from "../icons/player-buttons";
 import BasicBox from "./basic-box";
 
-export default function NavigationBox() {
+interface MusicPlayerBoxProps {
+  className?: string;
+}
+
+export default function MusicPlayerBox({ className }: MusicPlayerBoxProps) {
   return (
-    <BasicBox className="flex items-center gap-[16px]">
+    <BasicBox className={cn("flex items-center gap-[16px]", className)}>
         <div className="w-[62px] h-[62px] rounded-[7px] bg-[#C6C6C6]/20 grow flex items-center justify-center">
             <MusicIcon />
         </div>

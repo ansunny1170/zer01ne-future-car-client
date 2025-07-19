@@ -1,15 +1,15 @@
-"use client";
+  "use client";
 
 import Step0 from "../components/steps/step0";
 import Step1 from "../components/steps/step1";
 import StepRepeat from "../components/steps/step-repeat";
-import StepVideoPlayer from "../components/video-player/step-video-player";
 import { useScene } from "../context/scene-context";
 import { AnimatePresence, motion } from "framer-motion";
 import { STEP_DUMMY } from "../utils/constants";
 import { StepInfo } from "../\btype";
 import StepAudioPlayer from "../components/audio-player/step-audio-player";
 import FixedLayout from "../components/fixed-layout";
+import CloneTalk from "../components/ui/clone-talk";
 
 export default function Home() {
   const { stepNumber, setStepNumber, lastSceneNumber, videoPath, bgmPath, goPrevStep } = useScene();
@@ -88,6 +88,8 @@ export default function Home() {
       </div> */}
 
       <FixedLayout/>
+
+      <CloneTalk/>
 
       <img src="/assets/images/bg_test.png" alt="fixed-layout" className="w-full object-cover" />
       

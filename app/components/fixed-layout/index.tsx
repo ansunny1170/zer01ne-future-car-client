@@ -8,7 +8,7 @@ export default function FixedLayout() {
     // 현재 시각 6:32 AM 포맷으로 가져오기
 
     return (
-        <div className="absolute inset-0 z-10">
+        <div className="absolute inset-0 z-10 perspective-1000">
             {/* 좌우 그라데이션 */}
             <p className="fixed left-0 top-0 w-1/4 h-full bg-gradient-to-r from-black/50 to-black/0"/>
             <p className="fixed right-0 top-0 w-1/4 h-full bg-gradient-to-l from-black/50 to-black/0"/>
@@ -25,14 +25,20 @@ export default function FixedLayout() {
             </div>
 
             {/* 하단 좌측 영역 */}
-            <div className="fixed right-1/2 bottom-[24px] -translate-x-[128px] flex gap-[21px]">
-                <ProgressBox />
+            <div className="fixed right-1/2 bottom-[24px] -translate-x-[110px] flex gap-[21px]">
+                <div className="rotate-y--15">
+                    <ProgressBox/>
+                </div>
+
+                
             </div>
 
             {/* 하단 우측 영역 */}
-            <div className="fixed left-1/2 bottom-[24px] translate-x-[128px] flex gap-[21px]">
-                <NavigationBox />
-                <MusicPlayerBox />
+            <div className="fixed left-1/2 bottom-[24px] translate-x-[110px] ">
+                <div className="flex gap-[21px] rotate-y-15">
+                    <NavigationBox />
+                    <MusicPlayerBox />
+                </div>
             </div>
 
 
