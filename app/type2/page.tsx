@@ -9,10 +9,10 @@ import { STEP_DUMMY } from "../utils/constants";
 import { StepInfo } from "../\btype";
 import StepAudioPlayer from "../components/audio-player/step-audio-player";
 import FixedLayout from "../components/fixed-layout";
-import CloneTalk from "../components/ui/clone-talk";
+import StepVideoPlayer from "../components/video-player/step-video-player";
 
 export default function Home() {
-  const { stepNumber, setStepNumber, lastSceneNumber, videoPath, bgmPath, goPrevStep } = useScene();
+  const { stepNumber, setStepNumber, lastSceneNumber, goPrevStep } = useScene();
 
   const fadeVariants = {
     initial: { opacity: 0 },
@@ -87,15 +87,17 @@ export default function Home() {
         [DEBUG] videoPath: {videoPath} / bgmPath: {bgmPath}
       </div> */}
 
-      <FixedLayout/>
+      {
+        stepNumber > 1 && (
+          <FixedLayout/>
+        )
+      }
 
-      <CloneTalk/>
-
-      <img src="/assets/images/bg_test.png" alt="fixed-layout" className="w-full object-cover" />
+      {/* <img src="/assets/images/bg_test.png" alt="fixed-layout" className="w-full object-cover" /> */}
       
-      {/* <StepVideoPlayer
+      <StepVideoPlayer
         direction="center"
-      /> */}
+      />
 
       <StepAudioPlayer/>
 

@@ -8,6 +8,7 @@ interface TextAnimationProps {
     showDuration?: number;
     hideDuration?: number;
     nextLineDuration?: number;
+    keepLastLine?: boolean;
     className?: string;
 }
 
@@ -18,6 +19,7 @@ export default function TextAnimation({
     showDuration = 1800,
     hideDuration = 1800,
     nextLineDuration = 2000,
+    keepLastLine = false,
     className
 }: TextAnimationProps) {
     const [currentLineIndex, setCurrentLineIndex] = useState(0);
@@ -40,29 +42,33 @@ export default function TextAnimation({
         
         // hideDuration 후 현재 줄을 숨김
         const hideTimer = setTimeout(() => {
-            setIsVisible(false);
+            if (!(keepLastLine && currentLineIndex === textGroups.length - 1)) {
+                setIsVisible(false);
+            }
         }, hideDuration);
         
         // nextLineDuration 후 다음 줄로 이동
         const nextLineTimer = setTimeout(() => {
-            setCurrentLineIndex(prev => prev + 1);
+            if (!(keepLastLine && currentLineIndex === textGroups.length - 1)) {
+                setCurrentLineIndex(prev => prev + 1);
+            }
         }, nextLineDuration);
         
         return () => {
             clearTimeout(hideTimer);
             clearTimeout(nextLineTimer);
         };
-    }, [currentLineIndex, textGroups.length, hideDuration, nextLineDuration, onComplete]);
+    }, [currentLineIndex, textGroups.length, hideDuration, nextLineDuration, onComplete, keepLastLine]);
     
     return (
         <div className={cn("whitespace-pre-wrap max-w-[90vw]", className)}>
-            {currentLineIndex < textGroups.length && (
+            {(currentLineIndex < textGroups.length || (keepLastLine && currentLineIndex === textGroups.length)) && (
                 <div 
                     className={`transition-opacity duration-500 ${
                         isVisible ? 'opacity-100' : 'opacity-0'
                     }`}
                 >
-                    {textGroups[currentLineIndex]}
+                    {textGroups[Math.min(currentLineIndex, textGroups.length - 1)]}
                 </div>
             )}
         </div>
