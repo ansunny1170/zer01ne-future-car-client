@@ -9,6 +9,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { STEP_DUMMY } from "../utils/constants";
 import { StepInfo } from "../\btype";
 import StepAudioPlayer from "../components/audio-player/step-audio-player";
+import FixedLayout from "../components/fixed-layout";
 
 export default function Home() {
   const { stepNumber, setStepNumber, lastSceneNumber, videoPath, bgmPath, goPrevStep } = useScene();
@@ -80,15 +81,19 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col items-start justify-center text-left h-screen cursor-none123 overflow-hidden">
+    <div className="flex flex-col items-start justify-center text-left w-full h-full overflow-hidden border-2 border-red-500">
 
-      <div className="absolute top-4 right-4 text-white z-10 bg-amber-200">
+      {/* <div className="absolute top-4 right-4 text-white z-10 bg-amber-200">
         [DEBUG] videoPath: {videoPath} / bgmPath: {bgmPath}
-      </div>
+      </div> */}
+
+      <FixedLayout/>
+
+      <img src="/assets/images/bg_test.png" alt="fixed-layout" className="w-full object-cover" />
       
-      <StepVideoPlayer
+      {/* <StepVideoPlayer
         direction="center"
-      />
+      /> */}
 
       <StepAudioPlayer/>
 
