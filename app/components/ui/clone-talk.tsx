@@ -2,20 +2,17 @@
 import { cn } from "@/app/utils/cn";
 import { motion, useAnimate, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
-
-const DUMMY_TEXT = "안녕하세요. 저는 인공지능 에이전트 조이입니다.\n오늘 날씨는 어때요? 기분은 어떠신가요?\n퇴근길에 맞는 노래를 들으며 퇴근하세요.";
-
 interface Message {
   text: string;
   isActive: boolean;
   id: number;
 }
 
-export default function CloneTalk() {
+export default function CloneTalk({text, keepLastLine = false}: {text: string, keepLastLine?: boolean}) {
   const [scope] = useAnimate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isComplete, setIsComplete] = useState(false);
-  const lines = DUMMY_TEXT.split("\n");
+  const lines = text.split("\n");
   
   useEffect(() => {
     let currentIndex = 0;
