@@ -31,12 +31,17 @@ const config: Config = {
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-out forwards',
+        'wave': 'wave 1s ease-in-out infinite',
       },
       keyframes: {
         fadeIn: {
           '0%': { opacity: '0' },
           '100%': { opacity: '1' },
         },
+        wave: {
+          '0%, 100%': { transform: 'scaleY(0.5)' },
+          '50%': { transform: 'scaleY(1.5)' },
+        }
       },
     },
   },

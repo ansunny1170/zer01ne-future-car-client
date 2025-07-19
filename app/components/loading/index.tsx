@@ -1,6 +1,6 @@
 export default function Loading() {
   return (
-    <div className="animate-fade-in absolute inset-0 flex flex-col gap-8 items-center justify-center backdrop-blur-sm bg-black/10">
+    <div className="animate-fade-in absolute inset-0 flex flex-col gap-8 items-center justify-center backdrop-blur-sm bg-black/10 z-[22]">
         <p>
             <svg className="animate-spin h-10 w-10 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

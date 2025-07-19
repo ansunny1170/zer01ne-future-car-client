@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import BasicBox from '../ui/basic-box';
 
 // Web Speech API 타입 정의
 interface SpeechRecognitionEvent extends Event {
@@ -106,11 +107,17 @@ export default function Speech({ onTrigger }: { onTrigger: (text: string) => voi
   }, [onTrigger])
 
   return (
-    <div className="p-6 space-y-4">
-      <div className="p-4 bg-green-100 text-green-800 rounded">
-        ✅ 음성인식 :<br />
+    <div className="flex flex-col gap-4 items-center justify-center">
+      <BasicBox className='flex items-center justify-center gap-4 p-4'>
+        <span className='inline-block w-[16px] h-[16px] bg-red-500 rounded-full animate-pulse'/>
+        {
+          !finalText && (
+            <strong className='opacity-60'>음성으로 '시작'을 알려주세요.</strong>
+          )
+        }
         <strong>{finalText}</strong>
-      </div>
+      </BasicBox>
     </div>
+    
   )
 }

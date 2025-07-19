@@ -8,15 +8,22 @@ interface Message {
   id: number;
 }
 
-export default function CloneTalk({text, keepLastLine = false}: {text: string, keepLastLine?: boolean}) {
+export default function CloneTalk({text, keepLastLine = false, onComplete}: {text: string, keepLastLine?: boolean, onComplete?: () => void}) {
   const [scope] = useAnimate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isComplete, setIsComplete] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const lines = text.split("\n");
   
   useEffect(() => {
-    let currentIndex = 0;
-    
+    setMessages([]);
+    setCurrentIndex(0);
+    setIsComplete(false);
+  }, [text]);
+
+  useEffect(() => {
+    if (currentIndex >= lines.length) return;
+
     const showNextMessage = () => {
       setMessages(prev => {
         const newMessages = prev.map(msg => ({
@@ -30,19 +37,25 @@ export default function CloneTalk({text, keepLastLine = false}: {text: string, k
         }];
       });
       
-      if (currentIndex === lines.length - 1) {
-        // 마지막 메시지 표시 후 3초 뒤에 페이드아웃
+      if (currentIndex === lines.length - 1 && !keepLastLine) {
         setTimeout(() => {
           setIsComplete(true);
         }, 3000);
       } else {
-        currentIndex++;
-        setTimeout(showNextMessage, 3000);
+        setTimeout(() => {
+          setCurrentIndex(prev => prev + 1);
+        }, 3000);
+      }
+
+      if (currentIndex === lines.length - 1 && keepLastLine) {
+        setTimeout(() => {
+          onComplete?.();
+        }, 3000);
       }
     };
     
     showNextMessage();
-  }, [lines.length]);
+  }, [currentIndex]);
 
   return (
     <motion.div 
