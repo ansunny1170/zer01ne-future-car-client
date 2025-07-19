@@ -81,7 +81,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col items-start justify-center text-left w-full h-full overflow-hidden border-2 border-red-500">
+    <div className="flex flex-col items-start justify-center text-left w-full h-full overflow-hidden">
 
       {/* <div className="absolute top-4 right-4 text-white z-10 bg-amber-200">
         [DEBUG] videoPath: {videoPath} / bgmPath: {bgmPath}
