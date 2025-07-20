@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { StepInfo } from '@/app/\btype';
+import { StepInfo } from '@/app/type';
 
 const axiosInstance = axios.create({
   baseURL: '/api',

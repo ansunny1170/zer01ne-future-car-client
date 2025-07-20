@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useRef, useEffect, useMemo } from "react";
-import { StepInfo } from "../\btype";
+import { StepInfo } from "../type";
 
 // Context에서 사용할 타입 정의
 export type SceneContextType = {

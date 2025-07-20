@@ -3,7 +3,7 @@ import QuestionButtons from "./question-buttons";
 import { motion } from "framer-motion";
 import Speech from "../speech";
 import { useScene } from "@/app/context/scene-context";
-import { StepInfo } from "@/app/\btype";
+import { StepInfo } from "@/app/type";
 import { useSpeechProcessing } from "@/app/hooks/useSpeechProcessing";
 import Loading from "../loading";
 

@@ -4,7 +4,7 @@ import { useSpeechProcessing } from "@/app/hooks/useSpeechProcessing";
 import Loading from "../loading";
 import CloneTalk from "../ui/clone-talk";
 import { useScene } from "@/app/context/scene-context";
-import { StepInfo } from "@/app/\btype";
+import { StepInfo } from "@/app/type";
 
 
 export default function Step0() {
