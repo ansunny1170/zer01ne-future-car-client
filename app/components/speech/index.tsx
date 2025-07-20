@@ -51,8 +51,27 @@ declare global {
 
 export default function Speech({ onTrigger }: { onTrigger: (text: string) => void }) {
   const [finalText, setFinalText] = useState<string | null>(null)
+  const [isListening, setIsListening] = useState(false)
   const recognitionRef = useRef<SpeechRecognition | null>(null)
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null)
+
+  const startRecognition = () => {
+    if (recognitionRef.current) {
+      setFinalText(null)
+      recognitionRef.current.start()
+    }
+  }
+
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.key.toLowerCase() === 's') {
+        startRecognition()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyPress)
+    return () => window.removeEventListener('keydown', handleKeyPress)
+  }, [])
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
@@ -67,6 +86,7 @@ export default function Speech({ onTrigger }: { onTrigger: (text: string) => voi
 
     recognition.onstart = () => {
       console.log("음성 인식 시작")
+      setIsListening(true)
     }
 
     recognition.onresult = (event) => {
@@ -86,11 +106,13 @@ export default function Speech({ onTrigger }: { onTrigger: (text: string) => voi
 
     recognition.onerror = (event) => {
       console.log(event)
+      setIsListening(false)
     }
 
     recognition.onend = () => {
       if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current)
       console.log("음성 인식 종료")
+      setIsListening(false)
     }
 
     recognitionRef.current = recognition
@@ -109,7 +131,7 @@ export default function Speech({ onTrigger }: { onTrigger: (text: string) => voi
   return (
     <div className="flex flex-col gap-4 items-center justify-center">
       <BasicBox className='flex items-center justify-center gap-4 p-4'>
-        <span className='inline-block w-[16px] h-[16px] bg-red-500 rounded-full animate-pulse'/>
+        <span className={`inline-block w-[16px] h-[16px] bg-red-500 rounded-full ${isListening ? 'animate-pulse' : ''}`}/>
         {
           !finalText && (
             <strong className='opacity-60'>음성으로 답변해주세요.</strong>
@@ -118,6 +140,5 @@ export default function Speech({ onTrigger }: { onTrigger: (text: string) => voi
         <strong>{finalText}</strong>
       </BasicBox>
     </div>
-    
   )
 }

@@ -45,7 +45,7 @@ export default function QuestionArea({
     
         try {
          const response = await processSpeech({session_id: session_id || "", user_message, is_new_session: false});
-         if(response?.현재_단계 !== "4/4 완료"){
+         if(response?.현재단계 === "4/4 완료" || response?.현재_단계 === "4/4 완료"){
             reStart();
             return;
          }

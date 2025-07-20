@@ -1,20 +1,26 @@
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
 import QuestionArea from "./question-area";
-import TextAnimation from "./text-animation";
-import { StepInfo } from "@/app/\btype";
 import { useScene } from "@/app/context/scene-context";
 import CloneTalk from "../ui/clone-talk";
 
 export default function StepRepeat() {
     const { stepInfo } = useScene();
-    const { question, choices, narrative } = stepInfo as StepInfo;
+    const { question, choices, narrative } = stepInfo || {};
     const [questionFlag, setQuestionFlag] = useState(false);
-
+    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     
     const handleAnimationComplete = () => {
         if (question) {
-            setQuestionFlag(true);
+            timeoutRef.current = setTimeout(() => {
+                setQuestionFlag(true);
+            }, 1000);
+        }
+
+        return () => {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+            }
         }
     };
     
@@ -29,8 +35,8 @@ export default function StepRepeat() {
                 {questionFlag && (
                     <QuestionArea 
                         mainText={question || ""} 
-                        buttons={choices.reduce((acc, choice) => {
-                            acc[choice.id] = choice.text;
+                        buttons={(choices || []).reduce((acc, choice) => {
+                            acc[choice?.id || ""] = choice?.text || "";
                             return acc;
                         }, {} as { [key: string]: string })} 
                     />
