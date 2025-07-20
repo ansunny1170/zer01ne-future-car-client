@@ -112,7 +112,7 @@ export default function Speech({ onTrigger }: { onTrigger: (text: string) => voi
         <span className='inline-block w-[16px] h-[16px] bg-red-500 rounded-full animate-pulse'/>
         {
           !finalText && (
-            <strong className='opacity-60'>음성으로 '시작'을 알려주세요.</strong>
+            <strong className='opacity-60'>음성으로 답변해주세요.</strong>
           )
         }
         <strong>{finalText}</strong>

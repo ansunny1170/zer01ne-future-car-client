@@ -1,18 +1,18 @@
   "use client";
 
 import Step0 from "../components/steps/step0";
-import Step1 from "../components/steps/step1";
 import StepRepeat from "../components/steps/step-repeat";
 import { useScene } from "../context/scene-context";
 import { AnimatePresence, motion } from "framer-motion";
 import { STEP_DUMMY } from "../utils/constants";
-import { StepInfo } from "../\btype";
 import StepAudioPlayer from "../components/audio-player/step-audio-player";
 import FixedLayout from "../components/fixed-layout";
 import StepVideoPlayer from "../components/video-player/step-video-player";
+import { useState } from "react";
 
 export default function Home() {
-  const { stepNumber, setStepNumber, lastSceneNumber, goPrevStep } = useScene();
+  const [debug, setDebug] = useState(false);
+  const { stepNumber, setStepNumber, lastSceneNumber, goPrevStep, stepInfo } = useScene();
 
   const fadeVariants = {
     initial: { opacity: 0 },
@@ -100,6 +100,24 @@ export default function Home() {
           >
             {stepNumber}
           </button>
+        )}
+
+        {
+          stepNumber > 0 && (
+            <div className="absolute top-4 left-16 max-h-[90vh] overflow-y-auto bg-white max-w-1/2 text-black px-4 py-2 rounded-md z-10"> 
+              <button
+                onClick={() => {
+                  setDebug(!debug);
+                }}
+              >
+                step info 디버깅
+              </button>
+              {debug && (
+                <pre>
+                  {JSON.stringify(stepInfo, null, 2)}
+                </pre>
+              )}
+          </div>
         )}
 
         {

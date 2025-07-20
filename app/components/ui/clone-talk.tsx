@@ -57,7 +57,7 @@ export default function CloneTalk({text, keepLastLine = false, onComplete}: {tex
         }, 3000);
       }
 
-      if (currentIndex === lines.length - 1 && keepLastLine) {
+      if (currentIndex === lines.length - 1) {
         setTimeout(() => {
           onComplete?.();
         }, 3000);
@@ -95,7 +95,7 @@ export default function CloneTalk({text, keepLastLine = false, onComplete}: {tex
             <motion.p
               key={message.id}
               className={cn(
-                "text-white text-center text-[52px] font-semibold",
+                "text-white text-center text-[52px] max-w-[50vw] break-keep font-semibold leading-[1.2]",
                 "shadow-sm absolute",
                 message.isActive 
                   ? 'opacity-100' 

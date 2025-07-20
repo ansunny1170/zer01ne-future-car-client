@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useRef, useEffect, useMemo } from "react";
 import { StepInfo } from "../\btype";
-import { STEP_DUMMY } from "../utils/constants";
 
 // Context에서 사용할 타입 정의
 export type SceneContextType = {
@@ -26,6 +25,9 @@ export type SceneContextType = {
   setSfxPath: (s: string | null) => void;
   stepInfo: StepInfo | null;
   setStepInfo: (s: StepInfo | null) => void;
+  sessionId: string | null;
+  setSessionId: (s: string | null) => void;
+  reStart: () => void;
 };
 
 const SceneContext = createContext<SceneContextType | undefined>(undefined);
@@ -40,6 +42,7 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
   const [bgmPath, setBgmPath] = useState<string | null>("night_synth.m4a");
   const [sfxPath, setSfxPath] = useState<string | null>(null);
   const [stepInfo, setStepInfo] = useState<StepInfo | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
 
   // BroadcastChannel 동기화 로직 추가
   const senderId = useRef(Date.now() + Math.random()).current;
@@ -62,18 +65,12 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
   }, [sceneNumber, category, categoryNumber, channel, senderId, stepNumber]);
 
   useEffect(() => {
-    setVideoPath(STEP_DUMMY[stepNumber as keyof typeof STEP_DUMMY]?.video || null);
-    setUiPath(STEP_DUMMY[stepNumber as keyof typeof STEP_DUMMY]?.ui || null);
-    setBgmPath(STEP_DUMMY[stepNumber as keyof typeof STEP_DUMMY]?.bgm || null);
-    setSfxPath(STEP_DUMMY[stepNumber as keyof typeof STEP_DUMMY]?.sfx || null);
+    setVideoPath(stepInfo?.assets[0]?.asset?.bg || null);
+    setUiPath(stepInfo?.assets[0]?.asset?.pop_ui || null);
+    setBgmPath(stepInfo?.assets[0]?.asset?.bgm || null);
+    setSfxPath(stepInfo?.assets[0]?.asset?.sfx || null);
 
-    // step 6에서 다음으로 넘어가면 (step 7) 부드러운 전환 후 0으로 이동
-    if (stepNumber === 7) {
-      setTimeout(() => {
-        setStepNumber(0);
-      }, 1000); // 1초 후 처음으로 돌아가기
-    }
-  }, [stepNumber]);
+  }, [stepInfo]);
 
   const goPrevStep = () => {
     setStepNumber(stepNumber - 1);
@@ -81,6 +78,16 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
 
   const goNextStep = () => {
     setStepNumber(stepNumber + 1);
+  }
+
+  const reStart = () => {
+    setStepNumber(0);
+    setSessionId(null);
+    setStepInfo(null);
+    setVideoPath(null);
+    setUiPath(null);
+    setBgmPath(null);
+    setSfxPath(null);
   }
 
   return (
@@ -107,7 +114,10 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
         sfxPath,
         setSfxPath,
         stepInfo,
-        setStepInfo
+        setStepInfo,
+        sessionId,
+        setSessionId,
+        reStart
       }}
     >
       {children}

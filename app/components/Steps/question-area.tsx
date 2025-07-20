@@ -1,6 +1,11 @@
 import { cn } from "@/app/utils/cn";
 import QuestionButtons from "./question-buttons";
 import { motion } from "framer-motion";
+import Speech from "../speech";
+import { useScene } from "@/app/context/scene-context";
+import { StepInfo } from "@/app/\btype";
+import { useSpeechProcessing } from "@/app/hooks/useSpeechProcessing";
+import Loading from "../loading";
 
 export default function QuestionArea({
     mainText,
@@ -18,8 +23,9 @@ export default function QuestionArea({
     // 한 글자씩 배열로 분리
     const mainChars = mainText ? mainText.split('') : [];
     const subChars = subText ? subText.split('') : [];
+    const { sessionId, setStepInfo, goNextStep, reStart } = useScene();
+    const { mutateAsync: processSpeech, isPending: isProcessing } = useSpeechProcessing();
 
-    // Framer Motion variants
     const container = {
         hidden: {},
         visible: {
@@ -33,8 +39,26 @@ export default function QuestionArea({
         visible: { opacity: 1 }
     };
 
+    const handleSpeechTrigger = async (ttsText: string) => {
+        const user_message = ttsText;
+        const session_id = sessionId;
+    
+        try {
+         const response = await processSpeech({session_id: session_id || "", user_message, is_new_session: false});
+         if(response?.현재_단계 !== "4/4 완료"){
+            reStart();
+            return;
+         }
+         setStepInfo(response as unknown as StepInfo);
+         goNextStep();
+        } catch (error) {
+          console.error('Speech processing failed:', error);
+        }
+      }
+
     return (
         <div className={cn("flex flex-col items-center justify-center h-full gap-16", className)}>
+            <Speech onTrigger={handleSpeechTrigger}/>
             <div>
                 {mainChars.length > 0 && (
                     <motion.h1
@@ -67,6 +91,10 @@ export default function QuestionArea({
                 )}
             </div>
             <QuestionButtons buttons={buttons} />
+
+            {isProcessing && (
+                <Loading />
+            )}
         </div>
     );
 }

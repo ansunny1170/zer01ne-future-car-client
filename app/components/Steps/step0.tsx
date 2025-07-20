@@ -10,10 +10,11 @@ import { StepInfo } from "@/app/\btype";
 export default function Step0() {
   const [talkingEnd, setTalkingEnd] = useState(false);
   const { mutateAsync: processSpeech, isPending: isProcessing } = useSpeechProcessing();
-  const { setStepInfo, goNextStep } = useScene();
+  const { setStepInfo, goNextStep, setSessionId } = useScene();
 
   const handleSpeechTrigger = async (ttsText: string) => {
     const session_id = new Date().getTime().toString();
+    setSessionId(session_id);
     const is_new_session = true;
     const user_message = ttsText;
 
