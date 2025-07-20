@@ -1,4 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const STEP_QUESTION_LIST = {
     scene1 : {
         mainText : "좋은 하루입니다. 주행을 시작하시겠어요?",

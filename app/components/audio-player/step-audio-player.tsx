@@ -115,6 +115,7 @@ export default function StepAudioPlayer({
             // nextAudioPath가 null이면 현재 오디오 유지
             prevNextAudioPathRef.current = nextAudioPath;
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [nextAudioPath, currentAudioPath]);
 
     // 새 오디오가 준비되고 사용자가 상호작용했을 때 크로스페이드 시작

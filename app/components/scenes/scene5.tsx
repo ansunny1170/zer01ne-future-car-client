@@ -30,6 +30,7 @@ export default function Scene5() {
     return () => {
       initialCategoryNumber.current = false;
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

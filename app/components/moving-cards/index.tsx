@@ -1,6 +1,6 @@
 import { useScene } from "@/app/context/scene-context";
 import { cn } from "@/app/utils/cn";
-import { PERSONA_LIST, STEP_DUMMY } from "@/app/utils/constants";
+import { PERSONA_LIST } from "@/app/utils/constants";
 import { motion } from "framer-motion";
 
 interface MovingCardsProps {
@@ -19,7 +19,7 @@ const Card = ({ text, index, rowNumber }: CardProps) => {
         <div
             key={`row${rowNumber}-${index}`}
             className="min-w-[300px] px-4 flex items-center justify-center"
-            onClick={() => goNextStep(STEP_DUMMY[2])}
+            onClick={() => goNextStep()}
         >
             <span className="text-lg font-medium text-amber-50 whitespace-nowrap">{text}</span>
         </div>

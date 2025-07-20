@@ -66,7 +66,7 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     setVideoPath(stepInfo?.assets[0]?.asset?.bg || null);
-    setUiPath(stepInfo?.assets[0]?.asset?.pop_ui || null);
+    setUiPath(stepInfo?.assets[0]?.asset?.pop_ui?.[0]?.key_name || null);
     setBgmPath(stepInfo?.assets[0]?.asset?.bgm || null);
     setSfxPath(stepInfo?.assets[0]?.asset?.sfx || null);
 

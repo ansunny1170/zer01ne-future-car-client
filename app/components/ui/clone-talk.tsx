@@ -69,6 +69,7 @@ export default function CloneTalk({text, keepLastLine = false, onComplete}: {tex
     return () => {
       clearAllTimeouts();
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentIndex, lines.length, keepLastLine, onComplete]);
 
   return (

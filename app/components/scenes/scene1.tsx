@@ -36,6 +36,7 @@ export default function Scene1() {
     return () => {
       initialCategoryNumber.current = false;
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -50,7 +51,7 @@ export default function Scene1() {
               className="center"
             />
             <div className="absolute top-0 -translate-x-full left-1/2 ">
-              <Speech keyword="시작" onTrigger={handleSpeechTrigger}/>
+              <Speech onTrigger={handleSpeechTrigger}/>
             </div>
           </div>
         )

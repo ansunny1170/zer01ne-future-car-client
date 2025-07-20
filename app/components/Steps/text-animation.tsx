@@ -16,7 +16,6 @@ export default function TextAnimation({
     text, 
     onComplete,
     groupSize = 2,
-    showDuration = 1800,
     hideDuration = 1800,
     nextLineDuration = 2000,
     keepLastLine = false,

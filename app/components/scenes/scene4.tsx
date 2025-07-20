@@ -15,6 +15,7 @@ export default function Scene4() {
 
     return () => clearTimeout(timeout);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return null;
