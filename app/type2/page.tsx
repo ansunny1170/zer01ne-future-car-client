@@ -1,13 +1,13 @@
   "use client";
 
-import Step0 from "../components/steps/step0";
-import StepRepeat from "../components/steps/step-repeat";
-import { useScene } from "../context/scene-context";
+import Step0 from "@/app/components/steps/step0";
+import StepRepeat from "@/app/components/steps/step-repeat";
+import { useScene } from "@/app/context/scene-context";
 import { AnimatePresence, motion } from "framer-motion";
-import { STEP_DUMMY } from "../utils/constants";
-import StepAudioPlayer from "../components/audio-player/step-audio-player";
-import FixedLayout from "../components/fixed-layout";
-import StepVideoPlayer from "../components/video-player/step-video-player";
+import { STEP_DUMMY } from "@/app/utils/constants";
+import StepAudioPlayer from "@/app/components/audio-player/step-audio-player";
+import FixedLayout from "@/app/components/fixed-layout";
+import StepVideoPlayer from "@/app/components/video-player/step-video-player";
 import { useState } from "react";
 
 export default function Home() {
