@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { StepInfo } from '@/app/\btype';
 
 const axiosInstance = axios.create({
   baseURL: '/api',
@@ -11,6 +12,7 @@ const axiosInstance = axios.create({
 export interface SpeechResponse {
   success: boolean;
   message: string;
+  data: StepInfo;
 }
 
 export const speechApi = {
