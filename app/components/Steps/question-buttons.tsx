@@ -1,5 +1,6 @@
 import { useScene } from "@/app/context/scene-context";
 import { useState, useEffect } from "react";
+import BasicBox from "../ui/basic-box";
 
 export default function QuestionButtons({
     buttons
@@ -31,21 +32,22 @@ export default function QuestionButtons({
             *:hover:bg-gray-300 *:hover:scale-[105%] *:hover:text-white *:hover:font-bold *:hover:outline-none
             *:focus:bg-gray-300 *:focus:scale-[105%] *:focus:text-white *:focus:font-bold *:focus:outline-none">
             {Object.keys(buttons).map((button, index) => (
-                <button
-                    key={index}
-                    className={`min-w-40 h-30 rounded-full bg-white/80 backdrop-blur-sm duration-200`}
-                    style={{
-                        opacity: visible >= index ? 1 : 0,
-                        transform: visible >= index ? "translateY(0)" : "translateY(20px)",
-                        transition: "all 0.3s, transform 0.5s",
-                        transitionDelay: `${index * 0.2}s`
-                    }}
-                    onClick={() => {
-                        setStepNumber(stepNumber + 1);
-                    }}
-                >
-                    {buttons[button]}
-                </button>
+                <BasicBox key={index} className="max-w-[25svw] break-keep items-center justify-center flex">
+                    <button
+                        key={index}
+                        style={{
+                            opacity: visible >= index ? 1 : 0,
+                            transform: visible >= index ? "translateY(0)" : "translateY(20px)",
+                            transition: "all 0.3s, transform 0.5s",
+                            transitionDelay: `${index * 0.2}s`
+                        }}
+                        onClick={() => {
+                            setStepNumber(stepNumber + 1);
+                        }}
+                    >
+                        {buttons[button]}
+                    </button>
+                </BasicBox>
             ))}
         </div>
     );

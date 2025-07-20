@@ -14,19 +14,8 @@ export type SceneContextType = {
   lastSceneNumber: number;
   stepNumber: number;
   setStepNumber: (n: number) => void;
-  persona: string | null;
-  setPersona: (p: string | null) => void;
-  goPrevStep: (stepInfo: StepInfo) => void;
-  goNextStep: (stepInfo: StepInfo) => void;
-  answers: {
-    step1: string;
-    step2: string;
-    step3: string;
-    step4: string;
-    step5: string;
-    step6: string;
-    step7: string;
-  };
+  goPrevStep: () => void;
+  goNextStep: () => void;
   videoPath: string | null;
   setVideoPath: (v: string | null) => void;
   uiPath: string | null;
@@ -37,16 +26,6 @@ export type SceneContextType = {
   setSfxPath: (s: string | null) => void;
   stepInfo: StepInfo | null;
   setStepInfo: (s: StepInfo | null) => void;
-
-  setAnswers: (a: {
-    step1: string;
-    step2: string;
-    step3: string;
-    step4: string;
-    step5: string;
-    step6: string;
-    step7: string;
-  }) => void;
 };
 
 const SceneContext = createContext<SceneContextType | undefined>(undefined);
@@ -61,25 +40,6 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
   const [bgmPath, setBgmPath] = useState<string | null>("night_synth.m4a");
   const [sfxPath, setSfxPath] = useState<string | null>(null);
   const [stepInfo, setStepInfo] = useState<StepInfo | null>(null);
-
-  const [persona, setPersona] = useState<string | null>(null);
-  const [answers, setAnswers] = useState<{
-    step1: string;
-    step2: string;
-    step3: string;
-    step4: string;
-    step5: string;
-    step6: string;
-    step7: string;
-  }>({
-    step1: "",
-    step2: "",
-    step3: "",
-    step4: "",
-    step5: "",
-    step6: "",
-    step7: "",
-  });
 
   // BroadcastChannel 동기화 로직 추가
   const senderId = useRef(Date.now() + Math.random()).current;
@@ -136,8 +96,6 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
         lastSceneNumber,
         stepNumber,
         setStepNumber,
-        persona,
-        setPersona,
         goPrevStep,
         goNextStep,
         videoPath,
@@ -148,8 +106,6 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
         setBgmPath,
         sfxPath,
         setSfxPath,
-        answers,
-        setAnswers,
         stepInfo,
         setStepInfo
       }}

@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 import QuestionArea from "./question-area";
 import TextAnimation from "./text-animation";
 import { StepInfo } from "@/app/\btype";
+import { useScene } from "@/app/context/scene-context";
 
-export default function StepRepeat({stepInfo}: {stepInfo: StepInfo}) {
-    const { ui, bgm, sfx, video, text, question } = stepInfo;
+export default function StepRepeat() {
+    const { stepInfo } = useScene();
+    const { assets, question, choices, narrative } = stepInfo as StepInfo;
     const [questionFlag, setQuestionFlag] = useState(false);
 
     useEffect(() => {
@@ -23,24 +25,23 @@ export default function StepRepeat({stepInfo}: {stepInfo: StepInfo}) {
     return (
         <div className="absolute inset-0 text-amber-50 text-xl flex flex-col items-center justify-center text-center">
             <div className="absolute top-0">
-                <h1>{ui}</h1>
-                <h1>{bgm}</h1>
-                <h1>{sfx}</h1>
-                <h1>{video}</h1>
+                {assets.map((asset) => (
+                    <h1 key={asset.id}>{asset.text}</h1>
+                ))}
             </div>
 
             <div className="text-2xl">
                 {questionFlag ? (
                     <QuestionArea 
-                        mainText={question?.title || ""} 
-                        buttons={question?.content?.reduce((acc, item) => {
-                            acc[item.main_text] = item.sub_text;
+                        mainText={question || ""} 
+                        buttons={choices.reduce((acc, choice) => {
+                            acc[choice.id] = choice.text;
                             return acc;
-                        }, {} as { [key: string]: string }) || {}} 
+                        }, {} as { [key: string]: string })} 
                     />
                 ) : (
                     <TextAnimation 
-                        text={text || ""}
+                        text={narrative || ""}
                         onComplete={handleAnimationComplete}
                         groupSize={2}
                         hideDuration={1800}

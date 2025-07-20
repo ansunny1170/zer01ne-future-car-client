@@ -10,7 +10,7 @@ const axiosInstance = axios.create({
 
 export interface SpeechResponse {
   success: boolean;
-  response: string;
+  message: string;
 }
 
 export const speechApi = {

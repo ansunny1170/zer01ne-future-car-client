@@ -25,7 +25,7 @@ export default function FixedLayout() {
             </div>
 
             {/* 하단 좌측 영역 */}
-            <div className="fixed right-1/2 bottom-[24px] -translate-x-[110px] flex gap-[21px]">
+            <div className="fixed right-1/2 bottom-[26px] -translate-x-[7.5vw] flex gap-[21px]">
                 <div className="rotate-y--15">
                     <ProgressBox/>
                 </div>
@@ -34,7 +34,7 @@ export default function FixedLayout() {
             </div>
 
             {/* 하단 우측 영역 */}
-            <div className="fixed left-1/2 bottom-[24px] translate-x-[110px] ">
+            <div className="fixed left-1/2 bottom-[26px] translate-x-[7.5vw] ">
                 <div className="flex gap-[21px] rotate-y-15">
                     <NavigationBox />
                     <MusicPlayerBox />

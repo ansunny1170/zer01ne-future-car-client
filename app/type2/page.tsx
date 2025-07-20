@@ -35,48 +35,19 @@ export default function Home() {
             <Step0/>
           </motion.div>
         );
-      case 1:
-        return (
-          <motion.div
-            key="step1"
-            variants={fadeVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={{ duration: 0.2 }}
-          >
-            <Step1/>
-          </motion.div>
-        );
-      case 7:
-        return (
-          <motion.div
-            key="step7"
-            variants={fadeVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={{ duration: 0.2 }}
-          >
-            <StepRepeat stepInfo={STEP_DUMMY[7 as keyof typeof STEP_DUMMY] as StepInfo}/>
-          </motion.div>
-        );
       default:
-        if (stepNumber >= 2 && stepNumber <= 6) {
-          return (
-            <motion.div
-              key={`step${stepNumber}`}
-              variants={fadeVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={{ duration: 0.2 }}
-            >
-              <StepRepeat stepInfo={STEP_DUMMY[stepNumber as keyof typeof STEP_DUMMY] as StepInfo}/>
-            </motion.div>
-          );
-        }
-        return null;
+        return (
+          <motion.div
+            key={`step${stepNumber}`}
+            variants={fadeVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 0.2 }}
+          >
+            <StepRepeat/>
+          </motion.div>
+        );
     }
   };
 
@@ -88,7 +59,7 @@ export default function Home() {
       </div> */}
 
       {
-        stepNumber > 1 && (
+        stepNumber > 0 && (
           <FixedLayout/>
         )
       }
@@ -122,7 +93,7 @@ export default function Home() {
             onClick={() => {
               const prevStep = STEP_DUMMY[stepNumber - 1 as keyof typeof STEP_DUMMY];
               if (prevStep) {
-                goPrevStep(prevStep as StepInfo);
+                goPrevStep();
               }
             }}
             disabled={stepNumber === 0}

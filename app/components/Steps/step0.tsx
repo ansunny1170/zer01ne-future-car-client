@@ -1,12 +1,16 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Speech from "../speech";
 import { useSpeechProcessing } from "@/app/hooks/useSpeechProcessing";
 import Loading from "../loading";
 import CloneTalk from "../ui/clone-talk";
+import { useScene } from "@/app/context/scene-context";
+import { StepInfo } from "@/app/\btype";
+
 
 export default function Step0() {
   const [talkingEnd, setTalkingEnd] = useState(false);
   const { mutateAsync: processSpeech, isPending: isProcessing } = useSpeechProcessing();
+  const { setStepInfo, goNextStep } = useScene();
 
   const handleSpeechTrigger = async (ttsText: string) => {
     const session_id = new Date().getTime().toString();
@@ -14,8 +18,9 @@ export default function Step0() {
     const user_message = ttsText;
 
     try {
-      await processSpeech({session_id, user_message, is_new_session});
-      // setStepNumber(1);
+     const response = await processSpeech({session_id, user_message, is_new_session});
+     setStepInfo(response as unknown as StepInfo);
+     goNextStep();
     } catch (error) {
       console.error('Speech processing failed:', error);
     }

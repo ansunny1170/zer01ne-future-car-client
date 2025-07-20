@@ -38,7 +38,7 @@ export default function QuestionArea({
             <div>
                 {mainChars.length > 0 && (
                     <motion.h1
-                        className="text-2xl font-bold text-white"
+                        className="text-[32px] leading-[1.2] font-bold text-white break-keep max-w-[50vw]"
                         variants={container}
                         initial="hidden"
                         animate="visible"
@@ -52,7 +52,7 @@ export default function QuestionArea({
                 )}
                 {subChars.length > 0 && (
                     <motion.p
-                        className="text-lg text-white/60 font-bold pt-2"
+                        className="text-lg text-white/60 font-bold pt-2 break-keep max-w-[50vw]"
                         variants={container}
                         initial="hidden"
                         animate="visible"
