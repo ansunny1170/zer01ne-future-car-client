@@ -1,10 +1,10 @@
 import { useRef, useState } from "react";
 import QuestionArea from "./question-area";
-import { useScene } from "@/app/context/scene-context";
+import { useScene } from "@/context/scene-context";
 import CloneTalk from "../ui/clone-talk";
 
 export default function StepRepeat() {
-    const { stepInfo } = useScene();
+    const { stepInfo } = useScene();    
     const { question, choices, narrative } = stepInfo || {};
     const [questionFlag, setQuestionFlag] = useState(false);
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);

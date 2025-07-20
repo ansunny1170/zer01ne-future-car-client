@@ -1,7 +1,7 @@
-import { cn } from "@/app/utils/cn";
+import { cn } from "@/utils/cn";
 import { useState, useEffect } from "react";
 
-interface TextAnimationProps {
+interface TextAnimationProps {  
     text: string;
     onComplete?: () => void;
     groupSize?: number;

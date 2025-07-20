@@ -1,6 +1,6 @@
-import { useScene } from "@/app/context/scene-context";
-import { cn } from "@/app/utils/cn";
-import { PERSONA_LIST } from "@/app/utils/constants";
+import { useScene } from "@/context/scene-context";
+import { cn } from "@/utils/cn";
+import { PERSONA_LIST } from "@/utils/constants";
 import { motion } from "framer-motion";
 
 interface MovingCardsProps {

@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-img-element */
-import { cn } from "@/app/utils/cn";
+import { cn } from "@/utils/cn";
 import { motion, useAnimate, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 interface Message {

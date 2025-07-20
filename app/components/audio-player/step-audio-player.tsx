@@ -1,4 +1,4 @@
-import { useScene } from '@/app/context/scene-context';
+import { useScene } from '@/context/scene-context';
 import { useEffect, useRef, useState } from 'react';
 
 export default function StepAudioPlayer({ 

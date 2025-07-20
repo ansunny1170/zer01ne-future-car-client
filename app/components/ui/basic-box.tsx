@@ -1,4 +1,4 @@
-import { cn } from "@/app/utils/cn";
+import { cn } from "@/utils/cn";
 
 export default function BasicBox({ children, className }: { children: React.ReactNode, className?: string }) {
     return (

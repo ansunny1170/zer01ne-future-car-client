@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useScene } from "@/app/context/scene-context";
+import { useScene } from "@/context/scene-context";
 
 export default function Scene6() {
   const { setCategoryNumber, setSceneNumber, sceneNumber, setCategory } = useScene();

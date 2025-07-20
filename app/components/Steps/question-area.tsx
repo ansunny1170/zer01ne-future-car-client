@@ -1,10 +1,10 @@
-import { cn } from "@/app/utils/cn";
+import { cn } from "@/utils/cn";
 import QuestionButtons from "./question-buttons";
 import { motion } from "framer-motion";
-import Speech from "../speech";
-import { useScene } from "@/app/context/scene-context";
-import { StepInfo } from "@/app/type";
-import { useSpeechProcessing } from "@/app/hooks/useSpeechProcessing";
+import Speech from "../speech"; 
+import { useScene } from "@/context/scene-context";
+import { StepInfo } from "@/type";
+import { useSpeechProcessing } from "@/hooks/useSpeechProcessing";
 import Loading from "../loading";
 
 export default function QuestionArea({

@@ -1,5 +1,5 @@
-import { useScene } from '@/app/context/scene-context';
-import { cn } from '@/app/utils/cn';
+import { useScene } from '@/context/scene-context';
+import { cn } from '@/utils/cn';
 import { useEffect, useRef, useState } from 'react';
 
 export default function VideoPlayer({ direction, className }:

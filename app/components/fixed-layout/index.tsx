@@ -1,4 +1,4 @@
-import { getFormattedTime } from "@/app/utils";
+import { getFormattedTime } from "@/utils";
 import MusicPlayerBox from "../ui/music-player-box";
 import NavigationBox from "../ui/navigation-box";
 import ProgressBox from "../ui/progress-box";

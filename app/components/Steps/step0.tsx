@@ -1,13 +1,13 @@
 import { useState } from "react";
 import Speech from "../speech";
-import { useSpeechProcessing } from "@/app/hooks/useSpeechProcessing";
+import { useSpeechProcessing } from "@/hooks/useSpeechProcessing";
 import Loading from "../loading";
 import CloneTalk from "../ui/clone-talk";
-import { useScene } from "@/app/context/scene-context";
-import { StepInfo } from "@/app/type";
+import { useScene } from "@/context/scene-context";
+import { StepInfo } from "@/type";
 
 
-export default function Step0() {
+export default function Step0() { 
   const [talkingEnd, setTalkingEnd] = useState(false);
   const { mutateAsync: processSpeech, isPending: isProcessing } = useSpeechProcessing();
   const { setStepInfo, goNextStep, setSessionId } = useScene();

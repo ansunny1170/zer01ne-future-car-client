@@ -1,8 +1,8 @@
-import { random } from "@/app/utils";
-import { SCENE_LIST, STEP_QUESTION_LIST } from "@/app/utils/constants";
+import { random } from "@/utils";
+import { SCENE_LIST, STEP_QUESTION_LIST } from "@/utils/constants";
 import { useEffect, useRef, useState } from "react";
 import QuestionArea from "./question-area";
-import { useScene } from "@/app/context/scene-context";
+import { useScene } from "@/context/scene-context";
 
 type Scene4Category = keyof typeof SCENE_LIST.scene4;
 

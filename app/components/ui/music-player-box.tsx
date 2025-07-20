@@ -1,4 +1,4 @@
-import { cn } from "@/app/utils/cn";
+import { cn } from "@/utils/cn";
 import MusicIcon from "../icons/musix";
 import PlayerButtons from "../icons/player-buttons";
 import BasicBox from "./basic-box";

@@ -1,4 +1,4 @@
-import { getFormattedTime } from "@/app/utils";
+import { getFormattedTime } from "@/utils";
 import BasicBox from "./basic-box";
 
 export default function ProgressBox({

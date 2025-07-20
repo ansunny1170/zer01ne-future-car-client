@@ -1,4 +1,4 @@
-import { STEP_DUMMY } from "@/app/utils/constants";
+import { STEP_DUMMY } from "@/utils/constants";
 import MovingCards from "../moving-cards";
 import { motion } from "framer-motion";
 
@@ -9,7 +9,7 @@ export default function Step1() {
         hidden: { opacity: 1 },
         visible: {
             opacity: 1,
-            transition: {
+            transition: {       
                 staggerChildren: 0.1,  // 글자 간 딜레이 조정
                 delayChildren: 0.3     // 전체 시작 전 딜레이
             }
