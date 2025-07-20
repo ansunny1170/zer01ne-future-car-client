@@ -27,6 +27,7 @@ export interface StepInfo {
     assets: AssetItem[];
     question: string;
     choices: Choice[];
-    현재_단계: string | null;
+    현재_단계?: string | null;
+    현재단계?: string | null;
     epilogue: string | null;
 }
