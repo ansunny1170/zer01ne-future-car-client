@@ -64,22 +64,13 @@ export default function Home() {
         )
       }
 
-      {/* <img src="/assets/images/bg_test.png" alt="fixed-layout" className="w-full object-cover" /> */}
+      <img src="/assets/images/bg_test.png" alt="fixed-layout" className="w-full object-cover" />
       
       <StepVideoPlayer
         direction="center"
       />
 
       <StepAudioPlayer/>
-
-      {/* <div className="hidden">
-        <audio 
-          key={category}
-          src={`/audios/${category}_music.m4a`} 
-          autoPlay
-          loop
-        />
-      </div> */}
 
       <AnimatePresence mode="wait">
         {renderStep()}
