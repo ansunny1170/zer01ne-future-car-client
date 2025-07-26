@@ -40,7 +40,7 @@ export default function Step0() {
           keepLastLine={true}
         /> */}
         <CloneTalk
-          text={`안녕하세요. 저는 클론-21g입니다.\n저와 함께 미래차 경험을 시작해보시겠어요?`}
+          text={`안녕하세요. 저는 클론-21g입니다.\n저와 함께 미래차 경험을 시작해보시겠어요?\n테스트문장입니다.`}
           keepLastLine={true}
           onComplete={() => setTalkingEnd(true)}
         />

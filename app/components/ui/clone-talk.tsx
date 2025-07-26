@@ -14,6 +14,7 @@ export default function CloneTalk({text, keepLastLine = false, onComplete}: {tex
   const [isComplete, setIsComplete] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const lines = text.split("\n");
+  const timeout = 3000;
   
   // 모든 timeout을 clear하는 유틸리티 함수
   const clearAllTimeouts = () => {
@@ -34,6 +35,18 @@ export default function CloneTalk({text, keepLastLine = false, onComplete}: {tex
   useEffect(() => {
     if (currentIndex >= lines.length) return;
 
+    if (currentIndex === 0) {
+      setMessages([{ 
+        text: lines[0], 
+        isActive: true,
+        id: 0 
+      }]);
+      setTimeout(() => {
+        setCurrentIndex(1);
+      }, timeout);
+      return;
+    }
+
     const showNextMessage = () => {
       setMessages(prev => {
         const newMessages = prev.map(msg => ({
@@ -50,17 +63,17 @@ export default function CloneTalk({text, keepLastLine = false, onComplete}: {tex
       if (currentIndex === lines.length - 1 && !keepLastLine) {
         setTimeout(() => {
           setIsComplete(true);
-        }, 3000);
+        }, timeout);
       } else {
         setTimeout(() => {
           setCurrentIndex(prev => prev + 1);
-        }, 3000);
+        }, timeout);
       }
 
       if (currentIndex === lines.length - 1) {
         setTimeout(() => {
           onComplete?.();
-        }, 3000);
+        }, timeout);
       }
     };
     
@@ -91,8 +104,8 @@ export default function CloneTalk({text, keepLastLine = false, onComplete}: {tex
         ref={scope}
         className="fixed bottom-[70%] left-1/2 -translate-x-1/2 flex flex-col items-center w-full"
       >
-        <AnimatePresence mode="popLayout">
-          {messages.map((message) => (
+        <AnimatePresence mode="popLayout" initial={false}>
+          {messages.slice(-2).map((message) => (
             <motion.p
               key={message.id}
               className={cn(
