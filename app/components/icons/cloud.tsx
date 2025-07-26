@@ -10,7 +10,7 @@ export default function CloudIcon() {
             </g>
             </g>
             <defs>
-            <filter id="filter0_dd_132_658" x="-26.135" y="-2.885" width="76.27" height="70.27" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+            <filter id="filter0_dd_132_658" x="-26.135" y="-2.885" width="76.27" height="70.27" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
             <feFlood floodOpacity="0" result="BackgroundImageFix"/>
             <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
             <feOffset dy="20.25"/>

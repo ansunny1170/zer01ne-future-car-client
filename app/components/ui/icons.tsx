@@ -22,8 +22,8 @@ export const Icons = {
                 <path d="M34.9588 52.6429C32.3903 52.6429 30.2071 51.7439 28.4092 49.946C26.6112 48.1481 25.7123 45.9649 25.7123 43.3964H31.8766C31.8766 44.2697 32.172 45.0017 32.7627 45.5924C33.3535 46.1832 34.0855 46.4785 34.9588 46.4785C35.8321 46.4785 36.5641 46.1832 37.1548 45.5924C37.7456 45.0017 38.0409 44.2697 38.0409 43.3964C38.0409 42.5231 37.7456 41.7911 37.1548 41.2003C36.5641 40.6096 35.8321 40.3142 34.9588 40.3142H5.67822V34.1499H34.9588C37.5272 34.1499 39.7104 35.0489 41.5084 36.8468C43.3063 38.6447 44.2053 40.8279 44.2053 43.3964C44.2053 45.9649 43.3063 48.1481 41.5084 49.946C39.7104 51.7439 37.5272 52.6429 34.9588 52.6429ZM5.67822 21.8212V15.6569H47.2874C48.623 15.6569 49.7275 15.2203 50.6008 14.347C51.474 13.4737 51.9107 12.3693 51.9107 11.0337C51.9107 9.69806 51.474 8.59362 50.6008 7.72034C49.7275 6.84706 48.623 6.41042 47.2874 6.41042C45.9518 6.41042 44.8474 6.84706 43.9741 7.72034C43.1008 8.59362 42.6642 9.69806 42.6642 11.0337H36.4999C36.4999 8.00287 37.5401 5.44725 39.6205 3.36678C41.701 1.28632 44.2566 0.246094 47.2874 0.246094C50.3182 0.246094 52.8738 1.28632 54.9543 3.36678C57.0348 5.44725 58.075 8.00287 58.075 11.0337C58.075 14.0645 57.0348 16.6201 54.9543 18.7005C52.8738 20.781 50.3182 21.8212 47.2874 21.8212H5.67822ZM56.5339 46.4785V40.3142C57.8695 40.3142 58.974 39.8776 59.8472 39.0043C60.7205 38.131 61.1572 37.0266 61.1572 35.691C61.1572 34.3554 60.7205 33.2509 59.8472 32.3777C58.974 31.5044 57.8695 31.0677 56.5339 31.0677H5.67822V24.9034H56.5339C59.5647 24.9034 62.1203 25.9436 64.2008 28.0241C66.2813 30.1046 67.3215 32.6602 67.3215 35.691C67.3215 38.7218 66.2813 41.2774 64.2008 43.3579C62.1203 45.4383 59.5647 46.4785 56.5339 46.4785Z" fill="white"/>
                 </g>
                 <defs>
-                <filter id="filter0_di_139_106" x="0.587314" y="0.246094" width="71.8251" height="62.5788" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-                <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+                <filter id="filter0_di_139_106" x="0.587314" y="0.246094" width="71.8251" height="62.5788" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+                <feFlood floodOpacity="0" result="BackgroundImageFix"/>
                 <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
                 <feOffset dy="5.09091"/>
                 <feGaussianBlur stdDeviation="2.54545"/>
@@ -51,8 +51,8 @@ export const Icons = {
                 <rect x="42.8066" y="16" width="6" height="6" fill="#D9D9D9"/>
                 </g>
                 <defs>
-                <filter id="filter0_di_190_166" x="0.215732" y="0.5" width="66.5685" height="60.0016" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-                <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+                <filter id="filter0_di_190_166" x="0.215732" y="0.5" width="66.5685" height="60.0016" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+                <feFlood floodOpacity="0" result="BackgroundImageFix"/>
                 <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
                 <feOffset dy="5.09091"/>
                 <feGaussianBlur stdDeviation="2.54545"/>
@@ -81,8 +81,8 @@ export const Icons = {
                 <path d="M9 25.7778H56" stroke="#D9D9D9" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
                 </g>
                 <defs>
-                <filter id="filter0_di_190_148" x="0.909091" y="0" width="63.1818" height="61.7375" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-                <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+                <filter id="filter0_di_190_148" x="0.909091" y="0" width="63.1818" height="61.7375" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+                <feFlood floodOpacity="0" result="BackgroundImageFix"/>
                 <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
                 <feOffset dy="5.09091"/>
                 <feGaussianBlur stdDeviation="2.54545"/>
@@ -126,8 +126,8 @@ export const Icons = {
                 <path d="M51.1666 37.1604V43.6604C51.1691 44.2638 51.0455 44.8611 50.8037 45.414C50.562 45.9668 50.2074 46.4631 49.7628 46.8711C49.3181 47.279 48.7932 47.5896 48.2216 47.7829C47.6499 47.9762 47.0442 48.048 46.4433 47.9937C39.7761 47.2693 33.3718 44.991 27.7449 41.342C22.5099 38.0155 18.0715 33.5771 14.7449 28.342C11.0832 22.6897 8.80446 16.2542 8.09327 9.55704C8.03913 8.95788 8.11033 8.35402 8.30235 7.78389C8.49438 7.21376 8.80301 6.68987 9.2086 6.24555C9.61419 5.80124 10.1078 5.44624 10.6582 5.20317C11.2085 4.9601 11.8033 4.83427 12.4049 4.83371H18.9049C19.9564 4.82336 20.9758 5.19571 21.7731 5.88136C22.5704 6.56701 23.0911 7.51917 23.2383 8.56037C23.5126 10.6405 24.0214 12.6829 24.7549 14.6487C25.0464 15.4242 25.1095 16.267 24.9367 17.0773C24.7639 17.8875 24.3625 18.6313 23.7799 19.2204L21.0283 21.972C24.1126 27.3964 28.6039 31.8877 34.0283 34.972L36.7799 32.2204C37.369 31.6378 38.1128 31.2364 38.923 31.0636C39.7333 30.8908 40.5761 30.9539 41.3516 31.2454C43.3174 31.9789 45.3598 32.4877 47.4399 32.762C48.4924 32.9105 49.4536 33.4407 50.1408 34.2516C50.8279 35.0626 51.193 36.0978 51.1666 37.1604Z" stroke="#D9D9D9" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
                 </g>
                 <defs>
-                <filter id="filter0_di_189_143" x="-1.59091" y="0.5" width="62.1818" height="62.1818" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-                <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+                <filter id="filter0_di_189_143" x="-1.59091" y="0.5" width="62.1818" height="62.1818" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+                <feFlood floodOpacity="0" result="BackgroundImageFix"/>
                 <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
                 <feOffset dy="5.09091"/>
                 <feGaussianBlur stdDeviation="2.54545"/>
@@ -158,8 +158,8 @@ export const Icons = {
                 <path d="M28.1758 27.4875V33.3938H22.3877V27.4875H28.1758ZM39.8653 27.4875V33.3938H34.0771V27.4875H39.8653ZM51.5547 27.4875V33.3938H45.7666V27.4875H51.5547Z" fill="#D9D9D9"/>
                 </g>
                 <defs>
-                <filter id="filter0_di_189_137" x="0.633523" y="7.8125" width="71.733" height="64.233" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-                <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+                <filter id="filter0_di_189_137" x="0.633523" y="7.8125" width="71.733" height="64.233" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+                <feFlood floodOpacity="0" result="BackgroundImageFix"/>
                 <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
                 <feOffset dy="4.77273"/>
                 <feGaussianBlur stdDeviation="2.38636"/>
@@ -217,8 +217,8 @@ export const Icons = {
                 <path d="M33.5 8.01074C32.5385 8.01074 31.7215 7.6979 31.0492 7.07222C30.3769 6.44653 30.04 5.68555 30.0385 4.78926C30.0385 4.14497 30.1923 3.57226 30.5 3.07114C30.8077 2.57002 31.5192 1.69307 32.6346 0.440272C32.8654 0.153919 33.1538 0.0107422 33.5 0.0107422C33.8462 0.0107422 34.1346 0.153919 34.3654 0.440272C35.4808 1.69307 36.1923 2.57002 36.5 3.07114C36.8077 3.57226 36.9615 4.14497 36.9615 4.78926C36.9615 5.68412 36.6254 6.4451 35.9531 7.07222C35.2808 7.69933 34.4631 8.01217 33.5 8.01074ZM21.9615 8.01074C21 8.01074 20.1831 7.6979 19.5108 7.07222C18.8385 6.44653 18.5015 5.68555 18.5 4.78926C18.5 4.14497 18.6538 3.57226 18.9615 3.07114C19.2692 2.57002 19.9808 1.69307 21.0962 0.440272C21.3269 0.153919 21.6154 0.0107422 21.9615 0.0107422C22.3077 0.0107422 22.5962 0.153919 22.8269 0.440272C23.9423 1.69307 24.6538 2.57002 24.9615 3.07114C25.2692 3.57226 25.4231 4.14497 25.4231 4.78926C25.4231 5.68412 25.0869 6.4451 24.4146 7.07222C23.7423 7.69933 22.9246 8.01217 21.9615 8.01074ZM45.0385 8.01074C44.0769 8.01074 43.26 7.6979 42.5877 7.07222C41.9154 6.44653 41.5785 5.68555 41.5769 4.78926C41.5769 4.14497 41.7308 3.57226 42.0385 3.07114C42.3462 2.57002 43.0577 1.69307 44.1731 0.440272C44.4038 0.153919 44.6923 0.0107422 45.0385 0.0107422C45.3846 0.0107422 45.6731 0.153919 45.9038 0.440272C47.0192 1.69307 47.7308 2.57002 48.0385 3.07114C48.3462 3.57226 48.5 4.14497 48.5 4.78926C48.5 5.68412 48.1638 6.4451 47.4915 7.07222C46.8192 7.69933 46.0015 8.01217 45.0385 8.01074Z" fill="#D9D9D9"/>
                 </g>
                 <defs>
-                <filter id="filter0_di_190_193" x="3.7" y="15.0107" width="59.1" height="53.6" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-                <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+                <filter id="filter0_di_190_193" x="3.7" y="15.0107" width="59.1" height="53.6" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+                <feFlood floodOpacity="0" result="BackgroundImageFix"/>
                 <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
                 <feOffset dy="4.8"/>
                 <feGaussianBlur stdDeviation="2.4"/>
@@ -232,8 +232,8 @@ export const Icons = {
                 <feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1 0"/>
                 <feBlend mode="normal" in2="shape" result="effect2_innerShadow_190_193"/>
                 </filter>
-                <filter id="filter1_di_190_193" x="13.7" y="0.0107422" width="39.6" height="17.6" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-                <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+                <filter id="filter1_di_190_193" x="13.7" y="0.0107422" width="39.6" height="17.6" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+                <feFlood floodOpacity="0" result="BackgroundImageFix"/>
                 <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
                 <feOffset dy="4.8"/>
                 <feGaussianBlur stdDeviation="2.4"/>
