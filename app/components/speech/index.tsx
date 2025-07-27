@@ -49,14 +49,14 @@ declare global {
   }
 }
 
-export default function Speech({ onTrigger }: { onTrigger: (text: string) => void }) {
+export default function Speech({ onTrigger, isProcessing }: { onTrigger: (text: string) => void, isProcessing: boolean }) {
   const [finalText, setFinalText] = useState<string | null>(null)
   const [isListening, setIsListening] = useState(false)
   const recognitionRef = useRef<SpeechRecognition | null>(null)
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   const startRecognition = () => {
-    if (recognitionRef.current) {
+    if (recognitionRef.current && !isProcessing) {
       setFinalText(null)
       recognitionRef.current.start()
     }
@@ -71,7 +71,7 @@ export default function Speech({ onTrigger }: { onTrigger: (text: string) => voi
 
     window.addEventListener('keydown', handleKeyPress)
     return () => window.removeEventListener('keydown', handleKeyPress)
-  }, [])
+  }, [isProcessing])
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
@@ -101,6 +101,7 @@ export default function Speech({ onTrigger }: { onTrigger: (text: string) => voi
       silenceTimerRef.current = setTimeout(() => {
         recognition.stop()
         onTrigger(transcript)
+        setFinalText(null) // onTrigger 실행 후 텍스트 리셋
       }, 3000)
     }
 
@@ -117,27 +118,32 @@ export default function Speech({ onTrigger }: { onTrigger: (text: string) => voi
 
     recognitionRef.current = recognition
 
-    // 자동 시작: 1초 후
+    // 자동 시작: 1초 후 (isProcessing이 아닐 때만)
     const startTimer = setTimeout(() => {
-      recognition.start()
+      if (!isProcessing) {
+        recognition.start()
+      }
     }, 1000)
 
     return () => {
       clearTimeout(startTimer)
       recognition.stop()
     }
-  }, [onTrigger])
+  }, [onTrigger, isProcessing])
 
   return (
     <div className="flex flex-col gap-4 items-center justify-center">
       <BasicBox className='flex items-center justify-center gap-4 p-4'>
         <span className={`inline-block w-[16px] h-[16px] bg-red-500 rounded-full ${isListening ? 'animate-pulse' : ''}`}/>
         {
-          !finalText && (
+          isProcessing ? (
+            <strong className='opacity-60'>처리 중입니다...</strong>
+          ) : !finalText ? (
             <strong className='opacity-60'>음성으로 답변해주세요.</strong>
+          ) : (
+            <strong>{finalText}</strong>
           )
         }
-        <strong>{finalText}</strong>
       </BasicBox>
     </div>
   )

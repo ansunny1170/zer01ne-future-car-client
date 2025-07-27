@@ -58,7 +58,7 @@ export default function QuestionArea({
 
     return (
         <div className={cn("flex flex-col items-center justify-center h-full gap-16", className)}>
-            <Speech onTrigger={handleSpeechTrigger}/>
+            <Speech onTrigger={handleSpeechTrigger} isProcessing={isProcessing} />
             <div>
                 {mainChars.length > 0 && (
                     <motion.h1

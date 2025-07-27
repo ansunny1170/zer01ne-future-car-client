@@ -51,7 +51,7 @@ export default function Scene1() {
               className="center"
             />
             <div className="absolute top-0 -translate-x-full left-1/2 ">
-              <Speech onTrigger={handleSpeechTrigger}/>
+              <Speech onTrigger={handleSpeechTrigger} isProcessing={false}/>
             </div>
           </div>
         )
