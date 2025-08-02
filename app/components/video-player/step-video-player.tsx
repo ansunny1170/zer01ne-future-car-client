@@ -1,15 +1,15 @@
+import { BASE_S3_LINK } from '@/constants';
 import { useScene } from '@/context/scene-context';
 import { cn } from '@/utils/cn' ;
 import { useEffect, useRef, useState } from 'react';
 
-export default function StepVideoPlayer({ direction, className }:
+export default function StepVideoPlayer({ className }:
     {
-        direction: "left" | "right" | "center",
         className?: string
     }) {
     const { videoPath } = useScene();
-    const BASE_URL = "";
-    const nextVideoPath = videoPath ? `/bg_video/${videoPath}_${direction}.mp4` : null;
+    const BASE_URL = BASE_S3_LINK;
+    const nextVideoPath = videoPath ? `${videoPath}` : null;
     const [currentVideoPath, setCurrentVideoPath] = useState<string | null>(nextVideoPath);
     const [previousVideoPath, setPreviousVideoPath] = useState<string | null>(null);
     const [isTransitioning, setIsTransitioning] = useState(false);
@@ -64,7 +64,7 @@ export default function StepVideoPlayer({ direction, className }:
             {/* New video (always below) */}
             <video
                 key={currentVideoPath}
-                src={`${BASE_URL}${currentVideoPath}`}
+                src={`${BASE_URL}/${currentVideoPath}`}
                 autoPlay
                 loop
                 muted
@@ -77,7 +77,7 @@ export default function StepVideoPlayer({ direction, className }:
             {previousVideoPath && (
                 <video
                     key={previousVideoPath}
-                    src={`${BASE_URL}${previousVideoPath}`}
+                    src={`${BASE_URL}/${previousVideoPath}`}
                     autoPlay
                     loop
                     muted

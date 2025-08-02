@@ -1,3 +1,4 @@
+import { BASE_S3_LINK } from '@/constants';
 import { useScene } from '@/context/scene-context';
 import { useEffect, useRef, useState } from 'react';
 
@@ -7,8 +8,8 @@ export default function StepAudioPlayer({
     className?: string
 }) {
     const { bgmPath } = useScene();
-    const BASE_URL = "";
-    const nextAudioPath = bgmPath ? `/bg_music/${bgmPath}` : null;
+    const BASE_URL = BASE_S3_LINK;
+    const nextAudioPath = bgmPath ? `${bgmPath}` : null;
     const [currentAudioPath, setCurrentAudioPath] = useState<string | null>(nextAudioPath);
     const [previousAudioPath, setPreviousAudioPath] = useState<string | null>(null);
     const [isCurrentReady, setIsCurrentReady] = useState(false);
@@ -179,7 +180,7 @@ export default function StepAudioPlayer({
             <audio
                 ref={currentAudioRef}
                 key={`current-${currentAudioPath}`}
-                src={`${BASE_URL}${currentAudioPath}`}
+                src={`${BASE_URL}/${currentAudioPath}`}
                 autoPlay
                 loop
                 muted={!isUserInteracted || hasError}
@@ -219,7 +220,7 @@ export default function StepAudioPlayer({
                 <audio
                     ref={previousAudioRef}
                     key={`previous-${previousAudioPath}`}
-                    src={`${BASE_URL}${previousAudioPath}`}
+                    src={`${BASE_URL}/${previousAudioPath}`}
                     autoPlay
                     loop
                     muted={!isUserInteracted}
