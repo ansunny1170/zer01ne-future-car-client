@@ -5,7 +5,6 @@ import Speech from "../speech";
 import { useScene } from "@/context/scene-context";
 import { StepInfo } from "@/type";
 import { useSpeechProcessing } from "@/hooks/useSpeechProcessing";
-import Loading from "../loading";
 
 export default function QuestionArea({
     mainText,
@@ -58,7 +57,11 @@ export default function QuestionArea({
 
     return (
         <div className={cn("flex flex-col items-center justify-center h-full gap-16", className)}>
-            <Speech onTrigger={handleSpeechTrigger} isProcessing={isProcessing} />
+            {
+                (mainText) && (
+                    <Speech onTrigger={handleSpeechTrigger} isProcessing={isProcessing} />
+                )
+            }
             <div>
                 {mainChars.length > 0 && (
                     <motion.h1

@@ -20,7 +20,7 @@ interface PopupUiArrayProps {
     setQuestionFlag?: (flag: boolean) => void;
 }
 
-export default function PopupUiArray({ assets_timeline = [], onComplete, setQuestionFlag }: PopupUiArrayProps) {
+export default function PopupUiArray({ assets_timeline, onComplete, setQuestionFlag }: PopupUiArrayProps) {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [currentAssetIndex, setCurrentAssetIndex] = useState(0);
     const [currentAsset, setCurrentAsset] = useState<Asset | null>(null);

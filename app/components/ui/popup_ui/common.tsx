@@ -1,5 +1,6 @@
 import { Icons } from "../icons";
 import BasicPopupBox from "./basic-popup-box";
+import CloneTalk from "../clone-talk";
 
 const popupDict: {
     [key: string]: {
@@ -119,21 +120,29 @@ const popupDict: {
     },
 }
 
-export default function CommonPopupUI({keyName, text, description}: {keyName: string, text?: string, description?: string}) {
+export default function CommonPopupUI({keyName, text, description, onComplete}: {keyName: string, text?: string, description?: string, onComplete?: () => void}) {
   return (
-    <BasicPopupBox type={popupDict[keyName]?.type} className={popupDict[keyName]?.className}>
-        {keyName}
-        <div
-            className="flex flex-col items-center gap-6 w-full opacity-0 translate-y-[50px] animate-popup"
-        >
-            <p className="w-[66px] h-[66px] flex items-center justify-center">
-                {popupDict[keyName]?.icon || <Icons.alert />}
-            </p>
-            <div className="leading-[1.2]">
-                <h1 className="text-[42px] font-bold">{text || popupDict[keyName]?.defaultText}</h1>
-                <p className="text-[22px] opacity-80">{description}</p>
+    <>
+        {keyName === 'CLONE_TALKS' ? (
+            <CloneTalk
+                text={text || ""}
+                onComplete={onComplete}
+            />
+        ) : (
+        <BasicPopupBox type={popupDict[keyName]?.type} className={popupDict[keyName]?.className}>
+            <div
+                className="flex flex-col items-center gap-6 w-full opacity-0 translate-y-[50px] animate-popup"
+            >
+                <p className="w-[66px] h-[66px] flex items-center justify-center">
+                    {popupDict[keyName]?.icon || <Icons.alert />}
+                </p>
+                <div className="leading-[1.2]">
+                    <h1 className="text-[42px] font-bold">{text || popupDict[keyName]?.defaultText}</h1>
+                    <p className="text-[22px] opacity-80">{description}</p>
+                </div>
             </div>
-        </div>
-    </BasicPopupBox>
+        </BasicPopupBox>
+    )}
+    </>
   );
 }
