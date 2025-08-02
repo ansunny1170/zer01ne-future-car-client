@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import BasicBox from '../ui/basic-box';
+import { Icons } from '../ui/icons';
+import { cn } from '@/utils/cn';
 
 // Web Speech API 타입 정의
 interface SpeechRecognitionEvent extends Event {
@@ -133,18 +135,21 @@ export default function Speech({ onTrigger, isProcessing }: { onTrigger: (text: 
 
   return (
     <div className="flex flex-col gap-4 items-center justify-center">
-      <BasicBox className='flex items-center justify-center gap-4 p-4'>
-        <span className={`inline-block w-[16px] h-[16px] bg-red-500 rounded-full ${isListening ? 'animate-pulse' : ''}`}/>
+      <div className='flex items-center justify-center gap-4 p-4 backdrop-blur-2xl rounded-full bg-[linear-gradient(to_right,#00519d98_0%,#0099ff36_100%)] text-[#46BBFF]'>
+        <span className={cn('animate-pulse', isListening && 'animate-in')}>
+          <Icons.leftQuote/>
+        </span>
         {
-          isProcessing ? (
-            <strong className='opacity-60'>처리 중입니다...</strong>
-          ) : !finalText ? (
-            <strong className='opacity-60'>음성으로 답변해주세요.</strong>
+          !finalText ? (
+            <strong className='opacity-60'>음성으로 알려주세요!</strong>
           ) : (
             <strong>{finalText}</strong>
           )
         }
-      </BasicBox>
+        <span className={cn('animate-pulse', isListening && 'animate-in')}>
+          <Icons.rightQuote/>
+        </span>
+      </div>
     </div>
   )
 }
