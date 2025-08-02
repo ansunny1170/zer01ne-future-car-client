@@ -1,6 +1,5 @@
 import { Icons } from "../icons";
 import BasicPopupBox from "./basic-popup-box";
-import { motion } from 'framer-motion';
 
 const popupDict: {
     [key: string]: {
@@ -10,134 +9,131 @@ const popupDict: {
         defaultText: string;
     };
 } = {
-    common: {
+    DEFAULT_POPUP: {
         icon: <Icons.alert />,
         type: "warm",
         className: "",
         defaultText: ""
     },
-    detour:{
+    DETOUR:{
         icon: <Icons.alert />,
         type: "cold",
         className: "",
         defaultText: ""
     },
-    parkingLot: {
+    PARKING_LOT: {
         icon: <Icons.car />,
         type: "cold",
         defaultText: "빈 자리를 찾는 중입니다...",
         className: "",
     },
-    air: {
+    AIR: {
         icon: <Icons.air />,
         type: "cold",
         defaultText: "실내 공기가 쾌적합니다.",
         className: "",
     },
-    emotion: {
+    EMOTION: {
         icon: <Icons.heart />,
         type: "cold",
         defaultText: "탑승자 감정인식 결과",
         className: "",
     },
-    calendar: {
+    CALENDAR: {
         icon: <Icons.calendar />,
         type: "cold",
         defaultText: "일정 알림",
         className: "",
     },
-    carOpen: {
+    CAR_OPEN: {
         icon: <Icons.doorOpen />,
         type: "warm",
         defaultText: "문열림",
         className: "min-w-auto",
     },
-    carClose: {
+    CAR_CLOSE: {
         icon: <Icons.doorClose />,
         type: "warm",
         defaultText: "문닫힘",
         className: "min-w-auto",
     },
-    careNode: {
+    CARE_NODE: {
         icon: <Icons.car />,
         type: "cold",
         defaultText: "동승자 케어모드 시작",
         className: "",
     },
-    incomingCall: {
+    INCOMING_CALL: {
         icon: <Icons.calling />,
         type: "cold",
         defaultText: "Incoming Call 팝업",
         className: "",
     },
-    message: {
+    MESSAGE: {
         icon: <Icons.message />,
         type: "cold",
         defaultText: "메세지 알림",
         className: "",
     },
-    tireAir: {
+    TIRE_AIR: {
         icon: <Icons.alert />,
         type: "warm",
         defaultText: "타이어 공기압 저하 알림",
         className: "",
     },
-    oil: {
+    OIL: {
         icon: <Icons.oil />,
         type: "warm",
         defaultText: "엔진오일 경고",
         className: "",
     },
-    battery: {
+    BATTERY: {
         icon: <Icons.battery />,
         type: "warm",
         defaultText: "배터리가 15% 이하입니다.",
         className: "",
     },
-    neerRepair: {
+    NEER_REPAIR: {
         icon: <Icons.alert />,
         type: "warm",
         defaultText: "",
         className: "",
     },
-    emergencyDetour: {
+    EMERGENCY_DETOUR: {
         icon: <Icons.alert />,
         type: "warm",
         defaultText: "",
         className: "",
     },
-    temperature: {
+    TEMPERATURE: {
         icon: <Icons.thermometer />,
         type: "cold",
         defaultText: "온도를 조절하는 중입니다...",
         className: "",
     },
-    carWash: {
+    CAR_WASH: {
         icon: <Icons.carWash />,
         type: "cold",
         defaultText: "세차 예약 중입니다....",
         className: "",
     },
-
 }
 
 export default function CommonPopupUI({keyName, text, description}: {keyName: string, text?: string, description?: string}) {
   return (
     <BasicPopupBox type={popupDict[keyName]?.type} className={popupDict[keyName]?.className}>
-        <motion.div
-            className="flex flex-col items-center gap-6 w-full"
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, ease: "easeOut" }}
+        {keyName}
+        <div
+            className="flex flex-col items-center gap-6 w-full opacity-0 translate-y-[50px] animate-popup"
         >
             <p className="w-[66px] h-[66px] flex items-center justify-center">
-                {popupDict[keyName]?.icon}
+                {popupDict[keyName]?.icon || <Icons.alert />}
             </p>
             <div className="leading-[1.2]">
-                <h1 className="text-[42px] font-bold">{text || popupDict[keyName].defaultText}</h1>
+                <h1 className="text-[42px] font-bold">{text || popupDict[keyName]?.defaultText}</h1>
                 <p className="text-[22px] opacity-80">{description}</p>
             </div>
-        </motion.div>
+        </div>
     </BasicPopupBox>
   );
 }

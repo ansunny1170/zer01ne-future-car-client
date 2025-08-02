@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import BasicBox from '../ui/basic-box';
 import { Icons } from '../ui/icons';
 import { cn } from '@/utils/cn';
+import HyundaiLoading from '../ui/hyundai-loading';
 
 // Web Speech API 타입 정의
 interface SpeechRecognitionEvent extends Event {
@@ -134,6 +135,9 @@ export default function Speech({ onTrigger, isProcessing }: { onTrigger: (text: 
   }, [onTrigger, isProcessing])
 
   return (
+    isProcessing ? (
+      <HyundaiLoading/>
+    ) : (
     <div className="flex flex-col gap-4 items-center justify-center">
       <div className='flex items-center justify-center gap-4 p-4 backdrop-blur-2xl rounded-full bg-[linear-gradient(to_right,#00519d98_0%,#0099ff36_100%)] text-[#46BBFF]'>
         <span className={cn('animate-pulse', isListening && 'animate-in')}>
@@ -151,5 +155,6 @@ export default function Speech({ onTrigger, isProcessing }: { onTrigger: (text: 
         </span>
       </div>
     </div>
+    )
   )
 }

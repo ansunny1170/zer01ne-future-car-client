@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useRef, useEffect, useMemo } from "react";
 import { StepInfo } from "../type";
-import { BASE_S3_LINK } from "@/constants";
 
 // Context에서 사용할 타입 정의
 export type SceneContextType = {
@@ -67,7 +66,7 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     setVideoPath(stepInfo?.bgv?.file_name || null);
-    setBgmPath(stepInfo?.bgm?.file_name || null);
+    setBgmPath(stepInfo?.bgm?.file_name || "bgm_joy_whistle.mp3");
     setStepInfo(stepInfo);
 
   }, [stepInfo]);

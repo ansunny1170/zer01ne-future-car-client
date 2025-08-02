@@ -32,6 +32,7 @@ const config: Config = {
       animation: {
         'fade-in': 'fadeIn 0.5s ease-out forwards',
         'wave': 'wave 1s ease-in-out infinite',
+        'popup': 'popup 1s ease-out forwards',
       },
       keyframes: {
         fadeIn: {
@@ -41,6 +42,16 @@ const config: Config = {
         wave: {
           '0%, 100%': { transform: 'scaleY(0.5)' },
           '50%': { transform: 'scaleY(1.5)' },
+        },
+        popup: {
+          '0%': { 
+            opacity: '0',
+            transform: 'translateY(50px)'
+          },
+          '100%': { 
+            opacity: '1',
+            transform: 'translateY(0)'
+          },
         }
       },
     },

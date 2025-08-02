@@ -66,9 +66,7 @@ export default function Home() {
 
       <img src="/assets/images/bg_test.png" alt="fixed-layout" className="w-full object-cover" />
       
-      <StepVideoPlayer
-        direction="center"
-      />
+      <StepVideoPlayer/>
 
       <StepAudioPlayer/>
 

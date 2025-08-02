@@ -91,10 +91,6 @@ export default function QuestionArea({
                 )}
             </div>
             <QuestionButtons buttons={buttons} />
-
-            {isProcessing && (
-                <Loading />
-            )}
         </div>
     );
 }
