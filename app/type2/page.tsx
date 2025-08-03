@@ -9,6 +9,7 @@ import StepAudioPlayer from "../components/audio-player/step-audio-player";
 import FixedLayout from "../components/fixed-layout";
 import StepVideoPlayer from "../components/video-player/step-video-player";
 import { useState } from "react";
+import StepAudioSfxPlayer from "@/components/audio-player/step-audio-sfx-player";
 
 export default function Home() {
   const [debug, setDebug] = useState(false);
@@ -69,6 +70,7 @@ export default function Home() {
       <StepVideoPlayer/>
 
       <StepAudioPlayer/>
+      <StepAudioSfxPlayer/>
 
       <AnimatePresence mode="wait">
         {renderStep()}
