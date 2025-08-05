@@ -1,6 +1,7 @@
 import { useScene } from "@/context/scene-context";
 import { motion } from "framer-motion";
 import { useEffect } from "react";
+import HyundaiLoading from "../ui/hyundai-loading";
 
 
 export default function StepComplete() { 
@@ -26,8 +27,9 @@ export default function StepComplete() {
         transition={{ duration: 1 }}
         className="animate-fade-in absolute inset-0 flex flex-col gap-8 items-center justify-center backdrop-blur-lg bg-black/10 z-[22]"
       >
-        <h1>체험이 모두 끝났습니다!</h1>
-        <p>뒷쪽 출구로 퇴장해 주세요.</p>
+        <h1 className="text-[96px] font-bold">체험이 모두 끝났습니다!</h1>
+        <HyundaiLoading/>
+        <p className="text-[45px] opacity-80">뒷쪽 출구로 퇴장해 주세요.</p>
       </motion.div>
     </div>
   );

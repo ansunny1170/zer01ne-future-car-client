@@ -40,8 +40,8 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
             // 사운드 설정
             setSfxPath(audioAsset.file_name || "");
 
-            // 사운드 재생 시간을 알 수 없으므로 임의로 3초 후 다음으로 진행
-            const timer = setTimeout(() => setCurrentIdx(idx => idx + 1), 3000);
+            // 사운드 재생 시간을 알 수 없으므로 임의로 5초 후 다음으로 진행
+            const timer = setTimeout(() => setCurrentIdx(idx => idx + 1), 5000);
             return () => clearTimeout(timer);
         }
     }, [assets_timeline, currentIdx, isTimelineFinished, setSfxPath]);
@@ -79,8 +79,8 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
         // parallel: true인 경우 FUNCTION_USP_POOL 여러 개를 동시에 표시
         const uspPoolAssets = item.assets.filter(asset => asset.type === "FUNCTION_USP_POOL");
         if (uspPoolAssets.length > 0) {
-            // 1.5초 후 다음 타임라인으로 이동
-            setTimeout(() => setCurrentIdx(idx => idx + 1), 1500);
+            // 2초 후 다음 타임라인으로 이동
+            setTimeout(() => setCurrentIdx(idx => idx + 1), 2000);
 
             return (
                 <div className="flex flex-col gap-4">

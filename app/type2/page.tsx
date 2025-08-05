@@ -47,7 +47,7 @@ export default function Home() {
             exit="exit"
             transition={{ duration: 0.2 }}
           >
-            <StepRepeat dafultComment="나 혼자 바다 보러 갈래"/>
+            <StepRepeat dafultComment="아이랑 산으로 캠핑"/>
           </motion.div>
         );
       case 6:
@@ -105,12 +105,9 @@ export default function Home() {
         )
       }
 
-      <img src="/assets/images/bg_test.png" alt="fixed-layout" className="w-full object-cover" />
-      
       <StepVideoPlayer/>
 
-      <StepAudioPlayer/>
-      <StepAudioSfxPlayer/>
+      <StepAudioPlayer/> 
 
       <AnimatePresence mode="wait">
         {renderStep()}

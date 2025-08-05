@@ -71,11 +71,6 @@ export default function QuestionArea({
 
     return (
         <div className={cn("flex flex-col items-center justify-center h-full gap-16", className)}>
-            {
-                (mainText) && (
-                    <Speech onTrigger={handleSpeechTrigger} isProcessing={isProcessing} defaultComment={defaultComment}/>
-                )
-            }
             <div>
                 {mainChars.length > 0 && (
                     <motion.h1
@@ -108,6 +103,11 @@ export default function QuestionArea({
                 )}
             </div>
             <QuestionButtons buttons={buttons} onSelect={handleSpeechTrigger} isProcessing={isProcessing || isPending} />
+            {
+                (mainText) && (
+                    <Speech onTrigger={handleSpeechTrigger} isProcessing={isProcessing} defaultComment={defaultComment}/>
+                )
+            }
         </div>
     );
 }

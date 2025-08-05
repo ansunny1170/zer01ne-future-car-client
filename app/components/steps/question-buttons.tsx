@@ -54,7 +54,7 @@ export default function QuestionButtons({
             *:hover:bg-gray-300 *:hover:scale-[105%] *:hover:text-white *:hover:font-bold *:hover:outline-none
             *:focus:bg-gray-300 *:focus:scale-[105%] *:focus:text-white *:focus:font-bold *:focus:outline-none">
             {Object.keys(buttons).map((button, index) => (
-                <BasicBox key={index} className="max-w-[25svw] break-keep items-center justify-center flex">
+                <BasicBox key={index} className="max-w-[25svw] break-keep items-center justify-center flex bg-black/20 backdrop-blur-2x;">
                     <button
                         key={index}
                         style={{
