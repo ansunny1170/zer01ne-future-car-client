@@ -1,10 +1,9 @@
 
-import Speech from "../speech";
 import { useSpeechProcessing } from "@/hooks/useSpeechProcessing";
 import { useScene } from "@/context/scene-context";
 import { StepInfo } from "@/type";
 import { motion } from "framer-motion";
-
+import IntroSpeech from "../speech/intro-speech";
 
 export default function Step0({ dafultComment }: { dafultComment?: string }) { 
   const { mutateAsync: processSpeech, isPending: isProcessing } = useSpeechProcessing();
@@ -31,12 +30,15 @@ export default function Step0({ dafultComment }: { dafultComment?: string }) {
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1 }}
-        className="animate-fade-in absolute inset-0 flex flex-col gap-8 items-center justify-center backdrop-blur-lg bg-black/10 z-[22]"
+        className="animate-fade-in absolute inset-0 flex flex-col items-center justify-center backdrop-blur-lg bg-black/10 z-[22]"
       >
-        <p>이 체험은 대화로 진행됩니다.</p>
-        <h1>반가워요!</h1>
-        <p>“출발”이라고 말해주세요.</p>
-        <Speech onTrigger={handleSpeechTrigger} isProcessing={isProcessing} defaultComment={dafultComment}/>
+        <p className="text-[24px] opacity-80 pb-[50px]">이 체험은 대화로 진행됩니다.</p>
+        <h1 className="text-[96px] font-bold pb-[20px]">반가워요!</h1>
+        <IntroSpeech
+          onTrigger={handleSpeechTrigger}
+          isProcessing={isProcessing}
+          defaultComment={dafultComment}
+          />
       </motion.div>
     </div>
   );
