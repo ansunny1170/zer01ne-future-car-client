@@ -4,10 +4,12 @@ import BasicBox from "../ui/basic-box";
 
 export default function QuestionButtons({
     buttons,
-    onSelect
+    onSelect,
+    isProcessing = false,
 }: {
     buttons: { [key: string]: string },
     onSelect?: (key: string) => void,
+    isProcessing?: boolean,
 }) {
     const { stepNumber, setStepNumber } = useScene();
     const [visible, setVisible] = useState<number>(-1);
@@ -16,7 +18,7 @@ export default function QuestionButtons({
     // 단축키 1~4 매핑
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
-            if (!hasAnimated) return; // 버튼 애니메이션 완료 후에만 허용
+            if (isProcessing || !hasAnimated) return; // 처리 중이거나 애니메이션 완료 전에는 허용하지 않음
             const key = event.key;
             if (['1','2','3','4'].includes(key)) {
                 const idx = parseInt(key, 10) - 1;
@@ -29,7 +31,7 @@ export default function QuestionButtons({
         }
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [buttons, hasAnimated, stepNumber, setStepNumber, onSelect]);
+    }, [buttons, hasAnimated, stepNumber, setStepNumber, onSelect, isProcessing]);
 
     useEffect(() => {
         if (hasAnimated) return; // 이미 애니메이션이 완료되었으면 다시 실행하지 않음
@@ -62,9 +64,11 @@ export default function QuestionButtons({
                             transitionDelay: `${index * 0.2}s`
                         }}
                         onClick={() => {
+                            if (isProcessing) return;
                             if (onSelect) onSelect(button);
                             setStepNumber(stepNumber + 1);
                         }}
+                        disabled={isProcessing}
                     >
                         {buttons[button]}
                     </button>

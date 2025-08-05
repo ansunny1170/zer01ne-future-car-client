@@ -50,7 +50,20 @@ export default function Home() {
             <StepRepeat dafultComment="나 혼자 바다 보러 갈래"/>
           </motion.div>
         );
-      case 8:
+      case 6:
+        return (
+          <motion.div
+            key="step0"
+            variants={fadeVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 0.2 }}
+          >
+            <StepRepeat dafultComment="네 감사해요"/>
+          </motion.div>
+        );
+      case 7:
         return (
           <motion.div
             key="step0"

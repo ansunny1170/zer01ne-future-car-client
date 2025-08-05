@@ -3,6 +3,7 @@ import QuestionButtons from "./question-buttons";
 import { motion } from "framer-motion";
 import Speech from "../speech"; 
 import { useScene } from "@/context/scene-context";
+import { useRef, useState } from "react";
 import { StepInfo } from "@/type";
 import { useSpeechProcessing } from "@/hooks/useSpeechProcessing";
 
@@ -25,7 +26,11 @@ export default function QuestionArea({
     const mainChars = mainText ? mainText.split('') : [];
     const subChars = subText ? subText.split('') : [];
     const { sessionId, setStepInfo, goNextStep, reStart } = useScene();
-    const { mutateAsync: processSpeech, isPending: isProcessing } = useSpeechProcessing();
+    const { mutateAsync: processSpeech, isPending } = useSpeechProcessing();
+
+    // 추가 가드: 렌더 사이에도 동작을 막기 위한 ref/state
+    const processingRef = useRef(false);
+    const [isProcessing, setIsProcessing] = useState(false);
 
     const container = {
         hidden: {},
@@ -41,6 +46,10 @@ export default function QuestionArea({
     };
 
     const handleSpeechTrigger = async (ttsText: string) => {
+        // 이미 처리 중이면 추가 호출을 방지
+        if (processingRef.current) return;
+        processingRef.current = true;
+        setIsProcessing(true);
         const user_message = ttsText;
         const session_id = sessionId;
     
@@ -54,6 +63,9 @@ export default function QuestionArea({
          goNextStep();
         } catch (error) {
           console.error('Speech processing failed:', error);
+        } finally {
+          processingRef.current = false;
+          setIsProcessing(false);
         }
       }
 
@@ -95,7 +107,7 @@ export default function QuestionArea({
                     </motion.p>
                 )}
             </div>
-            <QuestionButtons buttons={buttons} onSelect={handleSpeechTrigger} />
+            <QuestionButtons buttons={buttons} onSelect={handleSpeechTrigger} isProcessing={isProcessing || isPending} />
         </div>
     );
 }
