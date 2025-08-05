@@ -65,8 +65,9 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
   }, [sceneNumber, category, categoryNumber, channel, senderId, stepNumber]);
 
   useEffect(() => {
-    setVideoPath(stepInfo?.bgv?.file_name || null);
+    setVideoPath(stepInfo?.bgv?.file_name || null );
     setBgmPath(stepInfo?.bgm?.file_name || "bgm_joy_whistle.mp3");
+    setSfxPath(stepInfo?.sfx?.file_name || null);
     setStepInfo(stepInfo);
 
   }, [stepInfo]);

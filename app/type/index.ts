@@ -118,6 +118,7 @@ export interface StepInfo {
     passenger_state?: PassengerState, // ❌사용하지 않습니다. 참고만 해주세요.
     bgv?: BackgroundVideo, // ✅ 사용하는 데이터입니다. 배경 영상입니다.
     bgm?: BackgroundMusic, // ✅ 사용하는 데이터입니다. 배경 음악입니다.
+    sfx?: VehicleSoundEffect, // ✅ 사용하는 데이터입니다. 효과음입니다.
     assets_timeline?: AssetsTimeline[], // 화면 출력용 UI정보입니다. 0번째 부터 순서대로 출력합니다.
     requires_location_change: boolean, // ❌사용하지 않습니다. 위치 상태 값입니다.
     question?: string, // ✅ 사용하는 데이터입니다. 선택지의 질문입니다.
