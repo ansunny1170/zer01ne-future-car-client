@@ -4,12 +4,13 @@ import QuestionArea from "./question-area";
 import CommonPopupUI from "../ui/popup_ui/common";
 import { useEffect, useState, useMemo } from "react";
 import UspPopupBox from "../ui/usp-popup-ui";
+import { cn } from "@/utils/cn";
 
 export default function StepRepeat({ dafultComment }: { dafultComment?: string }) {
     const { stepInfo, setSfxPath } = useScene();
     const { assets_timeline, question, choices } = stepInfo || {};
     const [questionFlag, setQuestionFlag] = useState(false);
-
+    const [componentsView, setComponentsView] = useState(false);
     // 현재 보여줄 timeline 인덱스
     const [currentIdx, setCurrentIdx] = useState(0);
 
@@ -122,8 +123,14 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
         return null;
     };
 
+    useEffect(() => {
+        setTimeout(() => {
+            setComponentsView(true);
+        }, 500);
+    }, []);
+
     return (
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+        <div className={cn("absolute inset-0 flex flex-col items-center justify-center text-center opacity-0 transition-all duration-300", componentsView && "opacity-100") }>
             {renderContent()}
 
             {questionFlag && (
