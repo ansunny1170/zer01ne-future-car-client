@@ -3,13 +3,33 @@ import { useState, useEffect } from "react";
 import BasicBox from "../ui/basic-box";
 
 export default function QuestionButtons({
-    buttons
+    buttons,
+    onSelect
 }: {
     buttons: { [key: string]: string },
+    onSelect?: (key: string) => void,
 }) {
     const { stepNumber, setStepNumber } = useScene();
     const [visible, setVisible] = useState<number>(-1);
     const [hasAnimated, setHasAnimated] = useState(false);
+
+    // 단축키 1~4 매핑
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (!hasAnimated) return; // 버튼 애니메이션 완료 후에만 허용
+            const key = event.key;
+            if (['1','2','3','4'].includes(key)) {
+                const idx = parseInt(key, 10) - 1;
+                const btnKeys = Object.keys(buttons);
+                if (idx >= 0 && idx < btnKeys.length) {
+                    if (onSelect) onSelect(btnKeys[idx]);
+                    setStepNumber(stepNumber + 1);
+                }
+            }
+        }
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [buttons, hasAnimated, stepNumber, setStepNumber, onSelect]);
 
     useEffect(() => {
         if (hasAnimated) return; // 이미 애니메이션이 완료되었으면 다시 실행하지 않음
@@ -42,6 +62,7 @@ export default function QuestionButtons({
                             transitionDelay: `${index * 0.2}s`
                         }}
                         onClick={() => {
+                            if (onSelect) onSelect(button);
                             setStepNumber(stepNumber + 1);
                         }}
                     >

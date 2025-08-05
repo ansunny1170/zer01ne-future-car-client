@@ -11,6 +11,7 @@ export default function QuestionArea({
     subText,
     buttons,
     className,
+    defaultComment,
 }: {
     mainText: string | null;
     subText?: string | null;
@@ -18,6 +19,7 @@ export default function QuestionArea({
     buttons: {
         [key: string]: string;
     };
+    defaultComment?: string;
 }) {
     // 한 글자씩 배열로 분리
     const mainChars = mainText ? mainText.split('') : [];
@@ -44,7 +46,7 @@ export default function QuestionArea({
     
         try {
          const response = await processSpeech({session_id: session_id || "", user_message, is_new_session: false});
-         if(response?.data?.현재_단계 === "4/4 완료"){
+         if(response?.data?.step === 7){
             reStart();
             return;
          }
@@ -59,7 +61,7 @@ export default function QuestionArea({
         <div className={cn("flex flex-col items-center justify-center h-full gap-16", className)}>
             {
                 (mainText) && (
-                    <Speech onTrigger={handleSpeechTrigger} isProcessing={isProcessing} />
+                    <Speech onTrigger={handleSpeechTrigger} isProcessing={isProcessing} defaultComment={defaultComment}/>
                 )
             }
             <div>
@@ -93,7 +95,7 @@ export default function QuestionArea({
                     </motion.p>
                 )}
             </div>
-            <QuestionButtons buttons={buttons} />
+            <QuestionButtons buttons={buttons} onSelect={handleSpeechTrigger} />
         </div>
     );
 }

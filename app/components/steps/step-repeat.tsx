@@ -5,7 +5,7 @@ import CommonPopupUI from "../ui/popup_ui/common";
 import { useEffect, useState, useMemo } from "react";
 import UspPopupBox from "../ui/usp-popup-ui";
 
-export default function StepRepeat() {
+export default function StepRepeat({ dafultComment }: { dafultComment?: string }) {
     const { stepInfo, setSfxPath } = useScene();
     const { assets_timeline, question, choices } = stepInfo || {};
     const [questionFlag, setQuestionFlag] = useState(false);
@@ -133,6 +133,7 @@ export default function StepRepeat() {
                         acc[choice?.usp || ""] = choice?.description || "";
                         return acc;
                     }, {} as { [key: string]: string })} 
+                    defaultComment={dafultComment}
                 />
             )}
         </div>

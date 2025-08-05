@@ -33,8 +33,7 @@ export default function Step0({ dafultComment }: { dafultComment?: string }) {
         transition={{ duration: 1 }}
         className="animate-fade-in absolute inset-0 flex flex-col gap-8 items-center justify-center backdrop-blur-lg bg-black/10 z-[22]"
       >
-        <p>이 체험은 대화로 진행됩니다.</p>
-        <h1>반가워요!</h1>
+        <h1>끝~~~!</h1>
         <p>“출발”이라고 말해주세요.</p>
         <Speech onTrigger={handleSpeechTrigger} isProcessing={isProcessing} defaultComment={dafultComment}/>
       </motion.div>

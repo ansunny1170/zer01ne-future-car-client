@@ -10,6 +10,7 @@ import FixedLayout from "../components/fixed-layout";
 import StepVideoPlayer from "../components/video-player/step-video-player";
 import { useState } from "react";
 import StepAudioSfxPlayer from "@/components/audio-player/step-audio-sfx-player";
+import StepComplete from "@/components/steps/step-complete";
 
 export default function Home() {
   const [debug, setDebug] = useState(false);
@@ -22,8 +23,8 @@ export default function Home() {
   };
 
   const renderStep = () => {
-    switch (stepNumber) {
-      case 0:
+    switch (stepInfo?.step) {
+      case undefined:
         return (
           <motion.div
             key="step0"
@@ -33,7 +34,33 @@ export default function Home() {
             exit="exit"
             transition={{ duration: 0.2 }}
           >
-            <Step0/>
+            <Step0 dafultComment="출발하자"/>
+          </motion.div>
+        );
+      case 1:
+        return (
+          <motion.div
+            key="step0"
+            variants={fadeVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 0.2 }}
+          >
+            <StepRepeat dafultComment="나 혼자 바다 보러 갈래"/>
+          </motion.div>
+        );
+      case 8:
+        return (
+          <motion.div
+            key="step0"
+            variants={fadeVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 0.2 }}
+          >
+            <StepComplete/>
           </motion.div>
         );
       default:
@@ -89,7 +116,7 @@ export default function Home() {
             }}
             disabled={stepNumber === 0}
           >
-            {stepNumber}
+            {stepInfo?.step}
           </button>
         )}
 

@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import BasicBox from '../ui/basic-box';
 import { Icons } from '../ui/icons';
 import { cn } from '@/utils/cn';
 import HyundaiLoading from '../ui/hyundai-loading';
@@ -52,7 +51,7 @@ declare global {
   }
 }
 
-export default function Speech({ onTrigger, isProcessing }: { onTrigger: (text: string) => void, isProcessing: boolean }) {
+export default function Speech({ onTrigger, isProcessing, defaultComment }: { onTrigger: (text: string) => void, isProcessing: boolean, defaultComment?: string }) {
   const [finalText, setFinalText] = useState<string | null>(null)
   const [isListening, setIsListening] = useState(false)
   const recognitionRef = useRef<SpeechRecognition | null>(null)
@@ -75,6 +74,20 @@ export default function Speech({ onTrigger, isProcessing }: { onTrigger: (text: 
     window.addEventListener('keydown', handleKeyPress)
     return () => window.removeEventListener('keydown', handleKeyPress)
   }, [isProcessing])
+
+  useEffect(() => {
+    // 단축키 space 누르면  onTrigger에다가 text 넣어서 실행함
+    const handleSpaceKey = (event: KeyboardEvent) => {
+      if (event.code === 'Space') {
+        event.preventDefault();
+        if (defaultComment) {
+          onTrigger(defaultComment)
+        }
+      }
+    }
+    window.addEventListener('keydown', handleSpaceKey)
+    return () => window.removeEventListener('keydown', handleSpaceKey)
+  }, [defaultComment, onTrigger])
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
