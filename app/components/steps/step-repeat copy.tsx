@@ -102,7 +102,7 @@ export default function StepRepeat() {
 
                     return (
                         <PopupUiArray 
-                            assets_timeline={[currentTimelineItem]}
+                            assets_timeline={[{ ...currentTimelineItem, assets: nonCloneAssets }]}
                             onComplete={handlePopupComplete}
                         />
                     );
