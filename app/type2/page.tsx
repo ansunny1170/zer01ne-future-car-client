@@ -108,7 +108,6 @@ export default function Home() {
       <StepVideoPlayer/>
 
       <StepAudioPlayer/> 
-      <StepAudioSfxPlayer/>
 
       <AnimatePresence mode="wait">
         {renderStep()}

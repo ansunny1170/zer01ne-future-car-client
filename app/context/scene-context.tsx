@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useRef, useEffect, useMemo } from "react";
-import { StepInfo } from "../type";
+import { StepInfo, AssetsType } from "../type";
 
 // Context에서 사용할 타입 정의
 export type SceneContextType = {
@@ -67,7 +67,24 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     setVideoPath(stepInfo?.bgv?.file_name || null );
     setBgmPath(stepInfo?.bgm?.file_name || "bgm_joy_whistle.mp3");
-    setSfxPath(stepInfo?.sfx?.file_name || null);
+    // sfx 추출: 직접 필드 또는 assets_timeline 열기
+    const extractSfx = (info: StepInfo | null): string | null => {
+      if (!info) return null;
+      if ((info as any).sfx?.file_name) return (info as any).sfx.file_name;
+      for (const timeline of info.assets_timeline || []) {
+        for (const asset of timeline.assets) {
+          if (
+            asset.type === AssetsType.VEHICLE_SOUND_EFFECT ||
+            asset.type === AssetsType.COMPANION_VOICE
+          ) {
+            // @ts-ignore optional file_name field
+            return asset.file_name ?? null;
+          }
+        }
+      }
+      return null;
+    };
+    setSfxPath(extractSfx(stepInfo));
     setStepInfo(stepInfo);
 
   }, [stepInfo]);
