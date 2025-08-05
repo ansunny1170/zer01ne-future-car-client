@@ -6,7 +6,7 @@ export default function BasicPopupBox({children, type = "warm", className}: {chi
     <div className="relative w-fit mt-24 rounded-[32px] overflow-hidden text-white">  
           {/* 그라데이션 */}
           <p className={cn(
-            "absolute inset-0 scale-[calc(100%+2px)] blur-lg opacity-40 bg-transparent transition-all duration-300",
+            "absolute inset-0 scale-[calc(100%+2px)] blur-lg opacity-40 transition-all duration-300",
             type === "warm" ? "bg-[linear-gradient(to_right,#BB00FF_0%,#FF4D00_50%,#FF0033_100%)]"
             : "bg-[linear-gradient(to_right,#BFFF00_0%,#5CFFD9_50%,#0099FF_100%)]",
             "[mask-image:linear-gradient(to_top,black_0%,transparent_50%)] mix-blend-color-dodge",
