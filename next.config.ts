@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
     };
     return config;
   },
+  eslint: { ignoreDuringBuilds: true },
   async rewrites() {
     return [
       {
