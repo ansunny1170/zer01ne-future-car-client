@@ -9,6 +9,24 @@ export default function QuestionButtons({
     const { sceneNumber, setSceneNumber, setCategory } = useScene();
     const [visible, setVisible] = useState<number>(-1);
 
+    // 단축키 1~4 매핑
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            const key = event.key;
+            if (['1','2','3','4'].includes(key)) {
+                const idx = parseInt(key, 10) - 1;
+                const btnKeys = Object.keys(buttons);
+                if (idx >= 0 && idx < btnKeys.length) {
+                    const categoryKey = btnKeys[idx];
+                    setSceneNumber(sceneNumber + 1);
+                    setCategory(categoryKey);
+                }
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [buttons, sceneNumber, setSceneNumber, setCategory]);
+
     useEffect(() => {
         let i = 0;
         setVisible(-1); // 초기화

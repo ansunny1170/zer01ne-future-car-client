@@ -1,13 +1,12 @@
-import { useState } from "react";
+
 import Speech from "../speech";
 import { useSpeechProcessing } from "@/hooks/useSpeechProcessing";
-import Loading from "../loading";
-import CloneTalk from "../ui/clone-talk";
 import { useScene } from "@/context/scene-context";
 import { StepInfo } from "@/type";
+import { motion } from "framer-motion";
 
-export default function Step0() { 
-  const [talkingEnd, setTalkingEnd] = useState(false);
+
+export default function Step0({ dafultComment }: { dafultComment?: string }) { 
   const { mutateAsync: processSpeech, isPending: isProcessing } = useSpeechProcessing();
   const { setStepInfo, goNextStep, setSessionId } = useScene();
 
@@ -27,25 +26,18 @@ export default function Step0() {
   }
 
   return (
-    <div className="pl-8 absolute inset-0">
-      <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-
-        <CloneTalk
-          text={`안녕하세요. 저는 클론-21g입니다.\n저와 함께 미래차 경험을 시작해보시겠어요?\n테스트문장입니다.`}
-          keepLastLine={true}
-          onComplete={() => setTalkingEnd(true)}
-        />
-
-        {talkingEnd && (
-          <div className="animate-fade-in">
-            <Speech onTrigger={handleSpeechTrigger} isProcessing={isProcessing} />
-          </div>
-        )}
-      </div>
-
-      {isProcessing && (
-        <Loading />
-      )}
+    <div className="pl-8 absolute inset-0 text-white">
+      <motion.div
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 1 }}
+        className="animate-fade-in absolute inset-0 flex flex-col gap-8 items-center justify-center backdrop-blur-lg bg-black/10 z-[22]"
+      >
+        <p>이 체험은 대화로 진행됩니다.</p>
+        <h1>반가워요!</h1>
+        <p>“출발”이라고 말해주세요.</p>
+        <Speech onTrigger={handleSpeechTrigger} isProcessing={isProcessing} defaultComment={dafultComment}/>
+      </motion.div>
     </div>
   );
 }

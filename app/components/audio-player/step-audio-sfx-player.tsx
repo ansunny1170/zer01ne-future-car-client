@@ -2,12 +2,12 @@ import { BASE_S3_LINK } from '@/constants';
 import { useScene } from '@/context/scene-context';
 import { useEffect, useRef, useState } from 'react';
 
-export default function StepAudioPlayer({ 
+export default function StepAudioSfxPlayer({ 
     className 
 }: {
     className?: string
 }) {
-    const { bgmPath } = useScene();
+    const { sfxPath } = useScene();
     const BASE_URL = BASE_S3_LINK;
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const [isUserInteracted, setIsUserInteracted] = useState(false);
@@ -63,7 +63,7 @@ export default function StepAudioPlayer({
 
     // 컴포넌트 마운트 시 초기 오디오 로드
     useEffect(() => {
-        if (audioRef.current && bgmPath) {
+        if (audioRef.current && sfxPath) {
             audioRef.current.load();
             if (isUserInteracted && !hasError) {
                 audioRef.current.play()
@@ -75,27 +75,27 @@ export default function StepAudioPlayer({
 
     // bgmPath가 변경될 때 오디오 소스 업데이트
     useEffect(() => {
-        if (audioRef.current && bgmPath) {
-            audioRef.current.src = `${BASE_URL}/${bgmPath}`;
+        if (audioRef.current && sfxPath) {
+            audioRef.current.src = `${BASE_URL}/${sfxPath}`;
             audioRef.current.load();
             if (isUserInteracted && !hasError) {
                 audioRef.current.play()
                     .catch(error => console.error('🎵 오디오 재생 실패:', error));
             }
         }
-    }, [bgmPath, isUserInteracted, hasError, BASE_URL]);
+    }, [sfxPath, isUserInteracted, hasError, BASE_URL]);
 
     return (
         <div className={className}>
             <audio
                 ref={audioRef}
-                src={`${BASE_URL}/${bgmPath}`}
+                src={`${BASE_URL}/${sfxPath}`}
                 autoPlay
                 loop
                 muted={!isUserInteracted || hasError}
                 preload='auto'
                 onCanPlay={() => {
-                    console.log('🎵 오디오 로드 완료:', bgmPath);
+                    console.log('🎵 오디오 로드 완료:', sfxPath);
                     if (audioRef.current && isUserInteracted && !hasError) {
                         audioRef.current.volume = DEFAULT_VOLUME;
                     }
@@ -103,7 +103,7 @@ export default function StepAudioPlayer({
                 }}
                 onError={(e) => {
                     console.error('🎵 오디오 로드 에러:', e);
-                    console.error('🎵 에러 발생 파일:', bgmPath);
+                    console.error('🎵 에러 발생 파일:', sfxPath);
                     setHasError(true);
                 }}
                 style={{ display: 'none' }}

@@ -37,9 +37,9 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
   const [category, setCategory] = useState("a");
   const [categoryNumber, setCategoryNumber] = useState<number | null>(1);
   const [stepNumber, setStepNumber] = useState(0);
-  const [videoPath, setVideoPath] = useState<string | null>("prologue");
+  const [videoPath, setVideoPath] = useState<string | null>("bg_citydrive_day.mp4");
   const [uiPath, setUiPath] = useState<string | null>(null);
-  const [bgmPath, setBgmPath] = useState<string | null>("night_synth.m4a");
+  const [bgmPath, setBgmPath] = useState<string | null>("bgm_joy_whistle.mp3");
   const [sfxPath, setSfxPath] = useState<string | null>(null);
   const [stepInfo, setStepInfo] = useState<StepInfo | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -65,10 +65,9 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
   }, [sceneNumber, category, categoryNumber, channel, senderId, stepNumber]);
 
   useEffect(() => {
-    setVideoPath(stepInfo?.assets[0]?.asset?.bg || null);
-    setUiPath(stepInfo?.assets[0]?.asset?.pop_ui?.[0]?.key_name || null);
-    setBgmPath(stepInfo?.assets[0]?.asset?.bgm || null);
-    setSfxPath(stepInfo?.assets[0]?.asset?.sfx || null);
+    setVideoPath(stepInfo?.bgv?.file_name || null);
+    setBgmPath(stepInfo?.bgm?.file_name || "bgm_joy_whistle.mp3");
+    setStepInfo(stepInfo);
 
   }, [stepInfo]);
 

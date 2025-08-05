@@ -1,0 +1,1 @@
+export const BASE_S3_LINK = "https://future-car.s3.ap-northeast-2.amazonaws.com"

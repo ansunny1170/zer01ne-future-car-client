@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import BasicBox from '../ui/basic-box';
+import { Icons } from '../ui/icons';
+import { cn } from '@/utils/cn';
+import HyundaiLoading from '../ui/hyundai-loading';
 
 // Web Speech API 타입 정의
 interface SpeechRecognitionEvent extends Event {
@@ -49,7 +51,7 @@ declare global {
   }
 }
 
-export default function Speech({ onTrigger, isProcessing }: { onTrigger: (text: string) => void, isProcessing: boolean }) {
+export default function Speech({ onTrigger, isProcessing, defaultComment }: { onTrigger: (text: string) => void, isProcessing: boolean, defaultComment?: string }) {
   const [finalText, setFinalText] = useState<string | null>(null)
   const [isListening, setIsListening] = useState(false)
   const recognitionRef = useRef<SpeechRecognition | null>(null)
@@ -72,6 +74,20 @@ export default function Speech({ onTrigger, isProcessing }: { onTrigger: (text: 
     window.addEventListener('keydown', handleKeyPress)
     return () => window.removeEventListener('keydown', handleKeyPress)
   }, [isProcessing])
+
+  useEffect(() => {
+    // 단축키 space 누르면  onTrigger에다가 text 넣어서 실행함
+    const handleSpaceKey = (event: KeyboardEvent) => {
+      if (event.code === 'Space') {
+        event.preventDefault();
+        if (defaultComment) {
+          onTrigger(defaultComment)
+        }
+      }
+    }
+    window.addEventListener('keydown', handleSpaceKey)
+    return () => window.removeEventListener('keydown', handleSpaceKey)
+  }, [defaultComment, onTrigger])
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
@@ -132,19 +148,26 @@ export default function Speech({ onTrigger, isProcessing }: { onTrigger: (text: 
   }, [onTrigger, isProcessing])
 
   return (
+    isProcessing ? (
+      <HyundaiLoading/>
+    ) : (
     <div className="flex flex-col gap-4 items-center justify-center">
-      <BasicBox className='flex items-center justify-center gap-4 p-4'>
-        <span className={`inline-block w-[16px] h-[16px] bg-red-500 rounded-full ${isListening ? 'animate-pulse' : ''}`}/>
+      <div className='flex items-center justify-center gap-4 p-4 backdrop-blur-2xl rounded-full bg-[linear-gradient(to_right,#00519d98_0%,#0099ff36_100%)] text-[#46BBFF]'>
+        <span className={cn('animate-pulse', isListening && 'animate-in')}>
+          <Icons.leftQuote/>
+        </span>
         {
-          isProcessing ? (
-            <strong className='opacity-60'>처리 중입니다...</strong>
-          ) : !finalText ? (
-            <strong className='opacity-60'>음성으로 답변해주세요.</strong>
+          !finalText ? (
+            <strong className='opacity-60'>음성으로 알려주세요!</strong>
           ) : (
             <strong>{finalText}</strong>
           )
         }
-      </BasicBox>
+        <span className={cn('animate-pulse', isListening && 'animate-in')}>
+          <Icons.rightQuote/>
+        </span>
+      </div>
     </div>
+    )
   )
 }

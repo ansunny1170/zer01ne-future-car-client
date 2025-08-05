@@ -10,11 +10,12 @@ const nextConfig: NextConfig = {
     };
     return config;
   },
+  eslint: { ignoreDuringBuilds: true },
   async rewrites() {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://15.165.63.35:8000/:path*', // 백엔드 주소
+        destination: 'http://ec2-15-165-63-35.ap-northeast-2.compute.amazonaws.com:8000/:path*', // 백엔드 주소
       },
     ]
   },

@@ -33,7 +33,14 @@ export default function CloneTalk({text, keepLastLine = false, onComplete}: {tex
   }, [text]);
 
   useEffect(() => {
-    if (currentIndex >= lines.length) return;
+    // 모든 라인을 표시한 뒤 완료 처리 (단일 라인 포함)
+    if (currentIndex >= lines.length) {
+      if (!isComplete) {
+        setIsComplete(true);
+        onComplete?.();
+      }
+      return;
+    }
 
     if (currentIndex === 0) {
       setMessages([{ 

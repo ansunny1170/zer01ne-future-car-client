@@ -3,15 +3,16 @@ import QuestionButtons from "./question-buttons";
 import { motion } from "framer-motion";
 import Speech from "../speech"; 
 import { useScene } from "@/context/scene-context";
+import { useRef, useState } from "react";
 import { StepInfo } from "@/type";
 import { useSpeechProcessing } from "@/hooks/useSpeechProcessing";
-import Loading from "../loading";
 
 export default function QuestionArea({
     mainText,
     subText,
     buttons,
     className,
+    defaultComment,
 }: {
     mainText: string | null;
     subText?: string | null;
@@ -19,12 +20,17 @@ export default function QuestionArea({
     buttons: {
         [key: string]: string;
     };
+    defaultComment?: string;
 }) {
     // 한 글자씩 배열로 분리
     const mainChars = mainText ? mainText.split('') : [];
     const subChars = subText ? subText.split('') : [];
     const { sessionId, setStepInfo, goNextStep, reStart } = useScene();
-    const { mutateAsync: processSpeech, isPending: isProcessing } = useSpeechProcessing();
+    const { mutateAsync: processSpeech, isPending } = useSpeechProcessing();
+
+    // 추가 가드: 렌더 사이에도 동작을 막기 위한 ref/state
+    const processingRef = useRef(false);
+    const [isProcessing, setIsProcessing] = useState(false);
 
     const container = {
         hidden: {},
@@ -40,12 +46,16 @@ export default function QuestionArea({
     };
 
     const handleSpeechTrigger = async (ttsText: string) => {
+        // 이미 처리 중이면 추가 호출을 방지
+        if (processingRef.current) return;
+        processingRef.current = true;
+        setIsProcessing(true);
         const user_message = ttsText;
         const session_id = sessionId;
     
         try {
          const response = await processSpeech({session_id: session_id || "", user_message, is_new_session: false});
-         if(response?.data?.현재_단계 === "4/4 완료"){
+         if(response?.data?.step === 7){
             reStart();
             return;
          }
@@ -53,12 +63,19 @@ export default function QuestionArea({
          goNextStep();
         } catch (error) {
           console.error('Speech processing failed:', error);
+        } finally {
+          processingRef.current = false;
+          setIsProcessing(false);
         }
       }
 
     return (
         <div className={cn("flex flex-col items-center justify-center h-full gap-16", className)}>
-            <Speech onTrigger={handleSpeechTrigger} isProcessing={isProcessing} />
+            {
+                (mainText) && (
+                    <Speech onTrigger={handleSpeechTrigger} isProcessing={isProcessing} defaultComment={defaultComment}/>
+                )
+            }
             <div>
                 {mainChars.length > 0 && (
                     <motion.h1
@@ -90,11 +107,7 @@ export default function QuestionArea({
                     </motion.p>
                 )}
             </div>
-            <QuestionButtons buttons={buttons} />
-
-            {isProcessing && (
-                <Loading />
-            )}
+            <QuestionButtons buttons={buttons} onSelect={handleSpeechTrigger} isProcessing={isProcessing || isPending} />
         </div>
     );
 }
