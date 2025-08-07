@@ -26,6 +26,10 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["var(--font-hyundai)", "var(--font-geist-sans)", "sans-serif"],
+        mono: ["var(--font-geist-mono)", "monospace"]
+      },
       maskImage: {
         'linear': 'linear-gradient(white, white)',
       },
