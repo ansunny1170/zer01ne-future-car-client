@@ -16,17 +16,8 @@ export default function CloneTalk({text, keepLastLine = false, onComplete}: {tex
   const lines = text.split("\n");
   const timeout = 3000;
   
-  // 모든 timeout을 clear하는 유틸리티 함수
-  const clearAllTimeouts = () => {
-    let id = window.setTimeout(() => {}, 0);
-    while (id) {
-      window.clearTimeout(id);
-      id--;
-    }
-  };
   
   useEffect(() => {
-    clearAllTimeouts();
     setMessages([]);
     setCurrentIndex(0);
     setIsComplete(false);
@@ -91,10 +82,6 @@ export default function CloneTalk({text, keepLastLine = false, onComplete}: {tex
     };
     
     showNextMessage();
-
-    return () => {
-      clearAllTimeouts();
-    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentIndex, lines.length, keepLastLine, onComplete]);
 

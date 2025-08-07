@@ -6,6 +6,14 @@ import HyundaiLoading from "../ui/hyundai-loading";
 
 export default function StepComplete() { 
   const { reStart } = useScene();
+  // 모든 timeout을 clear하는 유틸리티 함수
+  const clearAllTimeouts = () => {
+    let id = window.setTimeout(() => {}, 0);
+    while (id) {
+      window.clearTimeout(id);
+      id--;
+    }
+  };
 
   // r키 누르면 맨 첫 페이지로 이동
   useEffect(() => {
@@ -16,7 +24,10 @@ export default function StepComplete() {
     }
 
     window.addEventListener('keydown', handleKeyPress)
-    return () => window.removeEventListener('keydown', handleKeyPress)
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress)
+      clearAllTimeouts()
+    }
   }, [reStart])
 
   return (
