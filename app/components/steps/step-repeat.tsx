@@ -20,6 +20,9 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
         return currentIdx >= assets_timeline.length;
     }, [assets_timeline, currentIdx]);
 
+    console.log(isTimelineFinished);
+    console.log(questionFlag);
+
     // 타임라인이 끝났을 때 questionFlag를 true로 설정
     useEffect(() => {
         if (isTimelineFinished && !questionFlag) {
@@ -47,14 +50,6 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
         }
     }, [assets_timeline, currentIdx, isTimelineFinished, setSfxPath]);
 
-    // 질문 영역에 전달할 버튼 객체 변환
-    const questionButtons = useMemo(() => {
-        if (!choices) return {};
-        return choices.reduce<Record<string, string>>((acc, choice, idx) => {
-            acc[choice.usp || `choice-${idx}`] = choice.description;
-            return acc;
-        }, {});
-    }, [choices]);
 
     // 현재 보여줄 콘텐츠 결정
     const renderContent = () => {

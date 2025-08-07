@@ -47,7 +47,7 @@ export default function Home() {
             exit="exit"
             transition={{ duration: 0.2 }}
           >
-            <StepRepeat dafultComment="아이랑 산으로 캠핑"/>
+          <StepRepeat dafultComment="아이랑 산으로 캠핑"/>
           </motion.div>
         );
       case 6:
