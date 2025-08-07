@@ -117,7 +117,7 @@ export default function Home() {
         {
           stepNumber > 0 && (
           <button
-            className="absolute top-4 left-4 bg-white text-black px-4 py-2 rounded-md z-10"
+            className="absolute top-4 left-4 bg-white text-black px-4 py-2 rounded-md z-10 z-[999]"
             onClick={() => {
               const prevStep = STEP_DUMMY[stepNumber - 1 as keyof typeof STEP_DUMMY];
               if (prevStep) {
@@ -132,7 +132,7 @@ export default function Home() {
 
         {
           stepNumber > 0 && (
-            <div className="absolute top-4 left-16 max-h-[90vh] overflow-y-auto bg-white max-w-1/2 text-black px-4 py-2 rounded-md z-10"> 
+            <div className="absolute top-4 left-16 max-h-[90vh] overflow-y-auto bg-white max-w-1/2 text-black px-4 py-2 rounded-md z-[999]"> 
               <button
                 onClick={() => {
                   setDebug(!debug);

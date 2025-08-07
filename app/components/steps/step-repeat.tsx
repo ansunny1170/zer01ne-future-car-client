@@ -14,6 +14,7 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
     const [componentsView, setComponentsView] = useState(false);
     // 현재 보여줄 timeline 인덱스
     const [currentIdx, setCurrentIdx] = useState(0);
+    const [currentUspPool, setCurrentUspPool] = useState<any[]>([]);
 
     // timeline 처리 완료 여부
     const isTimelineFinished = useMemo(() => {
@@ -79,18 +80,9 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
             // 2초 후 다음 타임라인으로 이동
             setTimeout(() => setCurrentIdx(idx => idx + 1), 2000);
 
-            return (
-                <div className="flex flex-col gap-4">
-                    {uspPoolAssets.map((asset, index) => (
-                        <UspPopupBox
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            key={`${currentIdx}-${index}`}
-                            text={(asset as any).description}
-                            className="w-full"
-                        />
-                    ))}
-                </div>
-            );
+            setCurrentUspPool(uspPoolAssets.map(asset => ({
+                description: (asset as any).description,
+            })));
         }
 
         // 팝업 UI 처리 (DEFAULT_POPUP, FUNCTION_USP_POOL 등)
@@ -129,7 +121,7 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
         <div className={cn("absolute inset-0 flex flex-col items-center justify-center text-center opacity-0 transition-all duration-300", componentsView && "opacity-100") }>
             {renderContent()}
 
-            <UspPopupWrapper data={[{description: "1234"}, {description: "2345sdfkljsdljsdfjksla"}, {description: "3456"}, {description: "456dsjklsdajfldjkl7"}, {description: "5678"}, {description: "6789"}, {description: "7890"}]} />
+            <UspPopupWrapper data={currentUspPool} />
 
             {questionFlag && (
                 <QuestionArea 
