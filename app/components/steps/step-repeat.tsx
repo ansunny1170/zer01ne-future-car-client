@@ -52,7 +52,7 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
 
 
     // 현재 보여줄 콘텐츠 결정
-    const renderContent = () => {
+    const renderContent = () => {  
         if (!assets_timeline || isTimelineFinished) {
             // 모든 timeline 처리가 끝나면 null 반환 (questionFlag로 별도 렌더링)
             return null;
@@ -100,8 +100,8 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
         ].includes(asset.type)) as any;
 
         if (popupAsset) {
-            // 1.5초 후 다음 타임라인으로 이동
-            setTimeout(() => setCurrentIdx(idx => idx + 1), 1500);
+            // 3초 후 다음 타임라인으로 이동
+            setTimeout(() => setCurrentIdx(idx => idx + 1), 3000);
 
             return (
                 <CommonPopupUI

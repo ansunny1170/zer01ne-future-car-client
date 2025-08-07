@@ -8,13 +8,18 @@ interface Message {
   id: number;
 }
 
-export default function CloneTalk({text, keepLastLine = false, onComplete}: {text: string, keepLastLine?: boolean, onComplete?: () => void}) {
+export default function CloneTalk({text, keepLastLine = false, onComplete, duration = 5000}: {text: string; keepLastLine?: boolean; onComplete?: () => void; duration?: number | number[]}) {
   const [scope] = useAnimate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isComplete, setIsComplete] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const lines = text.split("\n");
-  const timeout = 3000;
+  const getTimeout = (idx: number): number => {
+    if (Array.isArray(duration)) {
+      return duration[idx] ?? 5000;
+    }
+    return (duration as number) ?? 5000;
+  };
   
   
   useEffect(() => {
@@ -44,7 +49,7 @@ export default function CloneTalk({text, keepLastLine = false, onComplete}: {tex
       }]);
       setTimeout(() => {
         setCurrentIndex(1);
-      }, timeout);
+      }, getTimeout(0));
       return;
     }
 
@@ -65,19 +70,19 @@ export default function CloneTalk({text, keepLastLine = false, onComplete}: {tex
         if (!keepLastLine) {
           setTimeout(() => {
             setIsComplete(true);
-          }, timeout);
+          }, getTimeout(currentIndex));
         }
         // keepLastLine이 true인 경우에는 마지막 라인을 유지하고 추가 업데이트를 수행하지 않습니다.
       } else {
         setTimeout(() => {
           setCurrentIndex(prev => prev + 1);
-        }, timeout);
+        }, getTimeout(currentIndex));
       }
 
       if (currentIndex === lines.length - 1) {
         setTimeout(() => {
           onComplete?.();
-        }, timeout);
+        }, getTimeout(currentIndex));
       }
     };
     

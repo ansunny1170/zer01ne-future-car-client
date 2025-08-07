@@ -59,7 +59,11 @@ export default function QuestionArea({
             {mainText && (
                 <CloneTalk text={mainText} keepLastLine={true} onComplete={() => {}} />
             )}
-            <QuestionButtons buttons={buttons} onSelect={handleSpeechTrigger} isProcessing={isProcessing || isPending} />
+            {
+                buttons && (
+                    <QuestionButtons buttons={buttons} onSelect={handleSpeechTrigger} isProcessing={isProcessing || isPending} />
+                )
+            }
             {
                 (mainText) && (
                     <Speech onTrigger={handleSpeechTrigger} isProcessing={isProcessing} defaultComment={defaultComment}/>
