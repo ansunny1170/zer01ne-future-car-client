@@ -1,32 +1,29 @@
 /* eslint-disable @next/next/no-img-element */
 import { cn } from "@/utils/cn";
 import { motion, useAnimate, AnimatePresence } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 interface Message {
   text: string;
   isActive: boolean;
   id: number;
 }
 
-export default function CloneTalk({text, keepLastLine = false, onComplete}: {text: string, keepLastLine?: boolean, onComplete?: () => void}) {
+export default function CloneTalk({text, keepLastLine = false, onComplete, duration = 5000}: {text: string; keepLastLine?: boolean; onComplete?: () => void; duration?: number | number[]}) {
   const [scope] = useAnimate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isComplete, setIsComplete] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const lines = text.split("\n");
-  const timeout = 3000;
-  
-  // 모든 timeout을 clear하는 유틸리티 함수
-  const clearAllTimeouts = () => {
-    let id = window.setTimeout(() => {}, 0);
-    while (id) {
-      window.clearTimeout(id);
-      id--;
+  const idCounter = useRef(0);
+  const getTimeout = (idx: number): number => {
+    if (Array.isArray(duration)) {
+      return duration[idx] ?? 5000;
     }
+    return (duration as number) ?? 5000;
   };
   
+  
   useEffect(() => {
-    clearAllTimeouts();
     setMessages([]);
     setCurrentIndex(0);
     setIsComplete(false);
@@ -35,8 +32,11 @@ export default function CloneTalk({text, keepLastLine = false, onComplete}: {tex
   useEffect(() => {
     // 모든 라인을 표시한 뒤 완료 처리 (단일 라인 포함)
     if (currentIndex >= lines.length) {
-      if (!isComplete) {
+      if (!isComplete && !keepLastLine) {
+        // keepLastLine이 false인 경우에만 페이드아웃 처리
         setIsComplete(true);
+      }
+      if (!isComplete) {
         onComplete?.();
       }
       return;
@@ -46,11 +46,11 @@ export default function CloneTalk({text, keepLastLine = false, onComplete}: {tex
       setMessages([{ 
         text: lines[0], 
         isActive: true,
-        id: 0 
+        id: idCounter.current++ 
       }]);
       setTimeout(() => {
         setCurrentIndex(1);
-      }, timeout);
+      }, getTimeout(0));
       return;
     }
 
@@ -63,38 +63,37 @@ export default function CloneTalk({text, keepLastLine = false, onComplete}: {tex
         return [...newMessages, { 
           text: lines[currentIndex], 
           isActive: true,
-          id: currentIndex 
+          id: idCounter.current++ 
         }];
       });
       
-      if (currentIndex === lines.length - 1 && !keepLastLine) {
-        setTimeout(() => {
-          setIsComplete(true);
-        }, timeout);
+      if (currentIndex === lines.length - 1) {
+        if (!keepLastLine) {
+          setTimeout(() => {
+            setIsComplete(true);
+          }, getTimeout(currentIndex));
+        }
+        // keepLastLine이 true인 경우에는 마지막 라인을 유지하고 추가 업데이트를 수행하지 않습니다.
       } else {
         setTimeout(() => {
           setCurrentIndex(prev => prev + 1);
-        }, timeout);
+        }, getTimeout(currentIndex));
       }
 
       if (currentIndex === lines.length - 1) {
         setTimeout(() => {
           onComplete?.();
-        }, timeout);
+        }, getTimeout(currentIndex));
       }
     };
     
     showNextMessage();
-
-    return () => {
-      clearAllTimeouts();
-    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentIndex, lines.length, keepLastLine, onComplete]);
 
   return (
     <motion.div 
-      className="absolute inset-0 z-10"
+      className="absolute inset-0 z-50"
       initial={{ opacity: 1 }}
       animate={{ opacity: isComplete ? 0 : 1 }}
       transition={{ duration: 1 }}

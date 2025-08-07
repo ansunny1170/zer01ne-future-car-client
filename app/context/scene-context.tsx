@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useRef, useEffect, useMemo } from "react";
 import { StepInfo, AssetsType } from "../type";
+import { bgmDict, bgvDict } from "@/utils/constants";
 
 // Context에서 사용할 타입 정의
 export type SceneContextType = {
@@ -37,9 +38,9 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
   const [category, setCategory] = useState("a");
   const [categoryNumber, setCategoryNumber] = useState<number | null>(1);
   const [stepNumber, setStepNumber] = useState(0);
-  const [videoPath, setVideoPath] = useState<string | null>("bg_citydrive_day.mp4");
+  const [videoPath, setVideoPath] = useState<string | null>(null);
   const [uiPath, setUiPath] = useState<string | null>(null);
-  const [bgmPath, setBgmPath] = useState<string | null>("bgm_joy_whistle.mp3");
+  const [bgmPath, setBgmPath] = useState<string | null>(null);
   const [sfxPath, setSfxPath] = useState<string | null>(null);
   const [stepInfo, setStepInfo] = useState<StepInfo | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -65,8 +66,8 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
   }, [sceneNumber, category, categoryNumber, channel, senderId, stepNumber]);
 
   useEffect(() => {
-    setVideoPath(stepInfo?.bgv?.file_name || null );
-    setBgmPath(stepInfo?.bgm?.file_name || "bgm_joy_whistle.mp3");
+    setVideoPath(stepInfo?.bgv?.file_name || bgvDict[Math.floor(Math.random() * bgvDict.length)].file_name || null );
+    setBgmPath(stepInfo?.bgm?.file_name || bgmDict[Math.floor(Math.random() * bgmDict.length)].file_name || null);
     // sfx 추출: 직접 필드 또는 assets_timeline 열기
     const extractSfx = (info: StepInfo | null): string | null => {
       if (!info) return null;
@@ -77,7 +78,7 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
             asset.type === AssetsType.VEHICLE_SOUND_EFFECT ||
             asset.type === AssetsType.COMPANION_VOICE
           ) {
-            // @ts-ignore optional file_name field
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             return asset.file_name ?? null;
           }
         }

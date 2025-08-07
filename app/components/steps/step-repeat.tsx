@@ -5,6 +5,7 @@ import CommonPopupUI from "../ui/popup_ui/common";
 import { useEffect, useState, useMemo } from "react";
 import UspPopupBox from "../ui/usp-popup-ui";
 import { cn } from "@/utils/cn";
+import UspPopupWrapper from "../ui/usp-popup-wrapper";
 
 export default function StepRepeat({ dafultComment }: { dafultComment?: string }) {
     const { stepInfo, setSfxPath } = useScene();
@@ -13,12 +14,16 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
     const [componentsView, setComponentsView] = useState(false);
     // 현재 보여줄 timeline 인덱스
     const [currentIdx, setCurrentIdx] = useState(0);
+    const [currentUspPool, setCurrentUspPool] = useState<any[]>([]);
 
     // timeline 처리 완료 여부
     const isTimelineFinished = useMemo(() => {
         if (!assets_timeline) return true;
         return currentIdx >= assets_timeline.length;
     }, [assets_timeline, currentIdx]);
+
+    console.log(isTimelineFinished);
+    console.log(questionFlag);
 
     // 타임라인이 끝났을 때 questionFlag를 true로 설정
     useEffect(() => {
@@ -47,17 +52,9 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
         }
     }, [assets_timeline, currentIdx, isTimelineFinished, setSfxPath]);
 
-    // 질문 영역에 전달할 버튼 객체 변환
-    const questionButtons = useMemo(() => {
-        if (!choices) return {};
-        return choices.reduce<Record<string, string>>((acc, choice, idx) => {
-            acc[choice.usp || `choice-${idx}`] = choice.description;
-            return acc;
-        }, {});
-    }, [choices]);
 
     // 현재 보여줄 콘텐츠 결정
-    const renderContent = () => {
+    const renderContent = () => {  
         if (!assets_timeline || isTimelineFinished) {
             // 모든 timeline 처리가 끝나면 null 반환 (questionFlag로 별도 렌더링)
             return null;
@@ -83,18 +80,12 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
             // 2초 후 다음 타임라인으로 이동
             setTimeout(() => setCurrentIdx(idx => idx + 1), 2000);
 
-            return (
-                <div className="flex flex-col gap-4">
-                    {uspPoolAssets.map((asset, index) => (
-                        <UspPopupBox
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            key={`${currentIdx}-${index}`}
-                            text={(asset as any).description}
-                            className="w-full"
-                        />
-                    ))}
-                </div>
-            );
+            setCurrentUspPool(prev => [...prev, ...uspPoolAssets.map(asset => (
+                {
+                    ...(asset as any),
+                    description: (asset as any).description,
+                }
+            )).filter(asset => asset.description)]);
         }
 
         // 팝업 UI 처리 (DEFAULT_POPUP, FUNCTION_USP_POOL 등)
@@ -105,8 +96,8 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
         ].includes(asset.type)) as any;
 
         if (popupAsset) {
-            // 1.5초 후 다음 타임라인으로 이동
-            setTimeout(() => setCurrentIdx(idx => idx + 1), 1500);
+            // 3초 후 다음 타임라인으로 이동
+            setTimeout(() => setCurrentIdx(idx => idx + 1), 3000);
 
             return (
                 <CommonPopupUI
@@ -132,6 +123,8 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
     return (
         <div className={cn("absolute inset-0 flex flex-col items-center justify-center text-center opacity-0 transition-all duration-300", componentsView && "opacity-100") }>
             {renderContent()}
+
+            <UspPopupWrapper data={currentUspPool} />
 
             {questionFlag && (
                 <QuestionArea 

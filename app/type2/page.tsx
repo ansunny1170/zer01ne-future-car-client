@@ -4,12 +4,10 @@ import Step0 from "../components/steps/step0";
 import StepRepeat from "../components/steps/step-repeat";
 import { useScene } from "../context/scene-context";
 import { AnimatePresence, motion } from "framer-motion";
-import { STEP_DUMMY } from "../utils/constants";
 import StepAudioPlayer from "../components/audio-player/step-audio-player";
 import FixedLayout from "../components/fixed-layout";
 import StepVideoPlayer from "../components/video-player/step-video-player";
 import { useState } from "react";
-import StepAudioSfxPlayer from "@/components/audio-player/step-audio-sfx-player";
 import StepComplete from "@/components/steps/step-complete";
 
 export default function Home() {
@@ -47,7 +45,7 @@ export default function Home() {
             exit="exit"
             transition={{ duration: 0.2 }}
           >
-            <StepRepeat dafultComment="아이랑 산으로 캠핑"/>
+          <StepRepeat dafultComment="아이랑 산으로 캠핑"/>
           </motion.div>
         );
       case 6:
@@ -114,39 +112,29 @@ export default function Home() {
       </AnimatePresence>
 
       <div>
-        {
-          stepNumber > 0 && (
-          <button
-            className="absolute top-4 left-4 bg-white text-black px-4 py-2 rounded-md z-10"
-            onClick={() => {
-              const prevStep = STEP_DUMMY[stepNumber - 1 as keyof typeof STEP_DUMMY];
-              if (prevStep) {
-                goPrevStep();
-              }
-            }}
-            disabled={stepNumber === 0}
-          >
-            {stepInfo?.step}
-          </button>
-        )}
+        <button
+          className="absolute top-4 left-4 bg-white text-black px-4 py-2 rounded-md z-10 z-[999]"
+          onClick={() => {
+            goPrevStep();
+          }}
+        >
+          {stepInfo?.step}
+        </button>
 
-        {
-          stepNumber > 0 && (
-            <div className="absolute top-4 left-16 max-h-[90vh] overflow-y-auto bg-white max-w-1/2 text-black px-4 py-2 rounded-md z-10"> 
-              <button
-                onClick={() => {
-                  setDebug(!debug);
-                }}
-              >
-                step info 디버깅
-              </button>
-              {debug && (
-                <pre>
-                  {JSON.stringify(stepInfo, null, 2)}
-                </pre>
-              )}
-          </div>
-        )}
+        <div className="absolute top-4 left-16 max-h-[90vh] overflow-y-auto bg-white max-w-1/2 text-black px-4 py-2 rounded-md z-[999]"> 
+          <button
+            onClick={() => {
+              setDebug(!debug);
+            }}
+          >
+            step info 디버깅
+          </button>
+          {debug && (
+            <pre>
+              {JSON.stringify(stepInfo, null, 2)}
+            </pre>
+          )}
+        </div>
 
         {
           stepNumber === lastSceneNumber && (

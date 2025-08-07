@@ -21,8 +21,13 @@ export default function StepAudioPlayer() {
 
     useEffect(() => {
         if (isSfxActive && sfxRef.current && sfxPath) {
-            sfxRef.current.load();
-            sfxRef.current.play();
+            const timer = setTimeout(() => {
+                if (sfxRef.current) {
+                    sfxRef.current.load();
+                    sfxRef.current.play();
+                }
+            }, 500); // 0.5초 지연 후 재생
+            return () => clearTimeout(timer);
         }
     }, [isSfxActive, sfxPath]);
     useEffect(() => {
@@ -42,7 +47,7 @@ export default function StepAudioPlayer() {
             )}
             {/* sfx */}
             {sfxPath && isSfxActive && (
-              <audio key={sfxPath} ref={sfxRef} src={`${BASE_URL}/${sfxPath}`} autoPlay />
+              <audio key={sfxPath} ref={sfxRef} src={`${BASE_URL}/${sfxPath}`} />
             )}
         </div>
     );

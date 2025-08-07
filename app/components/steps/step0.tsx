@@ -7,7 +7,7 @@ import IntroSpeech from "../speech/intro-speech";
 
 export default function Step0({ dafultComment }: { dafultComment?: string }) { 
   const { mutateAsync: processSpeech, isPending: isProcessing } = useSpeechProcessing();
-  const { setStepInfo, goNextStep, setSessionId } = useScene();
+  const { setStepInfo, goNextStep, setSessionId, setBgmPath, setVideoPath } = useScene();
 
   const handleSpeechTrigger = async (ttsText: string) => {
     const session_id = new Date().getTime().toString();
