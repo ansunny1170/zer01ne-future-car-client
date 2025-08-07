@@ -16,7 +16,7 @@ export default function UspPopupBox({text, type = "warm", className}: {text: str
           {/* 기본 테두리 */}
           <p className="absolute inset-0 border-[1.5px] border-white/40 bg-white/10 rounded-[32px] [mask-image:linear-gradient(to_top,black_0%,transparent_80%)]"/>
           {/* overlay 테두리 */}
-          <p className="absolute inset-0 border-[1.5px] border-white/30 rounded-[32px] backdrop-blur-md [mask-image:linear-gradient(to_bottom,black_50%,transparent_80%)] mix-blend-overlay"/>
+          <p className="absolute inset-0 border-[1.5px] border-white/30 rounded-[32px] backdrop-blur-xl [mask-image:linear-gradient(to_bottom,black_50%,transparent_80%)] mix-blend-overlay"/>
           
           <div className={cn("relative px-8 py-[4px] flex flex-col items-center gap-6", className)}>
             <p className="text-2xl font-bold">{text}</p>

@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 import { cn } from "@/utils/cn";
 import { motion, useAnimate, AnimatePresence } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 interface Message {
   text: string;
   isActive: boolean;
@@ -14,6 +14,7 @@ export default function CloneTalk({text, keepLastLine = false, onComplete, durat
   const [isComplete, setIsComplete] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const lines = text.split("\n");
+  const idCounter = useRef(0);
   const getTimeout = (idx: number): number => {
     if (Array.isArray(duration)) {
       return duration[idx] ?? 5000;
@@ -45,7 +46,7 @@ export default function CloneTalk({text, keepLastLine = false, onComplete, durat
       setMessages([{ 
         text: lines[0], 
         isActive: true,
-        id: 0 
+        id: idCounter.current++ 
       }]);
       setTimeout(() => {
         setCurrentIndex(1);
@@ -62,7 +63,7 @@ export default function CloneTalk({text, keepLastLine = false, onComplete, durat
         return [...newMessages, { 
           text: lines[currentIndex], 
           isActive: true,
-          id: currentIndex 
+          id: idCounter.current++ 
         }];
       });
       

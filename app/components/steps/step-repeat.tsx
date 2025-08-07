@@ -5,6 +5,7 @@ import CommonPopupUI from "../ui/popup_ui/common";
 import { useEffect, useState, useMemo } from "react";
 import UspPopupBox from "../ui/usp-popup-ui";
 import { cn } from "@/utils/cn";
+import UspPopupWrapper from "../ui/usp-popup-wrapper";
 
 export default function StepRepeat({ dafultComment }: { dafultComment?: string }) {
     const { stepInfo, setSfxPath } = useScene();
@@ -127,6 +128,8 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
     return (
         <div className={cn("absolute inset-0 flex flex-col items-center justify-center text-center opacity-0 transition-all duration-300", componentsView && "opacity-100") }>
             {renderContent()}
+
+            <UspPopupWrapper data={[{description: "1234"}, {description: "2345sdfkljsdljsdfjksla"}, {description: "3456"}, {description: "456dsjklsdajfldjkl7"}, {description: "5678"}, {description: "6789"}, {description: "7890"}]} />
 
             {questionFlag && (
                 <QuestionArea 
