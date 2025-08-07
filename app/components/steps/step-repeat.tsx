@@ -80,9 +80,12 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
             // 2초 후 다음 타임라인으로 이동
             setTimeout(() => setCurrentIdx(idx => idx + 1), 2000);
 
-            setCurrentUspPool(uspPoolAssets.map(asset => ({
-                description: (asset as any).description,
-            })));
+            setCurrentUspPool(prev => [...prev, ...uspPoolAssets.map(asset => (
+                {
+                    ...(asset as any),
+                    description: (asset as any).description,
+                }
+            )).filter(asset => asset.description)]);
         }
 
         // 팝업 UI 처리 (DEFAULT_POPUP, FUNCTION_USP_POOL 등)

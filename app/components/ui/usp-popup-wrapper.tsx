@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 
 export default function UspPopupWrapper({ data }: { data: { description: string }[] }) {
   return (
-    <ul className="flex flex-col absolute left-8 top-24 gap-4 items-start z-[999]">
+    <ul className="flex flex-col absolute left-8 top-24 gap-4 items-start text-left z-[999]">
       <AnimatePresence initial={false}>
         {data.map((item, index) => (
           <motion.li

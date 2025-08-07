@@ -48,6 +48,7 @@ export default function QuestionButtons({
         }, 200);
         return () => clearInterval(interval);
     }, [buttons, hasAnimated]);
+    console.log(buttons);
 
     return (
         <div className="flex flex-row gap-4 *:p-2 *:bg-gray-200 *:text-gray-800 *:rounded-md *:duration-500 *:cursor-none
@@ -70,6 +71,7 @@ export default function QuestionButtons({
                         }}
                         disabled={isProcessing}
                     >
+                        <p className="font-bold text-lg">{button}</p>
                         {buttons[button]}
                     </button>
                 </BasicBox>
