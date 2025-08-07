@@ -1,13 +1,13 @@
 import { useScene } from "@/context/scene-context";
 import CloneTalk from "../ui/clone-talk";
-import QuestionArea from "./question-area";
-import CommonPopupUI from "../ui/popup_ui/common";
+            import CommonPopupUI from "../ui/popup_ui/common";
 import { useEffect, useState, useMemo } from "react";
-import UspPopupBox from "../ui/usp-popup-ui";
 import { cn } from "@/utils/cn";
 import UspPopupWrapper from "../ui/usp-popup-wrapper";
+import { motion } from "framer-motion";
+import HyundaiLoading from "../ui/hyundai-loading";
 
-export default function StepRepeat({ dafultComment }: { dafultComment?: string }) {
+export default function StepCompleteFin() {
     const { stepInfo, setSfxPath } = useScene();
     const { assets_timeline, question, choices } = stepInfo || {};
     const [questionFlag, setQuestionFlag] = useState(false);
@@ -134,21 +134,27 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
     }, []);
 
     return (
-        <div className={cn("absolute inset-0 flex flex-col items-center justify-center text-center opacity-0 transition-all duration-300", componentsView && "opacity-100") }>
+        <div className={cn("absolute inset-0 flex flex-col items-center justify-center text-center opacity-0 transition-all duration-300", questionFlag && "blur-lg") }>
             {renderContent()}
 
             <UspPopupWrapper data={currentUspPool} />
 
-            {questionFlag && (
-                <QuestionArea 
-                    mainText={question || ""} 
-                    buttons={(choices || []).reduce((acc, choice) => {
-                        acc[choice?.usp || ""] = choice?.description || "";
-                        return acc;
-                    }, {} as { [key: string]: string })} 
-                    defaultComment={dafultComment}
-                />
-            )}
+            {
+                questionFlag && (
+                    <div className="pl-8 absolute inset-0 text-white">
+                    <motion.div
+                      initial={{ opacity: 0, y: 50 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 1 }}
+                      className="animate-fade-in absolute inset-0 flex flex-col gap-8 items-center justify-center backdrop-blur-lg bg-black/10 z-[22]"
+                    >
+                      <h1 className="text-[96px] font-bold">체험이 모두 끝났습니다!</h1>
+                      <HyundaiLoading/>
+                      <p className="text-[45px] opacity-80">뒷쪽 출구로 퇴장해 주세요.</p>
+                    </motion.div>
+                  </div>
+                )       
+            }
         </div>
     );
 }

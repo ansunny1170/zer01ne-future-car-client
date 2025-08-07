@@ -61,19 +61,19 @@ export default function Home() {
             <StepRepeat dafultComment="네 감사해요"/>
           </motion.div>
         );
-      case 7:
-        return (
-          <motion.div
-            key="step0"
-            variants={fadeVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={{ duration: 0.2 }}
-          >
-            <StepComplete/>
-          </motion.div>
-        );
+      // case 7:
+      //   return (
+      //     <motion.div
+      //       key="step0"
+      //       variants={fadeVariants}
+      //       initial="initial"
+      //       animate="animate"
+      //       exit="exit"
+      //       transition={{ duration: 0.2 }}
+      //     >
+      //       <StepComplete/>
+      //     </motion.div>
+      //   );
       default:
         return (
           <motion.div
