@@ -66,7 +66,7 @@ export default function IntroSpeech({ onTrigger, isProcessing, defaultComment, p
 
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
-      if (event.key.toLowerCase() === 's') {
+      if (event.key.toLowerCase() === 's' || event.key.toLowerCase() === 'ㄴ') {
         startRecognition()
       }
     }
