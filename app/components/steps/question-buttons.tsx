@@ -48,7 +48,6 @@ export default function QuestionButtons({
         }, 200);
         return () => clearInterval(interval);
     }, [buttons, hasAnimated]);
-    console.log(buttons);
 
     return (
         <div className="flex flex-row gap-4 *:p-2 *:bg-gray-200 *:text-gray-800 *:rounded-md *:duration-500 *:cursor-none

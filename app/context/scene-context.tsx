@@ -22,8 +22,8 @@ export type SceneContextType = {
   setUiPath: (u: string | null) => void;
   bgmPath: string | null;
   setBgmPath: (b: string | null) => void;
-  sfxPath: string | null;
-  setSfxPath: (s: string | null) => void;
+  sfxPath: string[] | null;
+  setSfxPath: (s: string[] | null) => void;
   stepInfo: StepInfo | null;
   setStepInfo: (s: StepInfo | null) => void;
   sessionId: string | null;
@@ -41,7 +41,7 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
   const [videoPath, setVideoPath] = useState<string | null>(null);
   const [uiPath, setUiPath] = useState<string | null>(null);
   const [bgmPath, setBgmPath] = useState<string | null>(null);
-  const [sfxPath, setSfxPath] = useState<string | null>(null);
+  const [sfxPath, setSfxPath] = useState<string[] | null>([]);
   const [stepInfo, setStepInfo] = useState<StepInfo | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
 
@@ -66,28 +66,19 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
   }, [sceneNumber, category, categoryNumber, channel, senderId, stepNumber]);
 
   useEffect(() => {
+    setStepInfo(stepInfo);
     setVideoPath(stepInfo?.bgv?.file_name || bgvDict[Math.floor(Math.random() * bgvDict.length)].file_name || null );
     setBgmPath(stepInfo?.bgm?.file_name || bgmDict[Math.floor(Math.random() * bgmDict.length)].file_name || null);
-    // sfx 추출: 직접 필드 또는 assets_timeline 열기
-    const extractSfx = (info: StepInfo | null): string | null => {
-      if (!info) return null;
-      if ((info as any).sfx?.file_name) return (info as any).sfx.file_name;
-      for (const timeline of info.assets_timeline || []) {
-        for (const asset of timeline.assets) {
-          if (
-            asset.type === AssetsType.VEHICLE_SOUND_EFFECT ||
-            asset.type === AssetsType.COMPANION_VOICE
-          ) {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            return asset.file_name ?? null;
-          }
-        }
-      }
-      return null;
-    };
-    setSfxPath(extractSfx(stepInfo));
-    setStepInfo(stepInfo);
 
+    const { assets_timeline } = stepInfo || {};
+    const allSfx = assets_timeline?.flatMap(item =>
+          item.assets
+            .filter(a =>
+                a.type === 'VEHICLE_SOUND_EFFECT' ||
+                a.type === 'COMPANION_VOICE')
+            .map(a => a.file_name)            // ★ 경로만 추출
+        ) ?? [];
+    setSfxPath(allSfx);
   }, [stepInfo]);
 
   const goPrevStep = () => {

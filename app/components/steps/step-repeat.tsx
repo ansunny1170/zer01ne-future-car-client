@@ -1,4 +1,5 @@
 import { useScene } from "@/context/scene-context";
+import { BASE_S3_LINK } from "@/constants";
 import CloneTalk from "../ui/clone-talk";
 import QuestionArea from "./question-area";
 import CommonPopupUI from "../ui/popup_ui/common";
@@ -7,7 +8,9 @@ import UspPopupBox from "../ui/usp-popup-ui";
 import { cn } from "@/utils/cn";
 import UspPopupWrapper from "../ui/usp-popup-wrapper";
 
+
 export default function StepRepeat({ dafultComment }: { dafultComment?: string }) {
+    const BASE_URL = BASE_S3_LINK;
     const { stepInfo, setSfxPath } = useScene();
     const { assets_timeline, question, choices } = stepInfo || {};
     const [questionFlag, setQuestionFlag] = useState(false);
@@ -15,6 +18,19 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
     // 현재 보여줄 timeline 인덱스
     const [currentIdx, setCurrentIdx] = useState(0);
     const [currentUspPool, setCurrentUspPool] = useState<any[]>([]);
+    const allSfx = useMemo(() =>
+        assets_timeline?.flatMap(item =>
+          item.assets
+            .filter(a =>
+              a.type === 'VEHICLE_SOUND_EFFECT' ||
+              a.type === 'COMPANION_VOICE')
+            .map(a => a.file_name)            // ★ 경로만 추출
+        ) ?? [],
+      [assets_timeline]);
+
+    useEffect(() => {
+        setSfxPath(allSfx as string[]);
+    }, [allSfx]);
 
     // timeline 처리 완료 여부
     const isTimelineFinished = useMemo(() => {
@@ -29,39 +45,30 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
         }
     }, [isTimelineFinished, questionFlag]);
 
-    // 오디오(SFX, COMPANION_VOICE)만 존재하는 아이템 자동 진행 처리
+
+    // FUNCTION_USP_POOL 순차 표시 처리 (parallel true 포함)
     useEffect(() => {
         if (!assets_timeline) return;
         if (isTimelineFinished) return;
-
         const item = assets_timeline[currentIdx];
-
-        // SFX 또는 COMPANION_VOICE만 있는 경우
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const audioAssets = item.assets.filter(asset => asset.type === "COMPANION_VOICE" || asset.type === "VEHICLE_SOUND_EFFECT") as any[];
-        if (audioAssets.length > 0) {
-            // 병렬(true) 여부와 상관없이, 여러 개의 효과음을 순차적으로 짧은 간격으로 재생한다.
-            // (여러 오디오 태그를 동시에 컨트롤하기 어렵기 때문에 sfxPath를 빠르게 교체하는 방식 사용)
+        const uspPoolAssets = item.assets.filter(asset => asset.type === "FUNCTION_USP_POOL");
+        if (uspPoolAssets.length > 0) {
             const timers: ReturnType<typeof setTimeout>[] = [];
-
-            audioAssets.forEach((asset, index) => {
+            uspPoolAssets.forEach((asset, index) => {
                 const timer = setTimeout(() => {
-                    setSfxPath(asset.file_name || "");
-                }, index * 1500); // 1.5초 간격으로 다음 효과음 재생
+                    setCurrentUspPool(prev => [...prev, {
+                        ...(asset as any),
+                        description: (asset as any).description,
+                    }]);
+                }, index * 2000); // 2초 간격으로 순차 표시
                 timers.push(timer);
             });
-
-            // 모든 효과음이 끝난 뒤(마지막 타이머 + 1초)에 다음 타임라인으로 이동
-            const totalDuration = audioAssets.length * 1500 + 1000;
+            const totalDuration = uspPoolAssets.length * 2000 + 1000; // 마지막 이후 1초
             const nextTimer = setTimeout(() => setCurrentIdx(idx => idx + 1), totalDuration);
             timers.push(nextTimer);
-
-            return () => {
-                timers.forEach(t => clearTimeout(t));
-            };
+            return () => timers.forEach(clearTimeout);
         }
-    }, [assets_timeline, currentIdx, isTimelineFinished, setSfxPath]);
-
+    }, [assets_timeline, currentIdx, isTimelineFinished]);
 
     // 현재 보여줄 콘텐츠 결정
     const renderContent = () => {  
@@ -87,18 +94,10 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
             );
         }
 
-        // parallel: true인 경우 FUNCTION_USP_POOL 여러 개를 동시에 표시
+        // FUNCTION_USP_POOL 처리: effect에서 순차적으로 표시
         const uspPoolAssets = item.assets.filter(asset => asset.type === "FUNCTION_USP_POOL");
         if (uspPoolAssets.length > 0) {
-            // 2초 후 다음 타임라인으로 이동
-            setTimeout(() => setCurrentIdx(idx => idx + 1), 2000);
-
-            setCurrentUspPool(prev => [...prev, ...uspPoolAssets.map(asset => (
-                {
-                    ...(asset as any),
-                    description: (asset as any).description,
-                }
-            )).filter(asset => asset.description)]);
+            return null; // 화면 표시는 별도 effect에서 진행
         }
 
         // 팝업 UI 처리 (DEFAULT_POPUP, FUNCTION_USP_POOL 등)
@@ -126,6 +125,7 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
         setCurrentIdx(idx => idx + 1);
         return null;
     };
+
 
     useEffect(() => {
         setTimeout(() => {

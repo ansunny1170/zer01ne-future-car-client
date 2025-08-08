@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 import HyundaiLoading from "../ui/hyundai-loading";
 
 export default function StepComplete() {
-    const { stepInfo, setSfxPath } = useScene();
+    const { stepInfo, setSfxPath, reStart } = useScene();
     const { assets_timeline, question, choices } = stepInfo || {};
     const [endFlag, setEndFlag] = useState(false);
     const [componentsView, setComponentsView] = useState(false);
@@ -141,6 +141,17 @@ export default function StepComplete() {
         setTimeout(() => {
             setComponentsView(true);
         }, 500);
+    }, []);
+
+    // 던축카 s카 누르면 첫 화면으로 이동 + re
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key.toLowerCase() === "s" || event.key.toLowerCase() === "ㄴ") {
+                reStart();
+            }
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
     }, []);
 
     return (
