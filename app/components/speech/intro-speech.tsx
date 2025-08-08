@@ -64,21 +64,11 @@ export default function IntroSpeech({ onTrigger, isProcessing, defaultComment, p
     }
   }
 
-  useEffect(() => {
-    const handleKeyPress = (event: KeyboardEvent) => {
-      if (event.key.toLowerCase() === 's' || event.key.toLowerCase() === 'ㄴ') {
-        startRecognition()
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyPress)
-    return () => window.removeEventListener('keydown', handleKeyPress)
-  }, [isProcessing])
 
   useEffect(() => {
     // 단축키 space 누르면  onTrigger에다가 text 넣어서 실행함
     const handleSpaceKey = (event: KeyboardEvent) => {
-      if (event.code === 'Space') {
+      if (event.key.toLowerCase() === 's' || event.key.toLowerCase() === 'ㄴ') {
         event.preventDefault();
         if (defaultComment) {
           onTrigger(defaultComment)
@@ -154,7 +144,7 @@ export default function IntroSpeech({ onTrigger, isProcessing, defaultComment, p
         <div className='flex items-center justify-center text-[45px]'>
           {
             !finalText ? (
-              <strong className='opacity-60'><b>"출발"</b>이라고 말해주세요.</strong>
+              <strong className='opacity-60'><b>&quot;출발&quot;</b>이라고 말해주세요.</strong>
             ) : (
               <strong>{finalText}</strong>
             )
