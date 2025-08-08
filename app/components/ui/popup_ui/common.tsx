@@ -118,6 +118,12 @@ const popupDict: {
         defaultText: "세차 예약 중입니다....",
         className: "",
     },
+    INSURE: {
+        icon: <Icons.alert />,
+        type: "cold",
+        defaultText: "보험사에 정보 업데이트",
+        className: "",
+    },
 }
 
 export default function CommonPopupUI({keyName, text, description, onComplete}: {keyName: string, text?: string, description?: string, onComplete?: () => void}) {
