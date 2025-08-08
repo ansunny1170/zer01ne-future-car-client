@@ -9,7 +9,7 @@ import HyundaiLoading from "../ui/hyundai-loading";
 
 export default function StepComplete() {
     const { stepInfo, setSfxPath, reStart } = useScene();
-    const { assets_timeline, question, choices } = stepInfo || {};
+    const { assets_timeline } = stepInfo || {};
     const [endFlag, setEndFlag] = useState(false);
     const [componentsView, setComponentsView] = useState(false);
     // 현재 보여줄 timeline 인덱스
