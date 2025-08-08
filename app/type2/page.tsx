@@ -8,7 +8,7 @@ import StepAudioPlayer from "../components/audio-player/step-audio-player";
 import FixedLayout from "../components/fixed-layout";
 import StepVideoPlayer from "../components/video-player/step-video-player";
 import { useState } from "react";
-import StepComplete from "@/components/steps/step-complete";
+import StepComplete from "../components/steps/step-complete";
 
 export default function Home() {
   const [debug, setDebug] = useState(false);
@@ -93,10 +93,6 @@ export default function Home() {
   return (
     <div className="flex flex-col items-start justify-center text-left w-full h-full overflow-hidden">
 
-      {/* <div className="absolute top-4 right-4 text-white z-10 bg-amber-200">
-        [DEBUG] videoPath: {videoPath} / bgmPath: {bgmPath}
-      </div> */}
-
       {
         stepNumber > 0 && (
           <FixedLayout/>
@@ -113,7 +109,7 @@ export default function Home() {
 
       <div>
         <button
-          className="absolute top-4 left-4 bg-white text-black px-4 py-2 rounded-md z-10 z-[999]"
+          className="absolute top-4 left-4 bg-white text-black px-4 py-2 rounded-md z-[999]"
           onClick={() => {
             goPrevStep();
           }}

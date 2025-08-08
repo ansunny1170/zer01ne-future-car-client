@@ -25,6 +25,8 @@ export const speechApi = {
       const response = await axiosInstance.post('/scenario', { session_id, user_message, is_new_session });
       return response.data;
     } catch (error) {
+
+      // 다시 해보라는 효과음 넣을 수도 있음
       console.error('Speech processing error:', error);
       throw error;
     }
