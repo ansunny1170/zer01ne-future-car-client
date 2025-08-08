@@ -52,7 +52,7 @@ export default function QuestionButtons({
     return (
         <div className="flex flex-row gap-4 *:p-2 *:bg-gray-200 *:text-gray-800 *:rounded-md *:duration-500 *:cursor-none
             *:hover:bg-gray-300 *:hover:scale-[105%] *:hover:text-white *:hover:font-bold *:hover:outline-none
-            *:focus:bg-gray-300 *:focus:scale-[105%] *:focus:text-white *:focus:font-bold *:focus:outline-none">
+            *:focus:bg-gray-300 *:focus:scale-[105%] *:focus:text-white *:focus:font-bold *:focus:outline-none z-[999]">
             {Object.keys(buttons).map((button, index) => (
                 <BasicBox key={index} className="max-w-[25svw] break-keep items-center justify-center flex bg-black/20 backdrop-blur-2x;">
                     <button
