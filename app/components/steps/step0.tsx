@@ -4,6 +4,8 @@ import { useScene } from "@/context/scene-context";
 import { StepInfo } from "@/type";
 import { motion } from "framer-motion";
 import IntroSpeech from "../speech/intro-speech";
+import TextSplitAnimation from "../text-split-animation";
+import TextAnimation from "./text-animation";
 
 export default function Step0({ dafultComment }: { dafultComment?: string }) { 
   const { mutateAsync: processSpeech, isPending: isProcessing } = useSpeechProcessing();
@@ -33,7 +35,8 @@ export default function Step0({ dafultComment }: { dafultComment?: string }) {
         className="animate-fade-in absolute inset-0 flex flex-col items-center justify-center backdrop-blur-lg bg-black/10 z-[22]"
       >
         <p className="text-[24px] opacity-80 pb-[50px]">이 체험은 대화로 진행됩니다.</p>
-        <h1 className="text-[96px] text-shadow-lg font-bold pb-[20px]">반가워요!</h1>
+        <TextAnimation text="반가워요!" className="text-[96px] text-shadow-lg font-bold pb-[20px]" />
+        <TextSplitAnimation text="반가워요!" delay={100} className="text-[96px] text-shadow-lg font-bold pb-[20px]" />
         <IntroSpeech
           onTrigger={handleSpeechTrigger}
           isProcessing={isProcessing}
