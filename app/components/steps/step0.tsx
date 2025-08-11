@@ -33,7 +33,7 @@ export default function Step0({ dafultComment }: { dafultComment?: string }) {
         className="animate-fade-in absolute inset-0 flex flex-col items-center justify-center backdrop-blur-lg bg-black/10 z-[22]"
       >
         <p className="text-[24px] opacity-80 pb-[50px]">이 체험은 대화로 진행됩니다.</p>
-        <h1 className="text-[96px] font-bold pb-[20px]">반가워요!</h1>
+        <h1 className="text-[96px] text-shadow-lg font-bold pb-[20px]">반가워요!</h1>
         <IntroSpeech
           onTrigger={handleSpeechTrigger}
           isProcessing={isProcessing}

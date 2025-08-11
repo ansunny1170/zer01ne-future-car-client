@@ -116,7 +116,7 @@ export default function CloneTalk({text, keepLastLine = false, onComplete, durat
               key={message.id}
               className={cn(
                 "text-white text-center text-[52px] max-w-[50vw] break-keep font-semibold leading-[1.2]",
-                "shadow-sm absolute",
+                "text-shadow-sm absolute",
                 message.isActive 
                   ? 'opacity-100' 
                   : 'opacity-40'
