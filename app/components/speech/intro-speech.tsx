@@ -1,8 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Icons } from '../ui/icons';
-import { cn } from '@/utils/cn';
 import HyundaiLoading from '../ui/hyundai-loading';
 
 // Web Speech API 타입 정의
@@ -56,6 +54,8 @@ export default function IntroSpeech({ onTrigger, isProcessing, defaultComment, p
   const [isListening, setIsListening] = useState(false)
   const recognitionRef = useRef<SpeechRecognition | null>(null)
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null)
+  // STT 재시작 플래그
+  const restartAfterStopRef = useRef<boolean>(false)
 
   const startRecognition = () => {
     if (recognitionRef.current && !isProcessing) {
@@ -64,20 +64,33 @@ export default function IntroSpeech({ onTrigger, isProcessing, defaultComment, p
     }
   }
 
+  // s 키 토글을 위해 음성 인식 종료 함수 추가
+  const stopRecognition = () => {
+    if (recognitionRef.current && isListening) {
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current)
+      recognitionRef.current.stop()
+    }
+  }
 
   useEffect(() => {
-    // 단축키 space 누르면  onTrigger에다가 text 넣어서 실행함
-    const handleSpaceKey = (event: KeyboardEvent) => {
+    // s 키(또는 한글 ㄴ)로 STT 재시작 처리
+    const handleSTTKey = (event: KeyboardEvent) => {
       if (event.key.toLowerCase() === 's' || event.key.toLowerCase() === 'ㄴ') {
-        event.preventDefault();
-        if (defaultComment) {
-          onTrigger(defaultComment)
+        event.preventDefault()
+        if (isListening) {
+          restartAfterStopRef.current = true
+          if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current)
+          setFinalText(null)
+          recognitionRef.current?.stop()
+        } else if (!isProcessing) {
+          startRecognition()
         }
       }
     }
-    window.addEventListener('keydown', handleSpaceKey)
-    return () => window.removeEventListener('keydown', handleSpaceKey)
-  }, [defaultComment, onTrigger])
+
+    window.addEventListener('keydown', handleSTTKey)
+    return () => window.removeEventListener('keydown', handleSTTKey)
+  }, [isListening, isProcessing])
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
@@ -119,20 +132,19 @@ export default function IntroSpeech({ onTrigger, isProcessing, defaultComment, p
     recognition.onend = () => {
       if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current)
       console.log("음성 인식 종료")
+      if (restartAfterStopRef.current && !isProcessing) {
+        setFinalText(null)
+        restartAfterStopRef.current = false
+        recognition.start()
+        return
+      }
       setIsListening(false)
     }
 
     recognitionRef.current = recognition
 
-    // 자동 시작: 1초 후 (isProcessing이 아닐 때만)
-    const startTimer = setTimeout(() => {
-      if (!isProcessing) {
-        recognition.start()
-      }
-    }, 1000)
-
+    // 더 이상 자동 시작을 하지 않고, 컴포넌트 언마운트 시에만 정리
     return () => {
-      clearTimeout(startTimer)
       recognition.stop()
     }
   }, [onTrigger, isProcessing])
