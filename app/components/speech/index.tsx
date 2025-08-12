@@ -56,6 +56,8 @@ export default function Speech({ onTrigger, isProcessing, defaultComment }: { on
   const [isListening, setIsListening] = useState(false)
   const recognitionRef = useRef<SpeechRecognition | null>(null)
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null)
+  // STT 재시작 플래그
+  const restartAfterStopRef = useRef<boolean>(false)
 
   const startRecognition = () => {
     if (recognitionRef.current && !isProcessing) {
@@ -65,18 +67,25 @@ export default function Speech({ onTrigger, isProcessing, defaultComment }: { on
   }
 
   useEffect(() => {
-    const handleKeyPress = (event: KeyboardEvent) => {
+    const handleSTTKey = (event: KeyboardEvent) => {
       if (event.key.toLowerCase() === 's' || event.key.toLowerCase() === 'ㄴ') {
-        startRecognition()
+        event.preventDefault()
+        if (isListening) {
+          restartAfterStopRef.current = true
+          if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current)
+          setFinalText(null)
+          recognitionRef.current?.stop()
+        } else if (!isProcessing) {
+          startRecognition()
+        }
       }
     }
 
-    window.addEventListener('keydown', handleKeyPress)
-    return () => window.removeEventListener('keydown', handleKeyPress)
-  }, [isProcessing])
+    window.addEventListener('keydown', handleSTTKey)
+    return () => window.removeEventListener('keydown', handleSTTKey)
+  }, [isListening, isProcessing])
 
   useEffect(() => {
-    // 단축키 space 누르면  onTrigger에다가 text 넣어서 실행함
     const handleSpaceKey = (event: KeyboardEvent) => {
       if (event.code === 'Space') {
         event.preventDefault();
@@ -129,20 +138,19 @@ export default function Speech({ onTrigger, isProcessing, defaultComment }: { on
     recognition.onend = () => {
       if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current)
       console.log("음성 인식 종료")
+      if (restartAfterStopRef.current && !isProcessing) {
+        setFinalText(null)
+        restartAfterStopRef.current = false
+        recognition.start()
+        return
+      }
       setIsListening(false)
     }
 
     recognitionRef.current = recognition
 
-    // 자동 시작: 1초 후 (isProcessing이 아닐 때만)
-    const startTimer = setTimeout(() => {
-      if (!isProcessing) {
-        recognition.start()
-      }
-    }, 1000)
-
+    // 더 이상 자동 시작을 하지 않고, 컴포넌트 언마운트 시에만 정리
     return () => {
-      clearTimeout(startTimer)
       recognition.stop()
     }
   }, [onTrigger, isProcessing])
