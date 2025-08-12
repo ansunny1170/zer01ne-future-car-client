@@ -161,9 +161,14 @@ export default function StepComplete() {
                 componentsView && "opacity-100",
             )
         }>
-            {renderContent()}
-
-            <UspPopupWrapper data={currentUspPool} />
+          {
+            !endFlag && (
+              <>
+                {renderContent()}
+                <UspPopupWrapper data={currentUspPool} />
+              </>
+            )
+          }
 
             {
                 endFlag && (
