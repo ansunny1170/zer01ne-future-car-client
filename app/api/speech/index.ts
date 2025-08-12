@@ -2,7 +2,7 @@ import axios from 'axios';
 import { StepInfo } from '@/type';
 
 const axiosInstance = axios.create({
-  baseURL: '/api',
+  baseURL: 'https://api.ftcar.org',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
