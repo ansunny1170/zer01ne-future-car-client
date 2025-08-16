@@ -1,12 +1,12 @@
 import { useScene } from "@/context/scene-context";
 import { BASE_S3_LINK } from "@/constants";
-import CloneTalk from "../ui/clone-talk";
 import QuestionArea from "./question-area";
 import CommonPopupUI from "../ui/popup_ui/common";
 import { useEffect, useState, useMemo } from "react";
 import UspPopupBox from "../ui/usp-popup-ui";
 import { cn } from "@/utils/cn";
 import UspPopupWrapper from "../ui/usp-popup-wrapper";
+import CloneTalkSplit from "../ui/clone-talk-split";
 
 
 export default function StepRepeat({ dafultComment }: { dafultComment?: string }) {
@@ -84,7 +84,7 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
         const cloneAsset = item.assets.find(asset => asset.type === "CLONE_TALKS") as any;
         if (cloneAsset && "text" in cloneAsset) {
             return (
-                <CloneTalk
+                <CloneTalkSplit
                     text={cloneAsset.text || ""}
                     onComplete={() => {
                         // 문장 완료 후 1초 간격을 두고 다음 타임라인으로 이동

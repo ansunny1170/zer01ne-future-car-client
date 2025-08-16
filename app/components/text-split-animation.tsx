@@ -13,6 +13,7 @@ type TextSplitAnimationProps = {
   charStagger?: number; // 글자 간 간격
   duration?: number; // 각 글자 애니메이션 시간
   fromY?: number; // 시작 y 오프셋
+  speed?: number; // 텍스트 전체 속도 배수 (1 = 기본속도, 2 = 2배속, 0.5 = 절반속도)
 };
 
 export default function TextSplitAnimation({
@@ -24,6 +25,7 @@ export default function TextSplitAnimation({
   charStagger = 0.04,
   duration = 0.35,
   fromY = 8,
+  speed = 1,
 }: TextSplitAnimationProps) {
   const [isMounted, setIsMounted] = useState(false);
   useEffect(() => {
@@ -31,12 +33,17 @@ export default function TextSplitAnimation({
   }, []);
   const lines = text.split("\n");
 
+  // speed에 따라 조정된 타이밍 값들
+  const adjustedCharStagger = charStagger / speed;
+  const adjustedDuration = duration / speed;
+  const adjustedDelay = delay / speed;
+
   const containerVariants: Variants = {
     hidden: {},
     show: {
       transition: {
-        staggerChildren: 0.1,
-        delayChildren: delay,
+        staggerChildren: 0.1 / speed,
+        delayChildren: adjustedDelay,
       },
     },
   };
@@ -45,7 +52,7 @@ export default function TextSplitAnimation({
     hidden: {},
     show: {
       transition: {
-        staggerChildren: charStagger,
+        staggerChildren: adjustedCharStagger,
       },
     },
   };
@@ -55,7 +62,7 @@ export default function TextSplitAnimation({
     show: {
       opacity: 1,
       y: 0,
-      transition: { duration, ease: "easeOut" },
+      transition: { duration: adjustedDuration, ease: "easeOut" },
     },
   };
 
