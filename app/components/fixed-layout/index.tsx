@@ -9,9 +9,11 @@ export default function FixedLayout() {
 
     return (
         <div className="absolute inset-0 z-10 perspective-1000">
-            {/* 좌우 그라데이션 */}
+            {/* 좌우 상하 그라데이션 */}
             <p className="fixed left-0 top-0 w-1/4 h-full bg-gradient-to-r from-black/50 to-black/0"/>
             <p className="fixed right-0 top-0 w-1/4 h-full bg-gradient-to-l from-black/50 to-black/0"/>
+            <p className="fixed right-0 top-0 w-full h-1/4 bg-gradient-to-b from-black/50 to-black/0"/>
+            <p className="fixed right-0 bottom-0 w-full h-1/4 bg-gradient-to-t from-black/50 to-black/0"/>
 
             {/* 상단 우측 영역 */}
             <div className="drop-shadow-[0_0_10px_rgba(0,0,0,0.5)] text-white/[0.6] text-[23px] font-semibold pt-[35px] pr-[38px] fixed left-0 top-0 w-full flex justify-end">
@@ -25,7 +27,7 @@ export default function FixedLayout() {
             </div>
 
             {/* 하단 좌측 영역 */}
-            <div className="fixed right-1/2 bottom-[26px] -translate-x-[7.5vw] flex gap-[21px]">
+            <div className="fixed right-1/2 bottom-[64px] -translate-x-[7.5vw] flex gap-[21px]">
                 <div className="rotate-y--15">
                     <ProgressBox/>
                 </div>
@@ -34,7 +36,7 @@ export default function FixedLayout() {
             </div>
 
             {/* 하단 우측 영역 */}
-            <div className="fixed left-1/2 bottom-[26px] translate-x-[7.5vw] ">
+            <div className="fixed left-1/2 bottom-[64px] translate-x-[7.5vw] ">
                 <div className="flex gap-[21px] rotate-y-15">
                     <NavigationBox />
                     <MusicPlayerBox />
@@ -43,6 +45,9 @@ export default function FixedLayout() {
 
 
             {/* 하단 기본프레임 */}
+            <div className="fixed left-0 bottom-0 w-full">
+                <img src="/assets/images/img_frame_top.png" alt="fixed-layout" className="w-full" />
+            </div>
             <div className="fixed left-0 bottom-0 w-full">
                 <img src="/assets/images/img_frame.png" alt="fixed-layout" className="w-full" />
             </div>
