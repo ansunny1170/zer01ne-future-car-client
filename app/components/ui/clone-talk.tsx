@@ -108,7 +108,7 @@ export default function CloneTalk({text, keepLastLine = false, onComplete, durat
 
       <div 
         ref={scope}
-        className="fixed bottom-[70%] left-1/2 -translate-x-1/2 flex flex-col items-center w-full"
+        className="fixed bottom-[80%] left-1/2 -translate-x-1/2 flex flex-col items-center w-full"
       >
         <AnimatePresence mode="popLayout" initial={false}>
           {messages.slice(-2).map((message) => (

@@ -32,6 +32,21 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
         setSfxPath(allSfx as string[]);
     }, [allSfx]);
 
+    // stepInfo가 변경될 때 상태 초기화
+    useEffect(() => {
+        if (stepInfo?.assets_timeline) {
+            console.log('StepInfo updated, resetting timeline:', stepInfo);
+            setCurrentIdx(0);
+            setQuestionFlag(false);
+            setCurrentUspPool([]);
+            setComponentsView(false);
+            // 새로운 stepInfo가 오면 다시 500ms 후에 표시
+            setTimeout(() => {
+                setComponentsView(true);
+            }, 500);
+        }
+    }, [stepInfo]);
+
     // timeline 처리 완료 여부
     const isTimelineFinished = useMemo(() => {
         if (!assets_timeline) return true;
@@ -133,11 +148,6 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
     };
 
 
-    useEffect(() => {
-        setTimeout(() => {
-            setComponentsView(true);
-        }, 500);
-    }, []);
 
     return (
         <div className={cn("absolute inset-0 flex flex-col items-center justify-center text-center opacity-0 transition-all duration-300", componentsView && "opacity-100") }>
