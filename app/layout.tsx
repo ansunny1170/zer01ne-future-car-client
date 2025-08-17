@@ -16,14 +16,54 @@ const hyundaiSans = localFont({
   display: "swap",
   src: [
     {
+      path: "../public/fonts/HyundaiSansUI_JP_KR_Latin-Thin.ttf",
+      weight: "100",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/HyundaiSansUI_JP_KR_Latin-ThinItalic.ttf",
+      weight: "100",
+      style: "italic",
+    },
+    {
+      path: "../public/fonts/HyundaiSansUI_JP_KR_Latin-Light.ttf",
+      weight: "300",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/HyundaiSansUI_JP_KR_Latin-LightItalic.ttf",
+      weight: "300",
+      style: "italic",
+    },
+    {
       path: "../public/fonts/HyundaiSansUI_JP_KR_Latin-Regular.ttf",
       weight: "400",
       style: "normal",
     },
     {
+      path: "../public/fonts/HyundaiSansUI_JP_KR_Latin-RegularItalic.ttf",
+      weight: "400",
+      style: "italic",
+    },
+    {
+      path: "../public/fonts/HyundaiSansUI_JP_KR_Latin-SemiBold.ttf",
+      weight: "600",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/HyundaiSansUI_JP_KR_Latin-SemiBoldItalic.ttf",
+      weight: "600",
+      style: "italic",
+    },
+    {
       path: "../public/fonts/HyundaiSansUI_JP_KR_Latin-Bold.ttf",
       weight: "700",
-      style: "bold",
+      style: "normal",
+    },
+    {
+      path: "../public/fonts/HyundaiSansUI_JP_KR_Latin-BoldItalic.ttf",
+      weight: "700",
+      style: "italic",
     }
   ],
 });

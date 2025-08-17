@@ -1,12 +1,12 @@
 import { useScene } from "@/context/scene-context";
 import { BASE_S3_LINK } from "@/constants";
-import CloneTalk from "../ui/clone-talk";
 import QuestionArea from "./question-area";
 import CommonPopupUI from "../ui/popup_ui/common";
 import { useEffect, useState, useMemo } from "react";
 import UspPopupBox from "../ui/usp-popup-ui";
 import { cn } from "@/utils/cn";
 import UspPopupWrapper from "../ui/usp-popup-wrapper";
+import CloneTalkSplit from "../ui/clone-talk-split";
 
 
 export default function StepRepeat({ dafultComment }: { dafultComment?: string }) {
@@ -18,6 +18,14 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
     // 현재 보여줄 timeline 인덱스
     const [currentIdx, setCurrentIdx] = useState(0);
     const [currentUspPool, setCurrentUspPool] = useState<any[]>([]);
+    
+    // 타이밍 설정 변수들
+    const COMPONENT_SHOW_DELAY = 50; // 컴포넌트 표시 지연 시간 (ms) - timeline 시작 속도
+    const QUESTION_SHOW_DELAY = 300; // 질문 표시 지연 시간 (ms)
+    const USP_POOL_INTERVAL = 2000; // USP Pool 간격 (ms)
+    const USP_POOL_FINAL_DELAY = 1000; // USP Pool 마지막 지연 (ms)
+    const CLONE_TALK_DELAY = 1000; // CloneTalk 완료 후 지연 (ms)
+    const POPUP_COMPLETE_DELAY = 500; // 팝업 완료 후 지연 (ms)
     const allSfx = useMemo(() =>
         assets_timeline?.flatMap(item =>
           item.assets
@@ -31,6 +39,28 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
     useEffect(() => {
         setSfxPath(allSfx as string[]);
     }, [allSfx]);
+
+    // stepInfo가 변경될 때 상태 초기화
+    useEffect(() => {
+        if (stepInfo) {
+            console.log('StepInfo updated, resetting timeline:', stepInfo);
+            setCurrentIdx(0);
+            setQuestionFlag(false);
+            setCurrentUspPool([]);
+            setComponentsView(false);
+            // 새로운 stepInfo가 오면 설정된 시간 후에 표시
+            setTimeout(() => {
+                setComponentsView(true);
+            }, COMPONENT_SHOW_DELAY);
+            
+            // assets_timeline이 null인 경우 질문 표시
+            if (!stepInfo.assets_timeline && stepInfo.question) {
+                setTimeout(() => {
+                    setQuestionFlag(true);
+                }, QUESTION_SHOW_DELAY);
+            }
+        }
+    }, [stepInfo]);
 
     // timeline 처리 완료 여부
     const isTimelineFinished = useMemo(() => {
@@ -60,10 +90,10 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
                         ...(asset as any),
                         description: (asset as any).description,
                     }]);
-                }, index * 2000); // 2초 간격으로 순차 표시
+                }, index * USP_POOL_INTERVAL);
                 timers.push(timer);
             });
-            const totalDuration = uspPoolAssets.length * 2000 + 1000; // 마지막 이후 1초
+            const totalDuration = uspPoolAssets.length * USP_POOL_INTERVAL + USP_POOL_FINAL_DELAY;
             const nextTimer = setTimeout(() => setCurrentIdx(idx => idx + 1), totalDuration);
             timers.push(nextTimer);
             return () => timers.forEach(clearTimeout);
@@ -78,17 +108,18 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
         }
 
         const item = assets_timeline[currentIdx];
+        console.log('Current timeline item:', currentIdx, item);
 
         // CloneTalk이 포함된 경우
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const cloneAsset = item.assets.find(asset => asset.type === "CLONE_TALKS") as any;
         if (cloneAsset && "text" in cloneAsset) {
             return (
-                <CloneTalk
+                <CloneTalkSplit
                     text={cloneAsset.text || ""}
                     onComplete={() => {
-                        // 문장 완료 후 1초 간격을 두고 다음 타임라인으로 이동
-                        setTimeout(() => setCurrentIdx(idx => idx + 1), 1000);
+                        // 문장 완료 후 설정된 시간만큼 기다린 후 다음 타임라인으로 이동
+                        setTimeout(() => setCurrentIdx(idx => idx + 1), CLONE_TALK_DELAY);
                     }}
                 />
             );
@@ -100,7 +131,7 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
             return null; // 화면 표시는 별도 effect에서 진행
         }
 
-        // 팝업 UI 처리 (DEFAULT_POPUP, FUNCTION_USP_POOL 등)
+        // 팝업 UI 처리 (DEFAULT_POPUP, TRIGGER_POPUP 등)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const popupAsset = item.assets.find(asset => [
             "DEFAULT_POPUP",
@@ -108,15 +139,20 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
         ].includes(asset.type)) as any;
 
         if (popupAsset) {
-            // 3초 후 다음 타임라인으로 이동
-            setTimeout(() => setCurrentIdx(idx => idx + 1), 3000);
-
+            console.log('Rendering popup:', popupAsset);
+            // id가 있으면 id를 keyName으로 사용, 없으면 type 사용
+            const keyName = popupAsset.id ? popupAsset.id.toUpperCase() : popupAsset.type;
             return (
                 <CommonPopupUI
                     key={currentIdx}
-                    keyName={popupAsset.type}
+                    keyName={keyName}
                     text={popupAsset.description}
                     description={popupAsset.subtext_usp_pool}
+                    onComplete={() => {
+                        console.log('Popup completed, moving to next timeline');
+                        // 팝업 완료 후 다음 타임라인으로 이동
+                        setTimeout(() => setCurrentIdx(idx => idx + 1), POPUP_COMPLETE_DELAY);
+                    }}
                 />
             );
         }
@@ -127,11 +163,6 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
     };
 
 
-    useEffect(() => {
-        setTimeout(() => {
-            setComponentsView(true);
-        }, 500);
-    }, []);
 
     return (
         <div className={cn("absolute inset-0 flex flex-col items-center justify-center text-center opacity-0 transition-all duration-300", componentsView && "opacity-100") }>

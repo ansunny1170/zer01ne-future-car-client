@@ -1,5 +1,4 @@
 import { getFormattedTime } from "@/utils";
-import BasicBox from "./basic-box";
 import { useScene } from "@/context/scene-context";
 
 export default function ProgressBox() {
@@ -11,14 +10,14 @@ export default function ProgressBox() {
   const totalStep = 7;
   
   return (
-    <BasicBox className="flex gap-[30px] items-center justify-between text-center">
+    <div className="flex gap-[30px] items-center justify-between text-center text-white">
       <div className="leading-[1.2]">
         <p className="text-[35px] font-bold">{time}min</p>
         <p className="text-[17px] opacity-60">{distance}km {getFormattedTime()}</p>
       </div>
 
       {/* 진행바 */}
-      <div className="h-[10px] rounded-full bg-black/20 grow w-[378px] relative">
+      <div className="h-[10px] rounded-full bg-black/40 grow w-[378px] relative">
         <div 
           className="h-full rounded-full relative transition-all duration-500 delay-100"
           style={{ 
@@ -49,6 +48,6 @@ export default function ProgressBox() {
           <p className="text-[22px] opacity-60">MPH</p>
         </li>
       </ul>
-    </BasicBox>
+    </div>
   );
 } 

@@ -15,6 +15,7 @@ export default function StepComplete() {
     // 현재 보여줄 timeline 인덱스
     const [currentIdx, setCurrentIdx] = useState(0);
     const [currentUspPool, setCurrentUspPool] = useState<any[]>([]);
+    const endTimeout = 3000;
 
     // timeline 처리 완료 여부
     const isTimelineFinished = useMemo(() => {
@@ -27,7 +28,7 @@ export default function StepComplete() {
         if (isTimelineFinished && !endFlag) {
             const timer = setTimeout(() => {
                 setEndFlag(true);
-            }, 1000);
+            }, endTimeout);
             return () => clearTimeout(timer);
         }
     }, [isTimelineFinished, endFlag]);

@@ -5,7 +5,7 @@ import { useScene } from "@/context/scene-context";
 import { useRef, useState } from "react";
 import { StepInfo } from "@/type";
 import { useSpeechProcessing } from "@/hooks/useSpeechProcessing";
-import CloneTalk from "../ui/clone-talk";
+import CloneTalkSplit from "../ui/clone-talk-split";
 
 export default function QuestionArea({
     mainText,
@@ -57,18 +57,20 @@ export default function QuestionArea({
     return (
         <div className={cn("flex flex-col items-center justify-center h-full gap-16", className)}>
             {mainText && (
-                <CloneTalk text={mainText} keepLastLine={true} onComplete={() => {}} />
+                <CloneTalkSplit text={mainText} keepLastLine={true} onComplete={() => {}} />
             )}
-            {
-                buttons && (
-                    <QuestionButtons buttons={buttons} onSelect={handleSpeechTrigger} isProcessing={isProcessing || isPending} />
-                )
-            }
-            {
-                (mainText) && (
-                    <Speech onTrigger={handleSpeechTrigger} isProcessing={isProcessing} defaultComment={defaultComment}/>
-                )
-            }
+            <div className="absolute top-[20%] inset-0 flex flex-col items-center justify-start gap-24">
+                {
+                    buttons && (
+                        <QuestionButtons buttons={buttons} onSelect={handleSpeechTrigger} isProcessing={isProcessing || isPending} />
+                    )
+                }
+                {
+                    (mainText) && (
+                        <Speech onTrigger={handleSpeechTrigger} isProcessing={isProcessing} defaultComment={defaultComment}/>
+                    )
+                }
+            </div>
         </div>
     );
 }
