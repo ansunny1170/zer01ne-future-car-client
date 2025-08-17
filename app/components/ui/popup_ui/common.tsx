@@ -1,6 +1,7 @@
 import { Icons } from "../icons";
 import BasicPopupBox from "./basic-popup-box";
 import CloneTalk from "../clone-talk";
+import { useEffect } from "react";
 
 const popupDict: {
     [key: string]: {
@@ -47,6 +48,12 @@ const popupDict: {
         className: "",
     },
     CAR_OPEN: {
+        icon: <Icons.doorOpen />,
+        type: "warm",
+        defaultText: "문열림",
+        className: "min-w-auto",
+    },
+    CAROPEN: {
         icon: <Icons.doorOpen />,
         type: "warm",
         defaultText: "문열림",
@@ -127,6 +134,21 @@ const popupDict: {
 }
 
 export default function CommonPopupUI({keyName, text, description, onComplete}: {keyName: string, text?: string, description?: string, onComplete?: () => void}) {
+  console.log('CommonPopupUI rendered:', { keyName, text, description });
+  
+  // 팝업 표시 시간 (기본 3초)
+  useEffect(() => {
+    if (keyName !== 'CLONE_TALKS' && onComplete) {
+      console.log('Setting popup timer for:', keyName);
+      const timer = setTimeout(() => {
+        console.log('Popup timer completed:', keyName);
+        onComplete();
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [keyName, onComplete]);
+
   return (
     <>
         {keyName === 'CLONE_TALKS' ? (

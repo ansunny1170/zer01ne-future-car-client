@@ -78,6 +78,7 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
         }
 
         const item = assets_timeline[currentIdx];
+        console.log('Current timeline item:', currentIdx, item);
 
         // CloneTalk이 포함된 경우
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -100,7 +101,7 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
             return null; // 화면 표시는 별도 effect에서 진행
         }
 
-        // 팝업 UI 처리 (DEFAULT_POPUP, FUNCTION_USP_POOL 등)
+        // 팝업 UI 처리 (DEFAULT_POPUP, TRIGGER_POPUP 등)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const popupAsset = item.assets.find(asset => [
             "DEFAULT_POPUP",
@@ -108,15 +109,20 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
         ].includes(asset.type)) as any;
 
         if (popupAsset) {
-            // 3초 후 다음 타임라인으로 이동
-            setTimeout(() => setCurrentIdx(idx => idx + 1), 3000);
-
+            console.log('Rendering popup:', popupAsset);
+            // id가 있으면 id를 keyName으로 사용, 없으면 type 사용
+            const keyName = popupAsset.id ? popupAsset.id.toUpperCase() : popupAsset.type;
             return (
                 <CommonPopupUI
                     key={currentIdx}
-                    keyName={popupAsset.type}
+                    keyName={keyName}
                     text={popupAsset.description}
                     description={popupAsset.subtext_usp_pool}
+                    onComplete={() => {
+                        console.log('Popup completed, moving to next timeline');
+                        // 팝업 완료 후 다음 타임라인으로 이동
+                        setTimeout(() => setCurrentIdx(idx => idx + 1), 500);
+                    }}
                 />
             );
         }
