@@ -59,7 +59,7 @@ export default function QuestionArea({
             {mainText && (
                 <CloneTalkSplit text={mainText} keepLastLine={true} onComplete={() => {}} />
             )}
-            <div className="absolute top-[25%] inset-0 flex flex-col items-center justify-start gap-16">
+            <div className="absolute top-[20%] inset-0 flex flex-col items-center justify-start gap-16">
                 {
                     buttons && (
                         <QuestionButtons buttons={buttons} onSelect={handleSpeechTrigger} isProcessing={isProcessing || isPending} />

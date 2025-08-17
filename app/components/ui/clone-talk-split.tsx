@@ -100,13 +100,13 @@ export default function CloneTalkSplit({
 
       <motion.div 
         ref={scope}
-        className="fixed bottom-[80%] left-1/2 -translate-x-1/2 flex flex-col items-center justify-center w-full"
+        className="fixed bottom-[85%] left-1/2 -translate-x-1/2 flex flex-col items-center justify-center w-full"
         variants={containerVariants}
         initial="hidden"
         animate="show"
         exit="exit"
       >
-        <motion.div className="text-white text-center text-[52px] max-w-[50vw] break-keep font-semibold leading-[1.2] text-shadow-sm flex flex-col items-center">
+        <motion.div className="text-white text-center text-[43px] max-w-[50vw] break-keep font-semibold leading-[1.2] flex flex-col items-center" style={{ filter: 'drop-shadow(0 3px 3px rgb(0 0 0 / 0.12)) drop-shadow(0 9px 7px rgb(0 0 0 / 0.1))' }}>
           {lines.map((line, lineIndex) => (
             <motion.div 
               key={`line-${lineIndex}-${text}`} 
