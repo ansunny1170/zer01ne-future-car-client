@@ -84,6 +84,7 @@ export default function CloneTalkSplit({
 
   return (
     <motion.div 
+      key={text}
       className="absolute inset-0 z-50"
       initial={{ opacity: 1 }}
       animate={{ opacity: isComplete ? 0 : 1 }}
@@ -99,23 +100,22 @@ export default function CloneTalkSplit({
 
       <motion.div 
         ref={scope}
-        className="fixed bottom-[70%] left-1/2 -translate-x-1/2 flex flex-col items-center w-full"
+        className="fixed bottom-[80%] left-1/2 -translate-x-1/2 flex flex-col items-center w-full"
         variants={containerVariants}
         initial="hidden"
-        animate={isMounted ? "show" : "hidden"}
+        animate="show"
         exit="exit"
-        style={{ visibility: isMounted ? "visible" : "hidden" }}
       >
-        <div className="text-white text-center text-[52px] max-w-[50vw] break-keep font-semibold leading-[1.2] text-shadow-sm">
+        <motion.div className="text-white text-center text-[52px] max-w-[50vw] break-keep font-semibold leading-[1.2] text-shadow-sm">
           {lines.map((line, lineIndex) => (
             <motion.div 
-              key={`line-${lineIndex}`} 
+              key={`line-${lineIndex}-${text}`} 
               className="whitespace-nowrap"
               variants={lineVariants}
             >
               {Array.from(line).map((char, charIndex) => (
                 <motion.span
-                  key={`char-${lineIndex}-${charIndex}`}
+                  key={`char-${lineIndex}-${charIndex}-${text}`}
                   className="inline-block"
                   variants={charVariants}
                 >
@@ -124,7 +124,7 @@ export default function CloneTalkSplit({
               ))}
             </motion.div>
           ))}
-        </div>
+        </motion.div>
       </motion.div>
     </motion.div>
   );
