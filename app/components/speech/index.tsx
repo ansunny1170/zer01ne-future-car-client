@@ -160,9 +160,9 @@ export default function Speech({ onTrigger, isProcessing, defaultComment }: { on
       <HyundaiLoading/>
     ) : (
     <div className="flex flex-col gap-4 items-center justify-center">
-      <div className='flex items-center justify-center gap-4 p-4 backdrop-blur-2xl rounded-full bg-[linear-gradient(to_right,#00519d98_0%,#0099ff36_100%)] text-[#46BBFF]'>
+      <div className='flex items-center justify-center gap-4 p-4 backdrop-blur-2xl rounded-full bg-[#003A66]/30 text-[#9DE6FF]'>
         <span className={cn('animate-pulse', isListening && 'animate-in')}>
-          <Icons.leftQuote/>
+          <Icons.leftQuote className='text-[#9DE6FF]'/>
         </span>
         {
           !finalText ? (
@@ -172,7 +172,7 @@ export default function Speech({ onTrigger, isProcessing, defaultComment }: { on
           )
         }
         <span className={cn('animate-pulse', isListening && 'animate-in')}>
-          <Icons.rightQuote/>
+          <Icons.rightQuote className='text-[#9DE6FF]'/>
         </span>
       </div>
     </div>
