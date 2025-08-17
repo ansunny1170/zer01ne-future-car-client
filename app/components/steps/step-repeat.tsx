@@ -18,6 +18,14 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
     // 현재 보여줄 timeline 인덱스
     const [currentIdx, setCurrentIdx] = useState(0);
     const [currentUspPool, setCurrentUspPool] = useState<any[]>([]);
+    
+    // 타이밍 설정 변수들
+    const COMPONENT_SHOW_DELAY = 50; // 컴포넌트 표시 지연 시간 (ms) - timeline 시작 속도
+    const QUESTION_SHOW_DELAY = 300; // 질문 표시 지연 시간 (ms)
+    const USP_POOL_INTERVAL = 2000; // USP Pool 간격 (ms)
+    const USP_POOL_FINAL_DELAY = 1000; // USP Pool 마지막 지연 (ms)
+    const CLONE_TALK_DELAY = 1000; // CloneTalk 완료 후 지연 (ms)
+    const POPUP_COMPLETE_DELAY = 500; // 팝업 완료 후 지연 (ms)
     const allSfx = useMemo(() =>
         assets_timeline?.flatMap(item =>
           item.assets
@@ -34,16 +42,23 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
 
     // stepInfo가 변경될 때 상태 초기화
     useEffect(() => {
-        if (stepInfo?.assets_timeline) {
+        if (stepInfo) {
             console.log('StepInfo updated, resetting timeline:', stepInfo);
             setCurrentIdx(0);
             setQuestionFlag(false);
             setCurrentUspPool([]);
             setComponentsView(false);
-            // 새로운 stepInfo가 오면 다시 500ms 후에 표시
+            // 새로운 stepInfo가 오면 설정된 시간 후에 표시
             setTimeout(() => {
                 setComponentsView(true);
-            }, 500);
+            }, COMPONENT_SHOW_DELAY);
+            
+            // assets_timeline이 null인 경우 질문 표시
+            if (!stepInfo.assets_timeline && stepInfo.question) {
+                setTimeout(() => {
+                    setQuestionFlag(true);
+                }, QUESTION_SHOW_DELAY);
+            }
         }
     }, [stepInfo]);
 
@@ -75,10 +90,10 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
                         ...(asset as any),
                         description: (asset as any).description,
                     }]);
-                }, index * 2000); // 2초 간격으로 순차 표시
+                }, index * USP_POOL_INTERVAL);
                 timers.push(timer);
             });
-            const totalDuration = uspPoolAssets.length * 2000 + 1000; // 마지막 이후 1초
+            const totalDuration = uspPoolAssets.length * USP_POOL_INTERVAL + USP_POOL_FINAL_DELAY;
             const nextTimer = setTimeout(() => setCurrentIdx(idx => idx + 1), totalDuration);
             timers.push(nextTimer);
             return () => timers.forEach(clearTimeout);
@@ -103,8 +118,8 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
                 <CloneTalkSplit
                     text={cloneAsset.text || ""}
                     onComplete={() => {
-                        // 문장 완료 후 1초 간격을 두고 다음 타임라인으로 이동
-                        setTimeout(() => setCurrentIdx(idx => idx + 1), 1000);
+                        // 문장 완료 후 설정된 시간만큼 기다린 후 다음 타임라인으로 이동
+                        setTimeout(() => setCurrentIdx(idx => idx + 1), CLONE_TALK_DELAY);
                     }}
                 />
             );
@@ -136,7 +151,7 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
                     onComplete={() => {
                         console.log('Popup completed, moving to next timeline');
                         // 팝업 완료 후 다음 타임라인으로 이동
-                        setTimeout(() => setCurrentIdx(idx => idx + 1), 500);
+                        setTimeout(() => setCurrentIdx(idx => idx + 1), POPUP_COMPLETE_DELAY);
                     }}
                 />
             );
