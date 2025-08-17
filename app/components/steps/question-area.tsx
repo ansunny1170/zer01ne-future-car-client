@@ -59,16 +59,18 @@ export default function QuestionArea({
             {mainText && (
                 <CloneTalkSplit text={mainText} keepLastLine={true} onComplete={() => {}} />
             )}
-            {
-                buttons && (
-                    <QuestionButtons buttons={buttons} onSelect={handleSpeechTrigger} isProcessing={isProcessing || isPending} />
-                )
-            }
-            {
-                (mainText) && (
-                    <Speech onTrigger={handleSpeechTrigger} isProcessing={isProcessing} defaultComment={defaultComment}/>
-                )
-            }
+            <div className="absolute top-[25%] inset-0 flex flex-col items-center justify-start gap-16">
+                {
+                    buttons && (
+                        <QuestionButtons buttons={buttons} onSelect={handleSpeechTrigger} isProcessing={isProcessing || isPending} />
+                    )
+                }
+                {
+                    (mainText) && (
+                        <Speech onTrigger={handleSpeechTrigger} isProcessing={isProcessing} defaultComment={defaultComment}/>
+                    )
+                }
+            </div>
         </div>
     );
 }
