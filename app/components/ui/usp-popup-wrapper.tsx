@@ -40,9 +40,23 @@ export default function UspPopupWrapper({ data }: { data: { description: string 
             exit={{ opacity: 0, x: 20 }}
             transition={{ duration: 0.35 }}
             layout // 레이아웃 변경 시 자연스러운 이동
-            className="flex justify-start items-center gap-2 bg-linear-to-r from-purple-500 to-transparent text-white font-bold max-w-[24vw] backdrop-blur-2xl p-4 rounded-full overflow-hidden bg-white/10 border border-white/30"
+            className="flex justify-start items-center gap-2 text-white font-semibold max-w-[24vw] bg-black/5 backdrop-blur-2xl p-4 rounded-[24px] overflow-hidden relative"
+            style={{
+              backgroundClip: 'padding-box',
+            }}
           >
-            <div className="w-[24px] h-[24px] flex items-center justify-center shrink-0">
+            <div 
+              className="absolute inset-0 rounded-[24px] opacity-50"
+              style={{
+                background: 'linear-gradient(-90deg, #4C8BFF 0%, #F7B094 72%, #FFC73B 100%)',
+                padding: '2px',
+                WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                WebkitMaskComposite: 'xor',
+                mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                maskComposite: 'exclude',
+              }}
+            />
+            <div className="w-[24px] h-[24px] flex items-center justify-center shrink-0 relative z-10">
               <Lottie
                 key={`lottie-${item.id}`}
                 animationData={JSON.parse(JSON.stringify(loaderAnimation))}
@@ -66,7 +80,19 @@ export default function UspPopupWrapper({ data }: { data: { description: string 
               />
             </div>
 
-            {item.description}
+            <span className="relative z-10">{item.description}</span>
+
+            <b 
+              className="whitespace-nowrap ml-4 relative z-10 bg-gradient-to-rbg-clip-text text-transparent opacity-90"
+              style={{
+                background: 'linear-gradient(-90deg, #4C8BFF 0%, #F7B094 72%, #FFC73B 100%)',
+                WebkitBackgroundClip: 'text',
+                backgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+              }}
+            >
+              AI 제안
+            </b>
           </motion.li>
         ))}
       </AnimatePresence>
