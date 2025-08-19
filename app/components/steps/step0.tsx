@@ -3,9 +3,8 @@ import { useSpeechProcessing } from "@/hooks/useSpeechProcessing";
 import { useScene } from "@/context/scene-context";
 import { StepInfo } from "@/type";
 import { motion } from "framer-motion";
-import IntroSpeech from "../speech/intro-speech";
-import TextSplitAnimation from "../text-split-animation";
-import TextAnimation from "./text-animation";
+import CloneTalkSplit from "../ui/clone-talk-split";
+import Speech from "../speech";
 
 export default function Step0({ dafultComment }: { dafultComment?: string }) { 
   const { mutateAsync: processSpeech, isPending: isProcessing } = useSpeechProcessing();
@@ -29,18 +28,20 @@ export default function Step0({ dafultComment }: { dafultComment?: string }) {
   return (
     <div className="pl-8 absolute inset-0 text-white">
       <motion.div
-        initial={{ opacity: 0, y: 50 }}
+        initial={{ opacity: 0, y: 0}}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1 }}
         className="animate-fade-in absolute inset-0 flex flex-col items-center justify-center backdrop-blur-lg bg-black/10 z-[22]"
       >
-        <p className="text-[24px] opacity-80 pb-[50px]">이 체험은 대화로 진행됩니다.</p>
-        <TextSplitAnimation text="반가워요!" delay={1} speed={0.8} className="text-[96px] text-shadow-lg font-bold pb-[20px]" />
-        <IntroSpeech
-          onTrigger={handleSpeechTrigger}
-          isProcessing={isProcessing}
-          defaultComment={dafultComment}
-          />
+        <CloneTalkSplit text="안녕하세요! 오늘은 어떤 드라이브를 갈까요?" keepLastLine={true} />
+
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, delay: 0.5 }}
+        >
+          <Speech onTrigger={handleSpeechTrigger} isProcessing={isProcessing} defaultComment={dafultComment}/>
+        </motion.div>
       </motion.div>
     </div>
   );

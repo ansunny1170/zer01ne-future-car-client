@@ -35,23 +35,23 @@ export default function Home() {
             <Step0 dafultComment="출발하자"/>
           </motion.div>
         );
-      case 1:
-        return (
-          <motion.div
-            key="step0"
-            variants={fadeVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={{ duration: 0.2 }}
-          >
-          <StepRepeat dafultComment="아이랑 산으로 캠핑"/>
-          </motion.div>
-        );
+      // case 1:
+      //   return (
+      //     <motion.div
+      //       key="step5"
+      //       variants={fadeVariants}
+      //       initial="initial"
+      //       animate="animate"
+      //       exit="exit"
+      //       transition={{ duration: 0.2 }}
+      //     >
+      //     <StepRepeat dafultComment="아이랑 산으로 캠핑"/>
+      //     </motion.div>
+      //   );
       case 6:
         return (
           <motion.div
-            key="step0"
+            key="step6"
             variants={fadeVariants}
             initial="initial"
             animate="animate"
@@ -64,7 +64,7 @@ export default function Home() {
       case 7:
         return (
           <motion.div
-            key="step0"
+            key="step7"
             variants={fadeVariants}
             initial="initial"
             animate="animate"
