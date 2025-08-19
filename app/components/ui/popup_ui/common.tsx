@@ -47,19 +47,13 @@ const popupDict: {
         defaultText: "일정 알림",
         className: "",
     },
-    CAR_OPEN: {
-        icon: <Icons.doorOpen />,
-        type: "warm",
-        defaultText: "문열림",
-        className: "min-w-auto",
-    },
     CAROPEN: {
         icon: <Icons.doorOpen />,
         type: "warm",
         defaultText: "문열림",
         className: "min-w-auto",
     },
-    CAR_CLOSE: {
+    CARCLOSE: {
         icon: <Icons.doorClose />,
         type: "warm",
         defaultText: "문닫힘",
