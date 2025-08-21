@@ -35,7 +35,7 @@ export default function UspPopupWrapper({ data }: { data: { description: string 
         {displayItems.map((item, index) => (
           <motion.li
             key={item.id} // 고유 ID 사용
-            initial={{ opacity: 0, x: -20 }}
+            initial={{ opacity: 0, x: 150 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
             transition={{ duration: 0.35 }}
@@ -56,7 +56,7 @@ export default function UspPopupWrapper({ data }: { data: { description: string 
                 maskComposite: 'exclude',
               }}
             />
-            <div className="w-[24px] h-[24px] flex items-center justify-center shrink-0 relative z-10">
+            <div className="w-[32px] h-[32px] flex items-center justify-center shrink-0 relative z-10">
               <Lottie
                 key={`lottie-${item.id}`}
                 animationData={JSON.parse(JSON.stringify(loaderAnimation))}
