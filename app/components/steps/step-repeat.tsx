@@ -2,7 +2,7 @@ import { useScene } from "@/context/scene-context";
 import { BASE_S3_LINK } from "@/constants";
 import QuestionArea from "./question-area";
 import CommonPopupUI from "../ui/popup_ui/common";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { cn } from "@/utils/cn";
 import UspPopupWrapper from "../ui/usp-popup-wrapper";
 import CloneTalkSplit from "../ui/clone-talk-split";
@@ -25,7 +25,7 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
     const USP_POOL_FINAL_DELAY = 1000; // USP Pool 마지막 지연 (ms)
     const CLONE_TALK_DELAY = 1000; // CloneTalk 완료 후 지연 (ms)
     const POPUP_COMPLETE_DELAY = 500; // 팝업 완료 후 지연 (ms)
-    const AUDIO_COMPLETE_DELAY = 1200; // 음성요소 완료 후 지연 시간 (ms)
+    const AUDIO_COMPLETE_DELAY = 1000; // 음성요소 완료 후 지연 시간 (ms)
     // 오디오 처리를 위한 별도 useEffect
 
     // stepInfo가 변경될 때 상태 초기화
@@ -88,7 +88,38 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
         }
     }, [assets_timeline, currentIdx, isTimelineFinished]);
 
-    // 단일 타임라인 처리기 - Race Condition 제거
+    // 연속된 오디오 아이템들을 하나로 묶어서 처리하는 함수
+    const getConsecutiveAudioItems = useCallback((startIdx: number) => {
+        if (!assets_timeline) return { audioFiles: [], endIdx: startIdx };
+        
+        const audioFiles: string[] = [];
+        let currentIndex = startIdx;
+        
+        // 현재 인덱스부터 연속된 오디오 전용 아이템들을 수집
+        while (currentIndex < assets_timeline.length) {
+            const item = assets_timeline[currentIndex];
+            
+            const audioAssets = item.assets.filter(asset => 
+                asset.type === "VEHICLE_SOUND_EFFECT" || asset.type === "COMPANION_VOICE"
+            );
+            
+            const hasOtherAssets = item.assets.some(asset => 
+                asset.type !== "VEHICLE_SOUND_EFFECT" && asset.type !== "COMPANION_VOICE"
+            );
+            
+            // 오디오가 있고 다른 요소가 없으면 수집
+            if (audioAssets.length > 0 && !hasOtherAssets) {
+                audioFiles.push(...audioAssets.map(asset => asset.file_name));
+                currentIndex++;
+            } else {
+                break;
+            }
+        }
+        
+        return { audioFiles, endIdx: currentIndex };
+    }, [assets_timeline]);
+
+    // 단일 타임라인 처리기 - Race Condition 제거 + 연속 오디오 처리
     useEffect(() => {
         if (!assets_timeline || isTimelineFinished) return;
 
@@ -107,32 +138,39 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
         
         const uspPoolAssets = item.assets.filter(asset => asset.type === "FUNCTION_USP_POOL");
 
-        // 오디오가 있으면 백그라운드에서 재생
-        if (audioAssets.length > 0) {
-            const audioFiles = audioAssets.map(asset => asset.file_name);
-            console.log('Starting audio for timeline', currentIdx, ':', audioFiles);
-            setSfxPath(audioFiles);
-        }
-
         // 진행 조건 결정 (우선순위: Visual > USP_Pool > Audio > Empty)
         if (visualAssets.length > 0) {
             console.log('Timeline has visual elements - waiting for visual completion');
+            
+            // 비주얼과 함께 오디오도 백그라운드에서 재생
+            if (audioAssets.length > 0) {
+                const audioFiles = audioAssets.map(asset => asset.file_name);
+                console.log('Starting background audio for visual timeline', currentIdx, ':', audioFiles);
+                setSfxPath(audioFiles);
+            }
+            
             setOnSfxComplete(undefined); // Visual 완료를 기다림
         } else if (uspPoolAssets.length > 0) {
             console.log('Timeline has USP Pool - handled by separate effect');
             setOnSfxComplete(undefined); // USP Pool effect에서 처리
         } else if (audioAssets.length > 0) {
-            console.log('Timeline is audio-only - waiting for audio completion');
+            console.log('Timeline is audio-only - checking for consecutive audio items');
+            
+            // 연속된 오디오 아이템들을 하나로 묶어서 처리
+            const { audioFiles, endIdx } = getConsecutiveAudioItems(currentIdx);
+            console.log(`Found consecutive audio items from ${currentIdx} to ${endIdx - 1}:`, audioFiles);
+            
+            setSfxPath(audioFiles);
             setOnSfxComplete(() => {
-                console.log('Audio-only timeline completed', currentIdx);
-                setTimeout(() => setCurrentIdx(idx => idx + 1), AUDIO_COMPLETE_DELAY);
+                console.log(`Consecutive audio completed, jumping to timeline ${endIdx}`);
+                setTimeout(() => setCurrentIdx(endIdx), AUDIO_COMPLETE_DELAY);
             });
         } else {
             console.log('Timeline is empty - moving immediately');
             // 빈 타임라인은 빈 아이템 처리 useEffect에서 처리
             setOnSfxComplete(undefined);
         }
-    }, [assets_timeline, currentIdx, isTimelineFinished, setSfxPath, setOnSfxComplete]);
+    }, [assets_timeline, currentIdx, isTimelineFinished, setSfxPath, setOnSfxComplete, getConsecutiveAudioItems]);
 
     // 빈 아이템 처리 (오디오도 비주얼도 없는 경우)
     useEffect(() => {
