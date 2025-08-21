@@ -10,7 +10,7 @@ export default function StepAudioPlayer() {
     const bgmRef = useRef<HTMLAudioElement>(null);
     const BASE_URL = BASE_S3_LINK;
     // 현재 재생할 오디오 경로
-    const { bgmPath, sfxPath } = useScene();
+    const { bgmPath, sfxPath, onSfxComplete } = useScene();
     useEffect(() => {
         const handleKeyDown = () => {
             setIsSfxActive(true);
@@ -29,17 +29,41 @@ export default function StepAudioPlayer() {
     // sfxpath 배열 바뀌면 하나씩 순차적으로 재생할 것. 중간에 200ms 간격으로 재생.
     // 순차 재생 함수
     const playSequential = useCallback((list: string[], idx: number) => {
-        if (idx >= list.length) return; // 모두 재생 완료
-        audioRef.current = new Audio(`${BASE_URL}/${list[idx]}`);
-        audioRef.current.play();
+        if (idx >= list.length) {
+            // 모든 재생 완료
+            console.log('All audio completed, calling onSfxComplete');
+            if (onSfxComplete) {
+                onSfxComplete();
+            }
+            return;
+        }
+        
+        const audioUrl = `${BASE_URL}/${list[idx]}`;
+        console.log('Playing audio:', audioUrl);
+        
+        audioRef.current = new Audio(audioUrl);
+        audioRef.current.onerror = (error) => {
+            console.error('Audio load error:', error);
+            console.error('Failed URL:', audioUrl);
+        };
+        
+        audioRef.current.play().catch(error => {
+            console.error('Audio play error:', error);
+            console.error('Failed URL:', audioUrl);
+        });
+        
         audioRef.current.onended = () => {
             playSequential(list, idx + 1);
         };
-    }, [BASE_URL]);
+    }, [BASE_URL, onSfxComplete]);
 
     useEffect(() => {
         if (!isSfxActive) return;
         if (!sfxPath || sfxPath.length === 0) return;
+        
+        console.log('StepAudioPlayer: Attempting to play audio:', sfxPath);
+        console.log('Full audio URLs:', sfxPath.map(path => `${BASE_URL}/${path}`));
+        
         playSequential(sfxPath, 0);
         // cleanup: 재생 중인 오디오 stop
         return () => {

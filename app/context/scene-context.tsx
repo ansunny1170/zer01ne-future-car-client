@@ -24,6 +24,8 @@ export type SceneContextType = {
   setBgmPath: (b: string | null) => void;
   sfxPath: string[] | null;
   setSfxPath: (s: string[] | null) => void;
+  onSfxComplete?: () => void;
+  setOnSfxComplete: (callback: (() => void) | undefined) => void;
   stepInfo: StepInfo | null;
   setStepInfo: (s: StepInfo | null) => void;
   sessionId: string | null;
@@ -42,6 +44,7 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
   const [uiPath, setUiPath] = useState<string | null>(null);
   const [bgmPath, setBgmPath] = useState<string | null>(null);
   const [sfxPath, setSfxPath] = useState<string[] | null>([]);
+  const [onSfxComplete, setOnSfxComplete] = useState<(() => void) | undefined>();
   const [stepInfo, setStepInfo] = useState<StepInfo | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
 
@@ -69,16 +72,9 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
     setStepInfo(stepInfo);
     setVideoPath(stepInfo?.bgv?.file_name || bgvDict[Math.floor(Math.random() * bgvDict.length)].file_name || null );
     setBgmPath(stepInfo?.bgm?.file_name || bgmDict[Math.floor(Math.random() * bgmDict.length)].file_name || null);
-
-    const { assets_timeline } = stepInfo || {};
-    const allSfx = assets_timeline?.flatMap(item =>
-          item.assets
-            .filter(a =>
-                a.type === 'VEHICLE_SOUND_EFFECT' ||
-                a.type === 'COMPANION_VOICE')
-            .map(a => a.file_name)            // ★ 경로만 추출
-        ) ?? [];
-    setSfxPath(allSfx);
+    
+    // stepInfo 변경 시 sfxPath 초기화
+    setSfxPath([]);
   }, [stepInfo]);
 
   const goPrevStep = () => {
@@ -122,6 +118,8 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
         setBgmPath,
         sfxPath,
         setSfxPath,
+        onSfxComplete,
+        setOnSfxComplete,
         stepInfo,
         setStepInfo,
         sessionId,
