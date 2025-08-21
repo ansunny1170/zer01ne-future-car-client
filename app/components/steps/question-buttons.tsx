@@ -66,7 +66,6 @@ export default function QuestionButtons({
                         onClick={() => {
                             if (isProcessing) return;
                             if (onSelect) onSelect(button);
-                            setStepNumber(stepNumber + 1);
                         }}
                         disabled={isProcessing}
                     >
