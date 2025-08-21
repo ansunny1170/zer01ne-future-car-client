@@ -2,6 +2,7 @@ import { Icons } from "../icons";
 import BasicPopupBox from "./basic-popup-box";
 import CloneTalk from "../clone-talk";
 import { useEffect } from "react";
+import BreakPadPopup from "./break-pad-popup";
 
 const popupDict: {
     [key: string]: {
@@ -145,11 +146,9 @@ export default function CommonPopupUI({keyName, text, description, onComplete}: 
 
   return (
     <>
-        {keyName === 'CLONE_TALKS' ? (
-            <CloneTalk
-                text={text || ""}
-                onComplete={onComplete}
-            />
+    {
+        keyName === 'BREAK_PAD' ? (
+            <BreakPadPopup/>
         ) : (
         <BasicPopupBox type={popupDict[keyName]?.type} className={popupDict[keyName]?.className}>
             <div
@@ -164,7 +163,7 @@ export default function CommonPopupUI({keyName, text, description, onComplete}: 
                 </div>
             </div>
         </BasicPopupBox>
-    )}
+        )}
     </>
   );
 }
