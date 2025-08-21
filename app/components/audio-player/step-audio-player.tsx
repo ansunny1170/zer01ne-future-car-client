@@ -73,7 +73,7 @@ export default function StepAudioPlayer() {
             
             currentAudio.onended = () => {
                 // 기존 onended 처리
-                if (originalOnEnded) originalOnEnded(new Event('ended'));
+                if (originalOnEnded) originalOnEnded.call(currentAudio, new Event('ended'));
                 
                 // 새 오디오 재생
                 setTimeout(() => {

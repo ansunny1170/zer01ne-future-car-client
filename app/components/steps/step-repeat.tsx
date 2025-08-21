@@ -19,7 +19,7 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
     const [currentUspPool, setCurrentUspPool] = useState<any[]>([]);
     
     // 타이밍 설정 변수들
-    const COMPONENT_SHOW_DELAY = 50; // 컴포넌트 표시 지연 시간 (ms) - timeline 시작 속도
+    const COMPONENT_SHOW_DELAY = 0; // 컴포넌트 표시 지연 시간 (ms) - timeline 시작 속도
     const QUESTION_SHOW_DELAY = 300; // 질문 표시 지연 시간 (ms)
     const USP_POOL_INTERVAL = 2000; // USP Pool 간격 (ms)
     const USP_POOL_FINAL_DELAY = 1000; // USP Pool 마지막 지연 (ms)
