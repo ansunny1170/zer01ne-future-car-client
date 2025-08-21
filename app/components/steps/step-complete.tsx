@@ -11,7 +11,6 @@ export default function StepComplete() {
     const { stepInfo, setSfxPath, setOnSfxComplete, reStart } = useScene();
     const { assets_timeline } = stepInfo || {};
     const [endFlag, setEndFlag] = useState(false);
-    const [componentsView, setComponentsView] = useState(false);
     // 현재 보여줄 timeline 인덱스
     const [currentIdx, setCurrentIdx] = useState(0);
     const [currentUspPool, setCurrentUspPool] = useState<any[]>([]);
@@ -252,11 +251,7 @@ export default function StepComplete() {
             setCurrentIdx(0);
             setEndFlag(false);
             setCurrentUspPool([]);
-            setComponentsView(false);
-            // 새로운 stepInfo가 오면 설정된 시간 후에 표시
-            setTimeout(() => {
-                setComponentsView(true);
-            }, COMPONENT_SHOW_DELAY);
+            // 즉시 표시 - 지연 없음
         }
     }, [stepInfo]);
 
@@ -272,12 +267,7 @@ export default function StepComplete() {
     }, []);
 
     return (
-        <div className={
-            cn(
-                "absolute inset-0 flex flex-col items-center justify-center text-center opacity-0 transition-all duration-300",
-                componentsView && "opacity-100",
-            )
-        }>
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
           {
             !endFlag && (
               <>

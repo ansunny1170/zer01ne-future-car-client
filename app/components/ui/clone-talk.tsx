@@ -8,7 +8,7 @@ interface Message {
   id: number;
 }
 
-export default function CloneTalk({text, keepLastLine = false, onComplete, duration = 5000}: {text: string; keepLastLine?: boolean; onComplete?: () => void; duration?: number | number[]}) {
+export default function CloneTalk({text, keepLastLine = false, onComplete, duration = 3000}: {text: string; keepLastLine?: boolean; onComplete?: () => void; duration?: number | number[]}) {
   const [scope] = useAnimate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isComplete, setIsComplete] = useState(false);
@@ -17,9 +17,9 @@ export default function CloneTalk({text, keepLastLine = false, onComplete, durat
   const idCounter = useRef(0);
   const getTimeout = (idx: number): number => {
     if (Array.isArray(duration)) {
-      return duration[idx] ?? 5000;
+      return duration[idx] ?? 3000;
     }
-    return (duration as number) ?? 5000;
+    return (duration as number) ?? 3000;
   };
   
   

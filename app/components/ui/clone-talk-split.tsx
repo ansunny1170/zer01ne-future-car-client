@@ -7,7 +7,7 @@ export default function CloneTalkSplit({
   text, 
   keepLastLine = false, 
   onComplete, 
-  duration = 5000,
+  duration = 3000,
   charStagger = 0.05,
   speed = 1
 }: {
@@ -20,12 +20,8 @@ export default function CloneTalkSplit({
 }) {
   const [scope] = useAnimate();
   const [isComplete, setIsComplete] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
   const lines = text.split("\n");
   
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
   
   
   const adjustedCharStagger = charStagger / speed;
@@ -70,17 +66,15 @@ export default function CloneTalkSplit({
   };
 
   useEffect(() => {
-    if (isMounted) {
-      const timer = setTimeout(() => {
-        if (!keepLastLine) {
-          setIsComplete(true);
-        }
-        onComplete?.();
-      }, totalDuration);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [isMounted, totalDuration, keepLastLine, onComplete]);
+    const timer = setTimeout(() => {
+      if (!keepLastLine) {
+        setIsComplete(true);
+      }
+      onComplete?.();
+    }, totalDuration);
+    
+    return () => clearTimeout(timer);
+  }, [totalDuration, keepLastLine, onComplete]);
 
   return (
     <motion.div 

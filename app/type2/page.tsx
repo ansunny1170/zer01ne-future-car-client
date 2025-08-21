@@ -31,7 +31,7 @@ export default function Home() {
             initial="initial"
             animate="animate"
             exit="exit"
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.05 }}
           >
             <Step0 dafultComment="출발하자"/>
           </motion.div>
@@ -44,7 +44,7 @@ export default function Home() {
             initial="initial"
             animate="animate"
             exit="exit"
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.05 }}
           >
           <StepRepeat dafultComment="아이랑 산으로 캠핑"/>
           </motion.div>
@@ -57,7 +57,7 @@ export default function Home() {
             initial="initial"
             animate="animate"
             exit="exit"
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.05 }}
           >
             <StepRepeat dafultComment="네 감사해요"/>
           </motion.div>
@@ -70,7 +70,7 @@ export default function Home() {
             initial="initial"
             animate="animate"
             exit="exit"
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.05 }}
           >
             <StepComplete/>
           </motion.div>
@@ -83,7 +83,7 @@ export default function Home() {
             initial="initial"
             animate="animate"
             exit="exit"
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.05 }}
           >
             <StepRepeat/>
           </motion.div>
@@ -107,7 +107,7 @@ export default function Home() {
 
       <StepAudioPlayer/> 
 
-      <AnimatePresence mode="wait">
+      <AnimatePresence>
         {renderStep()}
       </AnimatePresence>
 
