@@ -6,6 +6,7 @@ import { useRef, useState } from "react";
 import { StepInfo } from "@/type";
 import { useSpeechProcessing } from "@/hooks/useSpeechProcessing";
 import CloneTalkSplit from "../ui/clone-talk-split";
+import HyundaiLoading from "../ui/hyundai-loading";
 
 export default function QuestionArea({
     mainText,
@@ -56,21 +57,35 @@ export default function QuestionArea({
 
     return (
         <div className={cn("flex flex-col items-center justify-center h-full gap-16", className)}>
-            {mainText && (
-                <CloneTalkSplit text={mainText} keepLastLine={true} onComplete={() => {}} />
-            )}
-            <div className="absolute top-[20%] inset-0 flex flex-col items-center justify-start gap-24">
-                {
-                    buttons && (
-                        <QuestionButtons buttons={buttons} onSelect={handleSpeechTrigger} isProcessing={isProcessing || isPending} />
-                    )
-                }
-                {
-                    (mainText) && (
-                        <Speech onTrigger={handleSpeechTrigger} isProcessing={isProcessing} defaultComment={defaultComment}/>
-                    )
-                }
-            </div>
+            {
+                !isProcessing && (
+                    <>
+                    {mainText && (
+                        <CloneTalkSplit text={mainText} keepLastLine={true} onComplete={() => {}} />
+                    )}
+                    <div className="absolute top-[20%] inset-0 flex flex-col items-center justify-start gap-24">
+                        {
+                            buttons && (
+                                <QuestionButtons buttons={buttons} onSelect={handleSpeechTrigger} isProcessing={isProcessing || isPending} />
+                            )
+                        }
+                        {
+                            (mainText) && (
+                                <Speech onTrigger={handleSpeechTrigger} isProcessing={isProcessing} defaultComment={defaultComment}/>
+                            )
+                        }
+                    </div>
+                    </>
+                )
+            }
+
+            {
+                isProcessing && (
+                    <div className="fixed top-[5%] w-full flex flex-col items-center justify-center">
+                        <HyundaiLoading size={177} text="더 좋은 응답을 위해 생각하는 중입니다..."/>
+                    </div>
+                )
+            }
         </div>
     );
 }
