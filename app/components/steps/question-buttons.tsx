@@ -25,7 +25,6 @@ export default function QuestionButtons({
                 const btnKeys = Object.keys(buttons);
                 if (idx >= 0 && idx < btnKeys.length) {
                     if (onSelect) onSelect(btnKeys[idx]);
-                    setStepNumber(stepNumber + 1);
                 }
             }
         }
@@ -66,7 +65,6 @@ export default function QuestionButtons({
                         onClick={() => {
                             if (isProcessing) return;
                             if (onSelect) onSelect(button);
-                            setStepNumber(stepNumber + 1);
                         }}
                         disabled={isProcessing}
                     >
