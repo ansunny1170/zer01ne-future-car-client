@@ -25,6 +25,7 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
     const USP_POOL_FINAL_DELAY = 1000; // USP Pool 마지막 지연 (ms)
     const CLONE_TALK_DELAY = 1000; // CloneTalk 완료 후 지연 (ms)
     const POPUP_COMPLETE_DELAY = 500; // 팝업 완료 후 지연 (ms)
+    const AUDIO_COMPLETE_DELAY = 1200; // 음성요소 완료 후 지연 시간 (ms)
     // 오디오 처리를 위한 별도 useEffect
 
     // stepInfo가 변경될 때 상태 초기화
@@ -124,7 +125,7 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
             console.log('Timeline is audio-only - waiting for audio completion');
             setOnSfxComplete(() => {
                 console.log('Audio-only timeline completed', currentIdx);
-                setTimeout(() => setCurrentIdx(idx => idx + 1), 100);
+                setTimeout(() => setCurrentIdx(idx => idx + 1), AUDIO_COMPLETE_DELAY);
             });
         } else {
             console.log('Timeline is empty - moving immediately');
@@ -152,7 +153,7 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
         // 오디오도 비주얼도 없으면 바로 다음으로 진행
         if (audioAssets.length === 0 && !hasVisualElements) {
             console.log('Empty timeline item, moving to next');
-            const timer = setTimeout(() => setCurrentIdx(idx => idx + 1), 100);
+            const timer = setTimeout(() => setCurrentIdx(idx => idx + 1), AUDIO_COMPLETE_DELAY);
             return () => clearTimeout(timer);
         }
     }, [assets_timeline, currentIdx, isTimelineFinished]);
