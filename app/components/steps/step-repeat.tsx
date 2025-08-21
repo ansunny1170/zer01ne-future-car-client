@@ -3,7 +3,6 @@ import { BASE_S3_LINK } from "@/constants";
 import QuestionArea from "./question-area";
 import CommonPopupUI from "../ui/popup_ui/common";
 import { useEffect, useState, useMemo } from "react";
-import UspPopupBox from "../ui/usp-popup-ui";
 import { cn } from "@/utils/cn";
 import UspPopupWrapper from "../ui/usp-popup-wrapper";
 import CloneTalkSplit from "../ui/clone-talk-split";

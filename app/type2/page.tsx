@@ -5,10 +5,11 @@ import StepRepeat from "../components/steps/step-repeat";
 import { useScene } from "../context/scene-context";
 import { AnimatePresence, motion } from "framer-motion";
 import StepAudioPlayer from "../components/audio-player/step-audio-player";
-import FixedLayout from "../components/fixed-layout";
 import StepVideoPlayer from "../components/video-player/step-video-player";
 import { useState } from "react";
 import StepComplete from "../components/steps/step-complete";
+import BottomLayout from "../components/fixed-layout/bottom-layout";
+import TopLayout from "@/components/fixed-layout/top-layout";
 
 export default function Home() {
   const [debug, setDebug] = useState(false);
@@ -35,19 +36,19 @@ export default function Home() {
             <Step0 dafultComment="출발하자"/>
           </motion.div>
         );
-      // case 1:
-      //   return (
-      //     <motion.div
-      //       key="step5"
-      //       variants={fadeVariants}
-      //       initial="initial"
-      //       animate="animate"
-      //       exit="exit"
-      //       transition={{ duration: 0.2 }}
-      //     >
-      //     <StepRepeat dafultComment="아이랑 산으로 캠핑"/>
-      //     </motion.div>
-      //   );
+      case 1:
+        return (
+          <motion.div
+            key="step1"
+            variants={fadeVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 0.2 }}
+          >
+          <StepRepeat dafultComment="아이랑 산으로 캠핑"/>
+          </motion.div>
+        );
       case 6:
         return (
           <motion.div
@@ -95,7 +96,10 @@ export default function Home() {
 
       {
         stepNumber > 0 && (
-          <FixedLayout/>
+          <>
+            <TopLayout/>
+            <BottomLayout/>
+          </>
         )
       }
 

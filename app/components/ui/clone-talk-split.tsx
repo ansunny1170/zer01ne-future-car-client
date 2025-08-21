@@ -85,7 +85,7 @@ export default function CloneTalkSplit({
   return (
     <motion.div 
       key={text}
-      className="absolute inset-0 z-50"
+      className="absolute inset-0 z-[5]"
       initial={{ opacity: 1 }}
       animate={{ opacity: isComplete ? 0 : 1 }}
       transition={{ duration: 1 }}
