@@ -1,17 +1,24 @@
 import Lottie from 'lottie-react';
 import loaderAnimation from '/public/assets/lotties/loader.json';
 
-export default function HyundaiLoading() {
+export default function HyundaiLoading({size = 137, text = "" }: { size?: number, text?: string }) {
   return (
     <div className="flex flex-col items-center justify-center gap-4 p-4">
-        <div className="w-137 h-137">
+        <div 
+            className="flex flex-col items-center justify-center"
+            style={{ width: `${size}px`, height: `${size}px` }}
+        >
             <Lottie 
                 animationData={loaderAnimation}
                 loop={true}
                 autoplay={true}
                 style={{ width: '100%', height: '100%' }}
             />
-            <p className="text-white text-center text-[29px] font-semibold">더 좋은 응답을 위해 생각하는 중입니다...</p>
+            {
+              text && (
+                <p className="text-white text-center text-[29px] font-semibold">{text}</p>
+              )
+            }
         </div>
     </div>
   )
