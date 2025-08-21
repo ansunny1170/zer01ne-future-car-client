@@ -1,6 +1,6 @@
 import { useScene } from "@/context/scene-context";
 import CloneTalk from "../ui/clone-talk";
-            import CommonPopupUI from "../ui/popup_ui/common";
+import CommonPopupUI from "../ui/popup_ui/common";
 import { useEffect, useState, useMemo } from "react";
 import { cn } from "@/utils/cn";
 import UspPopupWrapper from "../ui/usp-popup-wrapper";
