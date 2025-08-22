@@ -16,7 +16,7 @@ export default function HyundaiLoading({size = 137, text = "" }: { size?: number
             />
             {
               text && (
-                <p className="text-white text-center text-[29px] font-semibold whitespace-nowrap">{text}</p>
+                <p className="text-white text-center text-[29px] font-semibold whitespace-nowrap text-shadow-sm">{text}</p>
               )
             }
         </div>

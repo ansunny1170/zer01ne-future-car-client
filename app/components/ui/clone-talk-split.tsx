@@ -100,7 +100,7 @@ export default function CloneTalkSplit({
         animate="show"
         exit="exit"
       >
-        <motion.div className="text-white text-center text-[36px] max-w-[50vw] break-keep font-semibold leading-[1.2] flex flex-col items-center" style={{ filter: 'drop-shadow(0 3px 3px rgb(0 0 0 / 0.12)) drop-shadow(0 9px 7px rgb(0 0 0 / 0.1))' }}>
+        <motion.div className="text-shadow-sm text-white text-center text-[36px] max-w-[50vw] break-keep font-semibold leading-[1.2] flex flex-col items-center" style={{ filter: 'drop-shadow(0 3px 3px rgb(0 0 0 / 0.12)) drop-shadow(0 9px 7px rgb(0 0 0 / 0.1))' }}>
           {lines.map((line, lineIndex) => (
             <motion.div 
               key={`line-${lineIndex}-${text}`} 

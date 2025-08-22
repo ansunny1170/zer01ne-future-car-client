@@ -115,7 +115,7 @@ export default function CloneTalk({text, keepLastLine = false, onComplete, durat
             <motion.p
               key={message.id}
               className={cn(
-                "text-white text-center text-[36px] max-w-[50vw] break-keep font-semibold leading-[1.2]",
+                "text-white text-center text-[36px] max-w-[50vw] break-keep font-semibold leading-[1.2] text-shadow-sm",
                 "text-shadow-sm absolute",
                 message.isActive 
                   ? 'opacity-100' 
