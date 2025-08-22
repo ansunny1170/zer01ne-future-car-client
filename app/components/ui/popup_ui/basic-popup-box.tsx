@@ -3,7 +3,7 @@ import { cn } from "@/utils/cn";
 export default function BasicPopupBox({children, type = "warm", className}: {children: React.ReactNode, type?: "warm" | "cold", className?: string}) {
 
   return (
-    <div className="relative w-fit mt-24 rounded-[32px] overflow-hidden text-white">  
+    <div className="relative w-fit mt-24 rounded-[32px] overflow-hidden text-white shadow-2xl/50">  
           {/* 그라데이션 */}
           <p className={cn(
             "absolute inset-0 scale-[calc(100%+2px)] blur-lg opacity-40 transition-all duration-300",
@@ -12,6 +12,8 @@ export default function BasicPopupBox({children, type = "warm", className}: {chi
             "[mask-image:linear-gradient(to_top,black_0%,transparent_50%)] mix-blend-color-dodge",
             )}/>
 
+          {/* 기본블러 */}
+          <p className="absolute inset-0 [mask-image:linear-gradient(to_top,white_0%,transparent_100%)] backdrop-blur-2xl"/>
           {/* 기본블러 */}
           <p className="absolute inset-0 [mask-image:linear-gradient(to_top,white_0%,transparent_100%)] backdrop-blur-2xl"/>
           {/* 기본 테두리 */}
