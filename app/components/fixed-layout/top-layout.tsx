@@ -2,10 +2,12 @@ import { getFormattedTime } from "@/utils";
 import MusicPlayerBox from "../ui/music-player-box";
 import NavigationBox from "../ui/navigation-box";
 import ProgressBox from "../ui/progress-box";
+import { useScene } from "@/context/scene-context";
+import { motion } from "framer-motion";
 
 /* eslint-disable @next/next/no-img-element */
 export default function TopLayout() {
-    // 현재 시각 6:32 AM 포맷으로 가져오기
+    const {stepNumber} = useScene();
 
     return (
         <div className="absolute inset-0 z-[6] perspective-1000">
@@ -34,12 +36,21 @@ export default function TopLayout() {
             </div>
 
             {/* 하단 우측 영역 */}
-            <div className="fixed left-1/2 bottom-[40px] translate-x-[7.5vw] ">
+            <motion.div 
+                className="fixed left-1/2 bottom-[40px] translate-x-[7.5vw] opacity-0"
+                animate={{
+                    opacity: stepNumber > 1 ? 1 : 0,
+                }}
+                transition={{
+                    duration: 1,
+                    ease: "easeInOut",
+                }}
+            >
                 <div className="flex gap-[60px] rotate-y-15">
                     <NavigationBox />
                     <MusicPlayerBox />
                 </div>
-            </div>
+            </motion.div>
 
 
             {/* 하단 기본프레임 */}
