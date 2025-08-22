@@ -13,8 +13,15 @@ export default function NavigationBox() {
             <p className="text-[20px] font-bold opacity-90">{stepInfo?.path_state?.destination || ''}</p>
             <div className="flex items-center gap-[4px] opacity-80">
               <p className="text-[14px]">{stepInfo?.path_state?.detour1 || ''}</p>
-              <p>→</p>
-              <p className="text-[14px]">{stepInfo?.path_state?.detour2 || ''}</p>
+
+              {
+                stepInfo?.path_state?.detour2 && (
+                  <>
+                    <p>→</p>
+                    <p className="text-[14px]">{stepInfo?.path_state?.detour2 || ''}</p>
+                  </>
+                )
+              }
             </div>
         </div>
     </div>
