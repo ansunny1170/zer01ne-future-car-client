@@ -2,6 +2,7 @@ import { Icons } from "../icons";
 import BasicPopupBox from "./basic-popup-box";
 import CloneTalk from "../clone-talk";
 import { useEffect } from "react";
+import BreakPadPopup from "./break-pad-popup";
 
 const popupDict: {
     [key: string]: {
@@ -47,19 +48,13 @@ const popupDict: {
         defaultText: "일정 알림",
         className: "",
     },
-    CAR_OPEN: {
-        icon: <Icons.doorOpen />,
-        type: "warm",
-        defaultText: "문열림",
-        className: "min-w-auto",
-    },
     CAROPEN: {
         icon: <Icons.doorOpen />,
         type: "warm",
         defaultText: "문열림",
         className: "min-w-auto",
     },
-    CAR_CLOSE: {
+    CARCLOSE: {
         icon: <Icons.doorClose />,
         type: "warm",
         defaultText: "문닫힘",
@@ -151,11 +146,9 @@ export default function CommonPopupUI({keyName, text, description, onComplete}: 
 
   return (
     <>
-        {keyName === 'CLONE_TALKS' ? (
-            <CloneTalk
-                text={text || ""}
-                onComplete={onComplete}
-            />
+    {
+        keyName === 'BREAK_PAD' ? (
+            <BreakPadPopup/>
         ) : (
         <BasicPopupBox type={popupDict[keyName]?.type} className={popupDict[keyName]?.className}>
             <div
@@ -170,7 +163,7 @@ export default function CommonPopupUI({keyName, text, description, onComplete}: 
                 </div>
             </div>
         </BasicPopupBox>
-    )}
+        )}
     </>
   );
 }

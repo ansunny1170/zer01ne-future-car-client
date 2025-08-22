@@ -10,7 +10,7 @@ export default function StepAudioPlayer() {
     const bgmRef = useRef<HTMLAudioElement>(null);
     const BASE_URL = BASE_S3_LINK;
     // 현재 재생할 오디오 경로
-    const { bgmPath, sfxPath } = useScene();
+    const { bgmPath, sfxPath, onSfxComplete } = useScene();
     useEffect(() => {
         const handleKeyDown = () => {
             setIsSfxActive(true);
@@ -29,22 +29,68 @@ export default function StepAudioPlayer() {
     // sfxpath 배열 바뀌면 하나씩 순차적으로 재생할 것. 중간에 200ms 간격으로 재생.
     // 순차 재생 함수
     const playSequential = useCallback((list: string[], idx: number) => {
-        if (idx >= list.length) return; // 모두 재생 완료
-        audioRef.current = new Audio(`${BASE_URL}/${list[idx]}`);
-        audioRef.current.play();
+        if (idx >= list.length) {
+            // 모든 재생 완료
+            console.log('All audio completed, calling onSfxComplete');
+            if (onSfxComplete) {
+                onSfxComplete();
+            }
+            return;
+        }
+        
+        const audioUrl = `${BASE_URL}/${list[idx]}`;
+        console.log('Playing audio:', audioUrl);
+        
+        audioRef.current = new Audio(audioUrl);
+        audioRef.current.onerror = (error) => {
+            console.error('Audio load error:', error);
+            console.error('Failed URL:', audioUrl);
+        };
+        
+        audioRef.current.play().catch(error => {
+            console.error('Audio play error:', error);
+            console.error('Failed URL:', audioUrl);
+        });
+        
         audioRef.current.onended = () => {
             playSequential(list, idx + 1);
         };
-    }, [BASE_URL]);
+    }, [BASE_URL, onSfxComplete]);
 
     useEffect(() => {
         if (!isSfxActive) return;
         if (!sfxPath || sfxPath.length === 0) return;
+        
+        console.log('StepAudioPlayer: Attempting to play audio:', sfxPath);
+        console.log('Full audio URLs:', sfxPath.map(path => `${BASE_URL}/${path}`));
+        
+        // 새로운 오디오 재생 전에 기존 오디오가 재생 중인지 확인
+        if (audioRef.current && !audioRef.current.paused) {
+            console.log('Previous audio still playing, waiting for completion...');
+            // 기존 오디오가 끝나면 새 오디오 재생하도록 대기
+            const currentAudio = audioRef.current;
+            const originalOnEnded = currentAudio.onended;
+            
+            currentAudio.onended = () => {
+                // 기존 onended 처리
+                if (originalOnEnded) originalOnEnded.call(currentAudio, new Event('ended'));
+                
+                // 새 오디오 재생
+                setTimeout(() => {
+                    playSequential(sfxPath, 0);
+                }, 100);
+            };
+            return; // 현재 재생 중이므로 바로 리턴
+        }
+        
         playSequential(sfxPath, 0);
+        
         // cleanup: 재생 중인 오디오 stop
         return () => {
-            audioRef.current?.pause();
-            audioRef.current = null;
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current = null;
+            }
         };
     }, [sfxPath, isSfxActive, playSequential]);
     console.log("sfxPath", sfxPath);

@@ -5,10 +5,11 @@ import StepRepeat from "../components/steps/step-repeat";
 import { useScene } from "../context/scene-context";
 import { AnimatePresence, motion } from "framer-motion";
 import StepAudioPlayer from "../components/audio-player/step-audio-player";
-import FixedLayout from "../components/fixed-layout";
 import StepVideoPlayer from "../components/video-player/step-video-player";
 import { useState } from "react";
 import StepComplete from "../components/steps/step-complete";
+import BottomLayout from "../components/fixed-layout/bottom-layout";
+import TopLayout from "@/components/fixed-layout/top-layout";
 
 export default function Home() {
   const [debug, setDebug] = useState(false);
@@ -30,7 +31,7 @@ export default function Home() {
             initial="initial"
             animate="animate"
             exit="exit"
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.05 }}
           >
             <Step0 dafultComment="출발하자"/>
           </motion.div>
@@ -38,12 +39,12 @@ export default function Home() {
       case 1:
         return (
           <motion.div
-            key="step0"
+            key="step1"
             variants={fadeVariants}
             initial="initial"
             animate="animate"
             exit="exit"
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.05 }}
           >
           <StepRepeat dafultComment="아이랑 산으로 캠핑"/>
           </motion.div>
@@ -51,12 +52,12 @@ export default function Home() {
       case 6:
         return (
           <motion.div
-            key="step0"
+            key="step6"
             variants={fadeVariants}
             initial="initial"
             animate="animate"
             exit="exit"
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.05 }}
           >
             <StepRepeat dafultComment="네 감사해요"/>
           </motion.div>
@@ -64,12 +65,12 @@ export default function Home() {
       case 7:
         return (
           <motion.div
-            key="step0"
+            key="step7"
             variants={fadeVariants}
             initial="initial"
             animate="animate"
             exit="exit"
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.05 }}
           >
             <StepComplete/>
           </motion.div>
@@ -82,7 +83,7 @@ export default function Home() {
             initial="initial"
             animate="animate"
             exit="exit"
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.05 }}
           >
             <StepRepeat/>
           </motion.div>
@@ -95,7 +96,10 @@ export default function Home() {
 
       {
         stepNumber > 0 && (
-          <FixedLayout/>
+          <>
+            <TopLayout/>
+            <BottomLayout/>
+          </>
         )
       }
 
@@ -103,13 +107,13 @@ export default function Home() {
 
       <StepAudioPlayer/> 
 
-      <AnimatePresence mode="wait">
+      <AnimatePresence>
         {renderStep()}
       </AnimatePresence>
 
       <div>
         <button
-          className="absolute top-4 left-4 bg-white text-black px-4 py-2 rounded-md z-[999]"
+          className="absolute top-1/3 left-4 bg-white text-black px-4 py-2 rounded-md z-[999]"
           onClick={() => {
             goPrevStep();
           }}
@@ -117,7 +121,7 @@ export default function Home() {
           {stepInfo?.step}
         </button>
 
-        <div className="absolute top-4 left-16 max-h-[90vh] overflow-y-auto bg-white max-w-1/2 text-black px-4 py-2 rounded-md z-[999]"> 
+        <div className="absolute top-1/3 left-16 max-h-[90vh] overflow-y-auto bg-white max-w-1/2 text-black px-4 py-2 rounded-md z-[999]"> 
           <button
             onClick={() => {
               setDebug(!debug);
@@ -126,24 +130,11 @@ export default function Home() {
             step info 디버깅
           </button>
           {debug && (
-            <pre>
+            <pre className="h-[40vh] overflow-y-auto">
               {JSON.stringify(stepInfo, null, 2)}
             </pre>
           )}
         </div>
-
-        {
-          stepNumber === lastSceneNumber && (
-            <button
-              className="absolute top-4 right-4 bg-white text-black px-4 py-2 rounded-md"
-              onClick={() => {
-                setStepNumber(0);
-              }}
-            >
-              처음으로
-            </button>
-          )
-        }
       </div>
     </div>
   );

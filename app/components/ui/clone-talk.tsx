@@ -8,7 +8,7 @@ interface Message {
   id: number;
 }
 
-export default function CloneTalk({text, keepLastLine = false, onComplete, duration = 5000}: {text: string; keepLastLine?: boolean; onComplete?: () => void; duration?: number | number[]}) {
+export default function CloneTalk({text, keepLastLine = false, onComplete, duration = 3000}: {text: string; keepLastLine?: boolean; onComplete?: () => void; duration?: number | number[]}) {
   const [scope] = useAnimate();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isComplete, setIsComplete] = useState(false);
@@ -17,9 +17,9 @@ export default function CloneTalk({text, keepLastLine = false, onComplete, durat
   const idCounter = useRef(0);
   const getTimeout = (idx: number): number => {
     if (Array.isArray(duration)) {
-      return duration[idx] ?? 5000;
+      return duration[idx] ?? 3000;
     }
-    return (duration as number) ?? 5000;
+    return (duration as number) ?? 3000;
   };
   
   
@@ -108,14 +108,14 @@ export default function CloneTalk({text, keepLastLine = false, onComplete, durat
 
       <div 
         ref={scope}
-        className="fixed bottom-[80%] left-1/2 -translate-x-1/2 flex flex-col items-center w-full"
+        className="fixed top-[10%] left-1/2 -translate-x-1/2 flex flex-col items-center w-full"
       >
         <AnimatePresence mode="popLayout" initial={false}>
           {messages.slice(-2).map((message) => (
             <motion.p
               key={message.id}
               className={cn(
-                "text-white text-center text-[52px] max-w-[50vw] break-keep font-semibold leading-[1.2]",
+                "text-white text-center text-[36px] max-w-[50vw] break-keep font-semibold leading-[1.2] text-shadow-sm",
                 "text-shadow-sm absolute",
                 message.isActive 
                   ? 'opacity-100' 
