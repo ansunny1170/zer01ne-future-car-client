@@ -1,6 +1,5 @@
 import { Icons } from "../icons";
 import BasicPopupBox from "./basic-popup-box";
-import CloneTalk from "../clone-talk";
 import { useEffect } from "react";
 import BreakPadPopup from "./break-pad-popup";
 
@@ -48,19 +47,19 @@ const popupDict: {
         defaultText: "일정 알림",
         className: "",
     },
-    CAROPEN: {
+    CAR_OPEN: {
         icon: <Icons.doorOpen />,
         type: "warm",
         defaultText: "문열림",
         className: "min-w-auto",
     },
-    CARCLOSE: {
+    CAR_CLOSE: {
         icon: <Icons.doorClose />,
         type: "warm",
         defaultText: "문닫힘",
         className: "min-w-auto",
     },
-    CARE_NODE: {
+    CARE_MODE: {
         icon: <Icons.car />,
         type: "cold",
         defaultText: "동승자 케어모드 시작",
@@ -96,7 +95,7 @@ const popupDict: {
         defaultText: "배터리가 15% 이하입니다.",
         className: "",
     },
-    NEER_REPAIR: {
+    NEED_REPAIR: {
         icon: <Icons.alert />,
         type: "warm",
         defaultText: "",
@@ -147,7 +146,7 @@ export default function CommonPopupUI({keyName, text, description, onComplete}: 
   return (
     <>
     {
-        keyName === 'BREAK_PAD' ? (
+        keyName === 'BRAKE_PAD' ? (
             <BreakPadPopup/>
         ) : (
         <BasicPopupBox type={popupDict[keyName]?.type} className={popupDict[keyName]?.className}>
