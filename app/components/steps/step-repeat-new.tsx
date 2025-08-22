@@ -105,14 +105,14 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
         );
         if (popupAsset) {
             console.log('Rendering popup:', popupAsset);
-            const keyName = popupAsset.id ? popupAsset.id.toUpperCase() : popupAsset.type;
+            const keyName = ('id' in popupAsset && popupAsset.id) ? popupAsset.id.toString().toUpperCase() : popupAsset.type;
             
             return (
                 <CommonPopupUI
                     key={currentIdx}
                     keyName={keyName}
-                    text={popupAsset.description}
-                    description={popupAsset.subtext_usp_pool}
+                    text={'description' in popupAsset ? popupAsset.description : ''}
+                    description={'subtext_usp_pool' in popupAsset ? popupAsset.subtext_usp_pool : ''}
                     onComplete={() => {
                         console.log('Popup completed');
                         setTimeout(() => {

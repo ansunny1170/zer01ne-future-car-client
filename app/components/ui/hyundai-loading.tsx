@@ -1,5 +1,5 @@
 import Lottie from 'lottie-react';
-import loaderAnimation from '/public/assets/lotties/loader.json';
+import loaderAnimation from '../../../public/assets/lotties/loader.json';
 
 export default function HyundaiLoading({size = 137, text = "" }: { size?: number, text?: string }) {
   return (

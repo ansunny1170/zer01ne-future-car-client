@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import Lottie from "lottie-react";
 import { useEffect, useState, useRef } from "react";
-import loaderAnimation from '/public/assets/lotties/mcp_motion.json';
+import loaderAnimation from '../../../public/assets/lotties/mcp_motion.json';
 
 export default function UspPopupWrapper({ data }: { data: { description: string }[] }) {
   const [displayItems, setDisplayItems] = useState<{ description: string, id: number, hasPlayed: boolean }[]>([]);
