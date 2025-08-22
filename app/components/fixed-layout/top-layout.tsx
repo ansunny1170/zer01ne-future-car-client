@@ -12,15 +12,15 @@ export default function TopLayout() {
     return (
         <div className="absolute inset-0 z-[6] perspective-1000">
             {/* 상단 우측 영역 */}
-            <div className="z-[20] drop-shadow-[0_0_10px_rgba(0,0,0,0.5)] text-white/[0.6] text-[23px] font-semibold pt-[35px] pr-[38px] fixed left-0 top-0 w-full flex justify-end">
+            <div className="z-[20] drop-shadow-[0_0_10px_rgba(0,0,0,0.5)] text-white/[0.6] text-[23px] font-semibold pt-[52px] pr-[38px] fixed left-0 top-0 w-full flex justify-end">
                 <div className="flex justify-end items-center gap-[24px]">
                     <p className="flex items-center gap-[8px]">
-                        <img src="/assets/images/img_cloud.png" alt="fixed-layout" className="w-[38px] opacity-60" />
+                        <img src="/assets/images/img_cloud.png" alt="fixed-layout" className="w-[26px] opacity-60" />
                         <span>27.5 º</span>
                     </p>
                     <p className="flex items-center gap-[8px]">
+                        <img src="/assets/images/img_battery.png" alt="fixed-layout" className="w-[35px] opacity-60" />
                         <span>68%</span>
-                        <img src="/assets/images/img_battery.png" alt="fixed-layout" className="w-[38px] opacity-60" />
                     </p>
                     <span>{getFormattedTime()}</span>
                 </div>

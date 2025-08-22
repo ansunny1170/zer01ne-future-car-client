@@ -113,7 +113,7 @@ export default function Home() {
 
       <div>
         <button
-          className="absolute top-4 left-4 bg-white text-black px-4 py-2 rounded-md z-[999]"
+          className="absolute top-1/2 left-4 bg-white text-black px-4 py-2 rounded-md z-[999]"
           onClick={() => {
             goPrevStep();
           }}
@@ -121,7 +121,7 @@ export default function Home() {
           {stepInfo?.step}
         </button>
 
-        <div className="absolute top-4 left-16 max-h-[90vh] overflow-y-auto bg-white max-w-1/2 text-black px-4 py-2 rounded-md z-[999]"> 
+        <div className="absolute top-1/2 left-16 max-h-[90vh] overflow-y-auto bg-white max-w-1/2 text-black px-4 py-2 rounded-md z-[999]"> 
           <button
             onClick={() => {
               setDebug(!debug);
@@ -135,19 +135,6 @@ export default function Home() {
             </pre>
           )}
         </div>
-
-        {
-          stepNumber === lastSceneNumber && (
-            <button
-              className="absolute top-4 right-4 bg-white text-black px-4 py-2 rounded-md"
-              onClick={() => {
-                setStepNumber(0);
-              }}
-            >
-              처음으로
-            </button>
-          )
-        }
       </div>
     </div>
   );

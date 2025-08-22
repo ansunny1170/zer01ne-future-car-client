@@ -30,7 +30,7 @@ export default function UspPopupWrapper({ data }: { data: { description: string 
   }, [data.length]);
 
   return (
-    <ul className="flex flex-col absolute left-8 top-24 gap-4 items-start text-left z-[999]">
+    <ul className="flex flex-col absolute left-[32px] top-[50px] gap-4 items-start text-left z-[60]">
       <AnimatePresence initial={false}>
         {displayItems.map((item, index) => (
           <motion.li
