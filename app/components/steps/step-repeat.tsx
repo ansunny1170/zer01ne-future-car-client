@@ -149,17 +149,21 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
             console.log('Timeline has USP Pool - handled by separate effect');
             setOnSfxComplete(undefined); // USP Pool effect에서 처리
         } else if (audioAssets.length > 0) {
-            console.log('Timeline is audio-only - checking for consecutive audio items');
-            
-            // 연속된 오디오 아이템들을 하나로 묶어서 처리
-            const { audioFiles, endIdx } = getConsecutiveAudioItems(currentIdx);
-            console.log(`Found consecutive audio items from ${currentIdx} to ${endIdx - 1}:`, audioFiles);
-            
-            setSfxPath(audioFiles);
-            setOnSfxComplete(() => {
-                console.log(`Consecutive audio completed, jumping to timeline ${endIdx}`);
-                setTimeout(() => setCurrentIdx(endIdx), AUDIO_COMPLETE_DELAY);
-            });
+            // 🎯 간단한 해결책: 개별 타임라인(오디오 1개)만 처리, 복수는 스킵
+            if (audioAssets.length === 1) {
+                console.log('Single audio timeline - processing:', audioAssets[0].file_name);
+                
+                const audioFiles = audioAssets.map(asset => asset.file_name);
+                setSfxPath(audioFiles);
+                setOnSfxComplete(() => {
+                    console.log(`Single audio completed, moving to next timeline`);
+                    setTimeout(() => setCurrentIdx(idx => idx + 1), AUDIO_COMPLETE_DELAY);
+                });
+            } else {
+                console.log(`Multiple audio in timeline (${audioAssets.length} files) - SKIPPING`);
+                // 복수 오디오는 스킵하고 바로 다음 타임라인으로
+                setTimeout(() => setCurrentIdx(idx => idx + 1), 100);
+            }
         } else {
             console.log('Timeline is empty - moving immediately');
             // 빈 타임라인은 빈 아이템 처리 useEffect에서 처리

@@ -59,7 +59,10 @@ export default function StepAudioPlayer() {
 
     useEffect(() => {
         if (!isSfxActive) return;
-        if (!sfxPath || sfxPath.length === 0) return;
+        if (!sfxPath || sfxPath.length === 0) {
+            console.log('StepAudioPlayer: No valid sfxPath to play');
+            return;
+        }
         
         console.log('StepAudioPlayer: Attempting to play audio:', sfxPath);
         console.log('Full audio URLs:', sfxPath.map(path => `${BASE_URL}/${path}`));
