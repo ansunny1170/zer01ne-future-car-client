@@ -37,6 +37,7 @@ const config: Config = {
         'fade-in': 'fadeIn 0.5s ease-out forwards',
         'wave': 'wave 1s ease-in-out infinite',
         'popup': 'popup 1s ease-out forwards',
+        'marquee': 'marquee var(--animation-duration, 8s) linear infinite',
       },
       keyframes: {
         fadeIn: {
@@ -56,6 +57,12 @@ const config: Config = {
             opacity: '1',
             transform: 'translateY(0)'
           },
+        },
+        marquee: {
+          '0%': { transform: 'translateX(0px)' },
+          '20%': { transform: 'translateX(0px)' },
+          '80%': { transform: 'translateX(var(--move-distance, -50px))' },
+          '100%': { transform: 'translateX(var(--move-distance, -50px))' },
         }
       },
     },
