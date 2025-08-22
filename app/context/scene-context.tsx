@@ -73,8 +73,8 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
     setVideoPath(stepInfo?.bgv?.file_name || bgvDict[Math.floor(Math.random() * bgvDict.length)].file_name || null );
     setBgmPath(stepInfo?.bgm?.file_name || bgmDict[Math.floor(Math.random() * bgmDict.length)].file_name || null);
     
-    // stepInfo 변경 시 sfxPath 초기화
-    setSfxPath([]);
+    // stepInfo 변경 시 sfxPath 초기화 - null로 설정
+    setSfxPath(null);
   }, [stepInfo]);
 
   const goPrevStep = () => {
