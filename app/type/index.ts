@@ -112,6 +112,14 @@ export interface Choice {
     description: string,
 }
 
+export interface PathState {
+    destination: string,
+    detour1: string,
+    detour2: string,
+    detour3: string,
+    event: string,
+    choirs: string,
+}
 export interface StepInfo {
     step: 1 | 2 | 3 | 4 | 5 | 6 | 7, // ✅ 각 스텝 번호입니다. 필요시 사용하세요.
     name: string, // 각 스텝의 시나리오 이름. ❌믿지마세요! 신뢰도가 낮으니 참고만 해주세요.
@@ -122,7 +130,8 @@ export interface StepInfo {
     assets_timeline?: AssetsTimeline[], // 화면 출력용 UI정보입니다. 0번째 부터 순서대로 출력합니다.
     requires_location_change: boolean, // ❌사용하지 않습니다. 위치 상태 값입니다.
     question?: string, // ✅ 사용하는 데이터입니다. 선택지의 질문입니다.
-    choices?: Choice[] // ✅ 사용하는 데이터입니다. 선택지입니다. choices의 배열길이는 항상 3입니다.
+    choices?: Choice[], // ✅ 사용하는 데이터입니다. 선택지입니다. choices의 배열길이는 항상 3입니다.
+    path_state?: PathState, // ✅ 사용하는 데이터입니다. 경로 상태입니다.
 }
 
 // export enum AssetsType {
