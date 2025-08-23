@@ -3,7 +3,6 @@ import { BASE_S3_LINK } from "@/constants";
 import QuestionArea from "./question-area";
 import CommonPopupUI from "../ui/popup_ui/common";
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { cn } from "@/utils/cn";
 import UspPopupWrapper from "../ui/usp-popup-wrapper";
 import CloneTalkSplit from "../ui/clone-talk-split";
 
@@ -59,14 +58,14 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
     }, [isTimelineFinished, questionFlag]);
 
 
-    // FUNCTION_USP_POOL 순차 표시 처리 (단일 객체로 수정)
+    // FUNCTION_POPUP 순차 표시 처리 (단일 객체로 수정)
     useEffect(() => {
         if (!assets_timeline) return;
         if (isTimelineFinished) return;
         const item = assets_timeline[currentIdx];
         const asset = item.assets;
         
-        if (asset?.type === "FUNCTION_USP_POOL") {
+        if (asset?.type === "FUNCTION_POPUP") {
             const timer = setTimeout(() => {
                 setCurrentUspPool(prev => [...prev, {
                     ...asset,
@@ -93,18 +92,14 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
         // 현재 인덱스부터 연속된 오디오 전용 아이템들을 수집
         while (currentIndex < assets_timeline.length) {
             const item = assets_timeline[currentIndex];
+            const asset = item.assets; // 단일 객체
             
-            const audioAssets = item.assets.filter(asset => 
-                asset.type === "VEHICLE_SOUND_EFFECT" || asset.type === "COMPANION_VOICE"
-            );
+            const isAudioAsset = asset?.type === "VEHICLE_SOUND_EFFECT" || asset?.type === "COMPANION_VOICE";
+            const isOtherAsset = asset?.type && asset.type !== "VEHICLE_SOUND_EFFECT" && asset.type !== "COMPANION_VOICE";
             
-            const hasOtherAssets = item.assets.some(asset => 
-                asset.type !== "VEHICLE_SOUND_EFFECT" && asset.type !== "COMPANION_VOICE"
-            );
-            
-            // 오디오가 있고 다른 요소가 없으면 수집
-            if (audioAssets.length > 0 && !hasOtherAssets) {
-                audioFiles.push(...audioAssets.map(asset => asset.file_name));
+            // 오디오이고 다른 요소가 없으면 수집
+            if (isAudioAsset && !isOtherAsset && asset.file_name) {
+                audioFiles.push(asset.file_name);
                 currentIndex++;
             } else {
                 break;
@@ -128,7 +123,7 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
         const isVisualAsset = asset?.type === "CLONE_TALKS" || 
                              asset?.type === "DEFAULT_POPUP" || 
                              asset?.type === "TRIGGER_POPUP";
-        const isUspPoolAsset = asset?.type === "FUNCTION_USP_POOL";
+        const isUspPoolAsset = asset?.type === "FUNCTION_POPUP";
 
         // 진행 조건 결정 (우선순위: Visual > USP_Pool > Audio > Empty)
         if (isVisualAsset) {
@@ -165,7 +160,7 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
         const isVisualAsset = asset?.type === "CLONE_TALKS" || 
                              asset?.type === "DEFAULT_POPUP" || 
                              asset?.type === "TRIGGER_POPUP" ||
-                             asset?.type === "FUNCTION_USP_POOL";
+                             asset?.type === "FUNCTION_POPUP";
 
         // 오디오도 비주얼도 없으면 바로 다음으로 진행
         if (!isAudioAsset && !isVisualAsset) {
@@ -202,8 +197,8 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
             );
         }
 
-        // FUNCTION_USP_POOL 처리: effect에서 순차적으로 표시
-        if (asset?.type === "FUNCTION_USP_POOL") {
+        // FUNCTION_POPUP 처리: effect에서 순차적으로 표시
+        if (asset?.type === "FUNCTION_POPUP") {
             return null; // 화면 표시는 별도 effect에서 진행
         }
 
@@ -211,13 +206,13 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
         if (asset?.type === "DEFAULT_POPUP" || asset?.type === "TRIGGER_POPUP") {
             console.log('Rendering popup:', asset);
             // id가 있으면 id를 keyName으로 사용, 없으면 type 사용
-            const keyName = asset.id ? asset.id.toUpperCase() : asset.type;
+            const keyName = asset.id ? asset.id.toString().toUpperCase() : asset.type;
             return (
                 <CommonPopupUI
                     key={currentIdx}
                     keyName={keyName}
                     text={asset.description}
-                    description={asset.subtext_usp_pool}
+                    description={asset.subtext_popup}
                     onComplete={() => {
                         console.log('Popup completed, moving to next timeline');
                         setTimeout(() => setCurrentIdx(idx => idx + 1), POPUP_COMPLETE_DELAY);

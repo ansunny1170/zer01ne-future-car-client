@@ -4,7 +4,7 @@ import { useScene } from '@/context/scene-context';
 type TimelineState = 'IDLE' | 'PROCESSING_AUDIO' | 'PROCESSING_VISUAL' | 'WAITING_COMPLETION' | 'COMPLETED';
 
 interface TimelineItem {
-  assets: any[];
+  assets: any;
 }
 
 interface ProcessorResult {
@@ -24,33 +24,30 @@ export function useTimelineProcessor() {
   
   // 타임라인 아이템 분석기
   const analyzeTimelineItem = useCallback((item: TimelineItem): ProcessorResult => {
-    const audioAssets = item.assets.filter(asset => 
-      asset.type === "VEHICLE_SOUND_EFFECT" || asset.type === "COMPANION_VOICE"
-    );
+    // 🎯 단일 객체로 변경된 assets 처리
+    const asset = item.assets;
     
-    const visualAssets = item.assets.filter(asset => 
-      asset.type === "CLONE_TALKS" || 
-      asset.type === "DEFAULT_POPUP" || 
-      asset.type === "TRIGGER_POPUP"
-    );
-    
-    const uspPoolAssets = item.assets.filter(asset => asset.type === "FUNCTION_USP_POOL");
+    const isAudioAsset = asset?.type === "VEHICLE_SOUND_EFFECT" || asset?.type === "COMPANION_VOICE";
+    const isVisualAsset = asset?.type === "CLONE_TALKS" || 
+                         asset?.type === "DEFAULT_POPUP" || 
+                         asset?.type === "TRIGGER_POPUP";
+    const isUspPoolAsset = asset?.type === "FUNCTION_USP_POOL";
     
     // 우선순위: Visual > USP_Pool > Audio > Empty
-    if (visualAssets.length > 0) {
+    if (isVisualAsset) {
       return {
         type: 'VISUAL',
-        completion: createVisualCompletion(visualAssets, audioAssets)
+        completion: createVisualCompletion(asset, null) // 단일 객체이므로 별도 오디오 없음
       };
-    } else if (uspPoolAssets.length > 0) {
+    } else if (isUspPoolAsset) {
       return {
         type: 'USP_POOL', 
-        completion: createUspPoolCompletion(uspPoolAssets)
+        completion: createUspPoolCompletion(asset)
       };
-    } else if (audioAssets.length > 0) {
+    } else if (isAudioAsset) {
       return {
         type: 'AUDIO',
-        completion: createAudioCompletion(audioAssets)
+        completion: createAudioCompletion(asset)
       };
     } else {
       return {
@@ -61,16 +58,16 @@ export function useTimelineProcessor() {
   }, []);
   
   // Audio 완료 Promise 생성 - Direct Audio Control
-  const createAudioCompletion = useCallback((audioAssets: any[]): Promise<void> => {
+  const createAudioCompletion = useCallback((audioAsset: any): Promise<void> => {
     return new Promise((resolve) => {
-      const audioFiles = audioAssets.map(asset => asset.file_name);
+      const audioFiles = audioAsset?.file_name ? [audioAsset.file_name] : [];
       console.log('Starting direct audio processing:', audioFiles);
       
       // Context를 통해 오디오 재생 시작
       setSfxPath(audioFiles);
       
       // 하지만 완료는 직접 계산된 시간으로 처리 (더 안정적)
-      const estimatedDuration = audioFiles.length * 2000; // 파일당 평균 2초로 가정
+      const estimatedDuration = 2000; // 단일 파일당 평균 2초로 가정
       setTimeout(() => {
         console.log('Audio estimated completion');
         resolve();
@@ -84,26 +81,22 @@ export function useTimelineProcessor() {
     });
   }, [setSfxPath, setOnSfxComplete]);
   
-  // Visual 완료 Promise 생성 (Audio도 함께 재생)
-  const createVisualCompletion = useCallback((visualAssets: any[], audioAssets: any[]): Promise<void> => {
+  // Visual 완료 Promise 생성 (단일 객체)
+  const createVisualCompletion = useCallback((visualAsset: any, audioAsset: any): Promise<void> => {
     return new Promise((resolve) => {
-      // Background에서 오디오 재생
-      if (audioAssets.length > 0) {
-        const audioFiles = audioAssets.map(asset => asset.file_name);
-        setSfxPath(audioFiles);
-        setOnSfxComplete(undefined); // Visual 완료를 기다리므로 오디오 완료 무시
-      }
+      // 단일 객체이므로 별도의 백그라운드 오디오 없음
+      setOnSfxComplete(undefined); // Visual 완료를 기다림
       
       // Visual 완료 콜백 설정
       completionResolveRef.current = resolve;
     });
-  }, [setSfxPath, setOnSfxComplete]);
+  }, [setOnSfxComplete]);
   
   // USP Pool 완료 Promise 생성
-  const createUspPoolCompletion = useCallback((uspPoolAssets: any[]): Promise<void> => {
+  const createUspPoolCompletion = useCallback((uspPoolAsset: any): Promise<void> => {
     return new Promise((resolve) => {
-      // USP Pool 로직은 기존과 동일하되 Promise로 감쌈
-      const totalDuration = uspPoolAssets.length * 2000 + 1000;
+      // 단일 USP Pool 객체 처리
+      const totalDuration = 2000 + 1000; // 단일 객체 기본 시간
       setTimeout(resolve, totalDuration);
     });
   }, []);
