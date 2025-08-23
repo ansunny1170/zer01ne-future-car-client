@@ -23,7 +23,7 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
     const USP_POOL_FINAL_DELAY = 1000; // USP Pool 마지막 지연 (ms)
     const CLONE_TALK_DELAY = 1000; // CloneTalk 완료 후 지연 (ms)
     const POPUP_COMPLETE_DELAY = 500; // 팝업 완료 후 지연 (ms)
-    const AUDIO_COMPLETE_DELAY = 1000; // 음성요소 완료 후 지연 시간 (ms)
+    const AUDIO_COMPLETE_DELAY = 500; // 음성요소 완료 후 지연 시간 (ms)
     // 오디오 처리를 위한 별도 useEffect
 
     // stepInfo가 변경될 때 상태 초기화
@@ -33,7 +33,9 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
             setCurrentIdx(0);
             setQuestionFlag(false);
             setCurrentUspPool([]);
-            // 즉시 표시 - 지연 없음
+            
+            // 기존 오디오 완료 콜백 초기화
+            setOnSfxComplete(undefined);
             
             // assets_timeline이 null인 경우 질문 표시
             if (!stepInfo.assets_timeline && stepInfo.question) {
@@ -42,7 +44,7 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
                 }, QUESTION_SHOW_DELAY);
             }
         }
-    }, [stepInfo]);
+    }, [stepInfo, setOnSfxComplete]);
 
     // timeline 처리 완료 여부
     const isTimelineFinished = useMemo(() => {
@@ -106,6 +108,7 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
             }
         }
         
+        console.log(`Found consecutive audio items from ${startIdx} to ${currentIndex - 1}:`, audioFiles);
         return { audioFiles, endIdx: currentIndex };
     }, [assets_timeline]);
 
@@ -135,13 +138,48 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
             console.log('Timeline has USP Pool - handled by separate effect');
             setOnSfxComplete(undefined); // USP Pool effect에서 처리
         } else if (isAudioAsset) {
-            console.log('Single audio timeline - processing:', asset.file_name);
+            console.log('Audio asset detected - checking for consecutive audio sequence');
             
-            setSfxPath([asset.file_name]);
-            setOnSfxComplete(() => {
-                console.log(`Single audio completed, moving to next timeline`);
-                setTimeout(() => setCurrentIdx(idx => idx + 1), AUDIO_COMPLETE_DELAY);
-            });
+            // 연속된 오디오 아이템들을 찾아서 한 번에 처리
+            const { audioFiles, endIdx } = getConsecutiveAudioItems(currentIdx);
+            
+            if (audioFiles.length > 1) {
+                console.log(`Processing consecutive audio sequence (${audioFiles.length} files):`, audioFiles);
+                
+                // 연속 오디오 완료 콜백 설정
+                const capturedEndIdx = endIdx;
+                setOnSfxComplete(() => {
+                    console.log(`Consecutive audio sequence completed, jumping to timeline ${capturedEndIdx}`);
+                    setTimeout(() => {
+                        setCurrentIdx(capturedEndIdx);
+                    }, AUDIO_COMPLETE_DELAY);
+                });
+                
+                // 모든 오디오 파일을 순차 재생
+                setSfxPath(audioFiles);
+            } else {
+                // 단일 오디오 처리 (기존 로직)
+                console.log('Single audio timeline - processing:', asset.file_name, 'currentIdx:', currentIdx);
+                
+                const capturedIdx = currentIdx;
+                const capturedFileName = asset.file_name;
+                
+                setOnSfxComplete(undefined);
+                setSfxPath(null);
+                
+                setOnSfxComplete(() => {
+                    console.log(`Audio COMPLETED for timeline ${capturedIdx} (${capturedFileName}), moving to next timeline after ${AUDIO_COMPLETE_DELAY}ms`);
+                    setTimeout(() => {
+                        console.log(`Actually moving to next timeline from ${capturedIdx} to ${capturedIdx + 1}`);
+                        setCurrentIdx(capturedIdx + 1);
+                    }, AUDIO_COMPLETE_DELAY);
+                });
+                
+                setTimeout(() => {
+                    console.log('Starting audio playback for:', capturedFileName);
+                    setSfxPath([capturedFileName]);
+                }, 10);
+            }
         } else {
             console.log('Timeline is empty - moving immediately');
             // 빈 타임라인은 빈 아이템 처리 useEffect에서 처리
