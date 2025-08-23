@@ -34,18 +34,14 @@ export default function StepComplete() {
         // 현재 인덱스부터 연속된 오디오 전용 아이템들을 수집
         while (currentIndex < assets_timeline.length) {
             const item = assets_timeline[currentIndex];
+            const asset = item.assets; // 단일 객체
             
-            const audioAssets = item.assets.filter(asset => 
-                asset.type === "VEHICLE_SOUND_EFFECT" || asset.type === "COMPANION_VOICE"
-            );
+            const isAudioAsset = asset?.type === "VEHICLE_SOUND_EFFECT" || asset?.type === "COMPANION_VOICE";
+            const isOtherAsset = asset?.type && asset.type !== "VEHICLE_SOUND_EFFECT" && asset.type !== "COMPANION_VOICE";
             
-            const hasOtherAssets = item.assets.some(asset => 
-                asset.type !== "VEHICLE_SOUND_EFFECT" && asset.type !== "COMPANION_VOICE"
-            );
-            
-            // 오디오가 있고 다른 요소가 없으면 수집
-            if (audioAssets.length > 0 && !hasOtherAssets) {
-                audioFiles.push(...audioAssets.map(asset => asset.file_name));
+            // 오디오이고 다른 요소가 없으면 수집
+            if (isAudioAsset && !isOtherAsset && asset.file_name) {
+                audioFiles.push(asset.file_name);
                 currentIndex++;
             } else {
                 break;
@@ -78,27 +74,27 @@ export default function StepComplete() {
         }
     }, [assets_timeline, endFlag]);
 
-    // FUNCTION_USP_POOL 순차 표시 처리 (parallel true 포함)
+    // FUNCTION_POPUP 순차 표시 처리 (단일 객체로 수정)
     useEffect(() => {
         if (!assets_timeline) return;
         if (isTimelineFinished) return;
         const item = assets_timeline[currentIdx];
-        const uspPoolAssets = item.assets.filter(asset => asset.type === "FUNCTION_USP_POOL");
-        if (uspPoolAssets.length > 0) {
-            const timers: ReturnType<typeof setTimeout>[] = [];
-            uspPoolAssets.forEach((asset, index) => {
-                const timer = setTimeout(() => {
-                    setCurrentUspPool(prev => [...prev, {
-                        ...(asset as any),
-                        description: (asset as any).description,
-                    }]);
-                }, index * USP_POOL_INTERVAL);
-                timers.push(timer);
-            });
-            const totalDuration = uspPoolAssets.length * USP_POOL_INTERVAL + USP_POOL_FINAL_DELAY;
-            const nextTimer = setTimeout(() => setCurrentIdx(idx => idx + 1), totalDuration);
-            timers.push(nextTimer);
-            return () => timers.forEach(clearTimeout);
+        const asset = item.assets;
+        
+        if (asset?.type === "FUNCTION_POPUP") {
+            const timer = setTimeout(() => {
+                setCurrentUspPool(prev => [...prev, {
+                    ...asset,
+                    description: asset.description,
+                }]);
+            }, USP_POOL_INTERVAL);
+            
+            const nextTimer = setTimeout(() => setCurrentIdx(idx => idx + 1), USP_POOL_INTERVAL + USP_POOL_FINAL_DELAY);
+            
+            return () => {
+                clearTimeout(timer);
+                clearTimeout(nextTimer);
+            };
         }
     }, [assets_timeline, currentIdx, isTimelineFinished]);
 
@@ -109,44 +105,31 @@ export default function StepComplete() {
         const item = assets_timeline[currentIdx];
         console.log(`Processing timeline ${currentIdx}:`, item);
         
-        const audioAssets = item.assets.filter(asset => 
-            asset.type === "VEHICLE_SOUND_EFFECT" || asset.type === "COMPANION_VOICE"
-        );
-
-        const visualAssets = item.assets.filter(asset => 
-            asset.type === "CLONE_TALKS" || 
-            asset.type === "DEFAULT_POPUP" || 
-            asset.type === "TRIGGER_POPUP"
-        );
+        // 🎯 assets가 단일 객체로 변경됨에 따른 수정
+        const asset = item.assets; // 단일 객체
         
-        const uspPoolAssets = item.assets.filter(asset => asset.type === "FUNCTION_USP_POOL");
+        const isAudioAsset = asset?.type === "VEHICLE_SOUND_EFFECT" || asset?.type === "COMPANION_VOICE";
+        const isVisualAsset = asset?.type === "CLONE_TALKS" || 
+                             asset?.type === "DEFAULT_POPUP" || 
+                             asset?.type === "TRIGGER_POPUP";
+        const isUspPoolAsset = asset?.type === "FUNCTION_POPUP";
 
         // 진행 조건 결정 (우선순위: Visual > USP_Pool > Audio > Empty)
-        if (visualAssets.length > 0) {
+        if (isVisualAsset) {
             console.log('Timeline has visual elements - waiting for visual completion');
             
-            // 비주얼과 함께 오디오도 백그라운드에서 재생
-            if (audioAssets.length > 0) {
-                const audioFiles = audioAssets.map(asset => asset.file_name);
-                console.log('Starting background audio for visual timeline', currentIdx, ':', audioFiles);
-                setSfxPath(audioFiles);
-            }
-            
+            // 비주얼과 함께 오디오도 백그라운드에서 재생 (단일 객체는 백그라운드 오디오 없음)
             setOnSfxComplete(undefined); // Visual 완료를 기다림
-        } else if (uspPoolAssets.length > 0) {
+        } else if (isUspPoolAsset) {
             console.log('Timeline has USP Pool - handled by separate effect');
             setOnSfxComplete(undefined); // USP Pool effect에서 처리
-        } else if (audioAssets.length > 0) {
-            console.log('Timeline is audio-only - checking for consecutive audio items');
+        } else if (isAudioAsset) {
+            console.log('Single audio timeline - processing:', asset.file_name);
             
-            // 연속된 오디오 아이템들을 하나로 묶어서 처리
-            const { audioFiles, endIdx } = getConsecutiveAudioItems(currentIdx);
-            console.log(`Found consecutive audio items from ${currentIdx} to ${endIdx - 1}:`, audioFiles);
-            
-            setSfxPath(audioFiles);
+            setSfxPath([asset.file_name]);
             setOnSfxComplete(() => {
-                console.log(`Consecutive audio completed, jumping to timeline ${endIdx}`);
-                setTimeout(() => setCurrentIdx(endIdx), AUDIO_COMPLETE_DELAY);
+                console.log(`Single audio completed, moving to next timeline`);
+                setTimeout(() => setCurrentIdx(idx => idx + 1), AUDIO_COMPLETE_DELAY);
             });
         } else {
             console.log('Timeline is empty - moving immediately');
@@ -160,19 +143,16 @@ export default function StepComplete() {
         if (!assets_timeline || isTimelineFinished) return;
 
         const item = assets_timeline[currentIdx];
-        const audioAssets = item.assets.filter(asset => 
-            asset.type === "VEHICLE_SOUND_EFFECT" || asset.type === "COMPANION_VOICE"
-        );
-
-        const hasVisualElements = item.assets.some(asset => 
-            asset.type === "CLONE_TALKS" || 
-            asset.type === "DEFAULT_POPUP" || 
-            asset.type === "TRIGGER_POPUP" ||
-            asset.type === "FUNCTION_USP_POOL"
-        );
+        const asset = item.assets;
+        
+        const isAudioAsset = asset?.type === "VEHICLE_SOUND_EFFECT" || asset?.type === "COMPANION_VOICE";
+        const isVisualAsset = asset?.type === "CLONE_TALKS" || 
+                             asset?.type === "DEFAULT_POPUP" || 
+                             asset?.type === "TRIGGER_POPUP" ||
+                             asset?.type === "FUNCTION_POPUP";
 
         // 오디오도 비주얼도 없으면 바로 다음으로 진행
-        if (audioAssets.length === 0 && !hasVisualElements) {
+        if (!isAudioAsset && !isVisualAsset) {
             console.log('Empty timeline item, moving to next');
             const timer = setTimeout(() => setCurrentIdx(idx => idx + 1), AUDIO_COMPLETE_DELAY);
             return () => clearTimeout(timer);
@@ -190,22 +170,16 @@ export default function StepComplete() {
         const item = assets_timeline[currentIdx];
         console.log('Rendering timeline item:', currentIdx, item);
         
-        // 각 asset 타입 확인
-        const cloneAsset = item.assets.find(asset => asset.type === "CLONE_TALKS");
-        const popupAsset = item.assets.find(asset => ["DEFAULT_POPUP", "TRIGGER_POPUP"].includes(asset.type));
-        const uspPoolAssets = item.assets.filter(asset => asset.type === "FUNCTION_USP_POOL");
+        // 🎯 단일 객체로 변경된 assets 처리
+        const asset = item.assets;
         
-        console.log('Asset types found:', {
-            clone: !!cloneAsset,
-            popup: !!popupAsset,
-            uspPool: uspPoolAssets.length
-        });
-
-        // CloneTalk이 포함된 경우
-        if (cloneAsset && "text" in (cloneAsset as any)) {
+        console.log('Asset type found:', asset?.type);
+        
+        // CloneTalk인 경우
+        if (asset?.type === "CLONE_TALKS" && "text" in asset) {
             return (
                 <CloneTalk
-                    text={(cloneAsset as any).text || ""}
+                    text={asset.text || ""}
                     onComplete={() => {
                         setTimeout(() => setCurrentIdx(idx => idx + 1), CLONE_TALK_DELAY);
                     }}
@@ -213,22 +187,22 @@ export default function StepComplete() {
             );
         }
 
-        // FUNCTION_USP_POOL 처리: effect에서 순차적으로 표시
-        if (uspPoolAssets.length > 0) {
+        // FUNCTION_POPUP 처리: effect에서 순차적으로 표시
+        if (asset?.type === "FUNCTION_POPUP") {
             return null; // 화면 표시는 별도 effect에서 진행
         }
 
         // 팝업 UI 처리 (DEFAULT_POPUP, TRIGGER_POPUP 등)
-        if (popupAsset) {
-            console.log('Rendering popup:', popupAsset);
+        if (asset?.type === "DEFAULT_POPUP" || asset?.type === "TRIGGER_POPUP") {
+            console.log('Rendering popup:', asset);
             // id가 있으면 id를 keyName으로 사용, 없으면 type 사용
-            const keyName = (popupAsset as any).id ? (popupAsset as any).id.toUpperCase() : (popupAsset as any).type;
+            const keyName = asset.id ? asset.id.toString().toUpperCase() : asset.type;
             return (
                 <CommonPopupUI
                     key={currentIdx}
                     keyName={keyName}
-                    text={(popupAsset as any).description}
-                    description={(popupAsset as any).subtext_usp_pool}
+                    text={asset.description}
+                    description={asset.subtext_popup}
                     onComplete={() => {
                         console.log('Popup completed, moving to next timeline');
                         setTimeout(() => setCurrentIdx(idx => idx + 1), POPUP_COMPLETE_DELAY);

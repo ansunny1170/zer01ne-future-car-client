@@ -43,7 +43,7 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
   const [videoPath, setVideoPath] = useState<string | null>(null);
   const [uiPath, setUiPath] = useState<string | null>(null);
   const [bgmPath, setBgmPath] = useState<string | null>(null);
-  const [sfxPath, setSfxPath] = useState<string[] | null>([]);
+  const [sfxPath, setSfxPath] = useState<string[] | null>(null);
   const [onSfxComplete, setOnSfxComplete] = useState<(() => void) | undefined>();
   const [stepInfo, setStepInfo] = useState<StepInfo | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);

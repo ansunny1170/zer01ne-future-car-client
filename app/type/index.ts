@@ -40,7 +40,7 @@ export enum AssetsType {
     CLONE_TALKS = 'CLONE_TALKS',
     DEFAULT_POPUP = 'DEFAULT_POPUP',
     TRIGGER_POPUP = 'TRIGGER_POPUP',
-    FUNCTION_USP_POOL = 'FUNCTION_USP_POOL',
+    FUNCTION_POPUP = 'FUNCTION_POPUP',
     COMPANION_VOICE = 'COMPANION_VOICE',
     VEHICLE_SOUND_EFFECT = 'VEHICLE_SOUND_EFFECT',
 }
@@ -73,17 +73,17 @@ export interface CloneTalks {
 export interface DefaultPopup {
     type: AssetsType.DEFAULT_POPUP,
     description: string,
-    subtext_usp_pool: string,
+    subtext_popup: string,
     id: number,
 }
 export interface TriggerPopup {
     type: AssetsType.TRIGGER_POPUP,
     description: string,
-    subtext_usp_pool: string,
+    subtext_popup: string,
     id: number,
 }
-export interface FunctionUspPool {
-    type: AssetsType.FUNCTION_USP_POOL,
+export interface FunctionPopup {
+    type: AssetsType.FUNCTION_POPUP,
     description: string,
 }
 export interface VehicleSoundEffect {
@@ -100,12 +100,12 @@ export interface CompanionVoice {
 export type Assets = CloneTalks 
   | DefaultPopup 
   | TriggerPopup
-  | FunctionUspPool
+  | FunctionPopup
   | VehicleSoundEffect 
   | CompanionVoice
 interface AssetsTimeline {
     parallel: boolean,
-    assets: Assets[],
+    assets: Assets,
 }
 export interface Choice {
     usp: string,
