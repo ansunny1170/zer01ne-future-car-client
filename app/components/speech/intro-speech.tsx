@@ -53,44 +53,152 @@ export default function IntroSpeech({ onTrigger, isProcessing, defaultComment, p
   const [finalText, setFinalText] = useState<string | null>(null)
   const [isListening, setIsListening] = useState(false)
   const recognitionRef = useRef<SpeechRecognition | null>(null)
-  const silenceTimerRef = useRef<NodeJS.Timeout | null>(null)
-  // STT 재시작 플래그
-  const restartAfterStopRef = useRef<boolean>(false)
+  
+  // 새로운 키 누름 추적 시스템
+  const [pressCount, setPressCount] = useState(0) // 키 누름 횟수
+  const keyDownTimeRef = useRef<number>(0) // 키 다운 시간
+  const longPressThreshold = 1200 // 1200ms 이상이면 길게 누름
+  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null) // 길게 누름 타이머
 
   const startRecognition = () => {
     if (recognitionRef.current && !isProcessing) {
+      console.log('🎙️ 녹음 시작')
       setFinalText(null)
       recognitionRef.current.start()
     }
   }
 
-  // s 키 토글을 위해 음성 인식 종료 함수 추가
-  const stopRecognition = () => {
-    if (recognitionRef.current && isListening) {
-      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current)
+  const restartRecording = () => {
+    if (recognitionRef.current) {
+      console.log('🔄 재녹음 시작')
+      console.log('🔄 현재 isListening:', isListening)
+      
+      setFinalText(null)
+      
+      // 강제로 isListening을 false로 설정하고 새로 시작
+      try {
+        console.log('🔄 음성 인식 중단...')
+        recognitionRef.current.stop()
+        setIsListening(false) // 강제로 false 설정
+      } catch (error) {
+        console.log('🔄 중단 중 에러:', error)
+      }
+      
+      // 재시작 시도 (여러 번 시도)
+      let retryCount = 0
+      const maxRetries = 5
+      
+      const tryRestart = () => {
+        if (!isProcessing && recognitionRef.current && retryCount < maxRetries) {
+          try {
+            console.log(`🔄 재시작 시도 ${retryCount + 1}/${maxRetries}, isListening:`, isListening)
+            recognitionRef.current.start()
+            console.log('🔄 재시작 성공')
+          } catch (error) {
+            console.log(`🔄 재시작 실패 ${retryCount + 1}:`, error)
+            retryCount++
+            if (retryCount < maxRetries) {
+              setTimeout(tryRestart, 100) // 100ms 후 다시 시도
+            } else {
+              console.log('🔄 최대 재시도 횟수 초과')
+            }
+          }
+        }
+      }
+      
+      // 200ms 후 첫 번째 재시작 시도
+      setTimeout(tryRestart, 200)
+    }
+  }
+
+  const sendTrigger = () => {
+    console.log('📤 sendTrigger 호출됨')
+    console.log('📤 finalText:', finalText)
+    console.log('📤 recognitionRef.current:', !!recognitionRef.current)
+    
+    if (finalText && recognitionRef.current) {
+      console.log('📤 조건 만족: onTrigger 실행')
       recognitionRef.current.stop()
+      onTrigger(finalText)
+      setPressCount(0) // 전송 후 초기화
+      setFinalText(null)
+    } else {
+      console.log('❌ 조건 불만족: onTrigger 실행 안됨')
+      console.log('❌ finalText 있음?', !!finalText)
+      console.log('❌ recognitionRef 있음?', !!recognitionRef.current)
     }
   }
 
   useEffect(() => {
-    // s 키(또는 한글 ㄴ)로 STT 재시작 처리
-    const handleSTTKey = (event: KeyboardEvent) => {
+    const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key.toLowerCase() === 's' || event.key.toLowerCase() === 'ㄴ') {
         event.preventDefault()
-        if (isListening) {
-          restartAfterStopRef.current = true
-          if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current)
-          setFinalText(null)
-          recognitionRef.current?.stop()
-        } else if (!isProcessing) {
-          startRecognition()
+        
+        // 이미 키가 눌려있다면 무시 (키 반복 방지)
+        if (keyDownTimeRef.current !== 0) return
+        
+        keyDownTimeRef.current = Date.now()
+        console.log('⬇️ 키 다운 - 시간 기록 시작')
+        
+        // pressCount가 0이 아닐 때만 길게 누름 타이머 설정
+        if (pressCount > 0) {
+          console.log('⏱️ 길게 누름 타이머 시작')
+          longPressTimerRef.current = setTimeout(() => {
+            console.log('⏰ 길게 누름 타이머 만료 - onTrigger 실행')
+            sendTrigger()
+            // 타이머 실행 후 정리
+            longPressTimerRef.current = null
+            keyDownTimeRef.current = 0
+          }, longPressThreshold)
         }
       }
     }
 
-    window.addEventListener('keydown', handleSTTKey)
-    return () => window.removeEventListener('keydown', handleSTTKey)
-  }, [isListening, isProcessing])
+    const handleKeyUp = (event: KeyboardEvent) => {
+      if (event.key.toLowerCase() === 's' || event.key.toLowerCase() === 'ㄴ') {
+        event.preventDefault()
+        
+        // 길게 누름 타이머가 있으면 취소
+        if (longPressTimerRef.current) {
+          console.log('⏹️ 길게 누름 타이머 취소')
+          clearTimeout(longPressTimerRef.current)
+          longPressTimerRef.current = null
+        }
+        
+        const pressDuration = Date.now() - keyDownTimeRef.current
+        keyDownTimeRef.current = 0 // 시간 초기화
+        
+        console.log(`🔍 키 누름 분석:`)
+        console.log(`  - 누름 시간: ${pressDuration}ms`)
+        console.log(`  - pressCount: ${pressCount}`)
+        console.log(`  - longPressThreshold: ${longPressThreshold}ms`) 
+        console.log(`  - finalText: "${finalText}"`)
+        console.log(`  - isListening: ${isListening}`)
+
+        if (pressCount === 0) {
+          // 1번째: 녹음 시작
+          console.log('✅ 1번째 키: 녹음 시작')
+          setPressCount(1)
+          startRecognition()
+        } else {
+          // 2번째 이상: 짧게 누름만 처리 (길게 누름은 이미 타이머에서 처리됨)
+          console.log(`🔄 짧게 누름 (${pressDuration}ms): 재녹음`)
+          restartRecording()
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('keyup', handleKeyUp)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('keyup', handleKeyUp)
+      // 컴포넌트 언마운트 시 타이머 정리
+      if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current)
+      }
+    }
+  }, [pressCount, finalText, isProcessing, onTrigger])
 
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
@@ -113,15 +221,9 @@ export default function IntroSpeech({ onTrigger, isProcessing, defaultComment, p
         .map((r) => r[0].transcript)
         .join('')
 
+      console.log('🎤 음성 인식 결과:', transcript)
       setFinalText(transcript)
-
-      // 무음 타이머 리셋
-      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current)
-      silenceTimerRef.current = setTimeout(() => {
-        recognition.stop()
-        onTrigger(transcript)
-        setFinalText(null) // onTrigger 실행 후 텍스트 리셋
-      }, 3000)
+      // 자동 타이머 제거 - 사용자가 S키로만 제어
     }
 
     recognition.onerror = (event) => {
@@ -130,15 +232,12 @@ export default function IntroSpeech({ onTrigger, isProcessing, defaultComment, p
     }
 
     recognition.onend = () => {
-      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current)
-      console.log("음성 인식 종료")
-      if (restartAfterStopRef.current && !isProcessing) {
-        setFinalText(null)
-        restartAfterStopRef.current = false
-        recognition.start()
-        return
-      }
+      console.log("🔚 음성 인식 종료")
       setIsListening(false)
+      // API 완료 시에만 pressCount 초기화
+      if (!isProcessing) {
+        // pressCount는 전송 후에만 초기화되도록 수정
+      }
     }
 
     recognitionRef.current = recognition
