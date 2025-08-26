@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: 'https://dev.ftcar.org/:path*', // 백엔드 주소
+        destination: 'https://api.ftcar.org/:path*', // 백엔드 주소
       },
     ]
   },
