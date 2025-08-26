@@ -11,14 +11,14 @@ const nextConfig: NextConfig = {
     return config;
   },
   eslint: { ignoreDuringBuilds: true },
-  // async rewrites() {
-  //   return [
-  //     {
-  //       source: '/api/:path*',
-  //       destination: 'https://dev.ftcar.org/:path*', // 백엔드 주소
-  //     },
-  //   ]
-  // },
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'https://dev.ftcar.org/:path*', // 백엔드 주소
+      },
+    ]
+  },
 };
 
 export default nextConfig;
