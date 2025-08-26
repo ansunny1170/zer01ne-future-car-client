@@ -5,6 +5,7 @@ import CommonPopupUI from "../ui/popup_ui/common";
 import { useEffect, useState, useMemo, useCallback } from "react";
 import UspPopupWrapper from "../ui/usp-popup-wrapper";
 import CloneTalkSplit from "../ui/clone-talk-split";
+import HudSampleLayer from "../ui/popup_ui/hud-sample-layer";
 
 
 export default function StepRepeat({ dafultComment }: { dafultComment?: string }) {
@@ -238,6 +239,11 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
         // FUNCTION_POPUP 처리: effect에서 순차적으로 표시
         if (asset?.type === "FUNCTION_POPUP") {
             return null; // 화면 표시는 별도 effect에서 진행
+        }
+
+        // HUD_SAMPLE 처리: effect에서 순차적으로 표시
+        if (asset?.type === "HUD_POPUP") {
+            return <HudSampleLayer />
         }
 
         // 팝업 UI 처리 (DEFAULT_POPUP, TRIGGER_POPUP 등)
