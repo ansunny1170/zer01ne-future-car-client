@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://ec2-15-165-63-35.ap-northeast-2.compute.amazonaws.com:8000/:path*', // 백엔드 주소
+        destination: 'http://ec2-15-165-63-35.ap-northeast-2.compute.amazonaws.com:8001/:path*', // 백엔드 주소
       },
     ]
   },
