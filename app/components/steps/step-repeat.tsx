@@ -242,7 +242,7 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
         }
 
         // HUD_SAMPLE 처리: effect에서 순차적으로 표시
-        if (asset?.type === "FUNCTION_POPUP") {
+        if (asset?.type === "HUD_POPUP") {
             return <HudSampleLayer />
         }
 
