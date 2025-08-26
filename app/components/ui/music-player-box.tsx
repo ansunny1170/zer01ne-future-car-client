@@ -3,6 +3,7 @@ import MusicIcon from "../icons/musix";
 import PlayerButtons from "../icons/player-buttons";
 import { useScene } from "@/context/scene-context";
 import { useEffect, useRef, useState } from "react";
+import { getArtistName } from "@/utils";
 
 interface MusicPlayerBoxProps {
   className?: string;
@@ -45,6 +46,9 @@ export default function MusicPlayerBox({ className }: MusicPlayerBoxProps) {
               )}
             >
               {stepInfo?.bgm?.file_name}
+            </p>
+            <p className={cn("text-[14px] pt-[4px] font-semibold whitespace-nowrap opacity-60", shouldAnimate && "animate-marquee")}>
+              {getArtistName()}
             </p>
         </div>
         <div className="opacity-70">
