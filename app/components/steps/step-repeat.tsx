@@ -126,7 +126,8 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
         const isAudioAsset = asset?.type === "VEHICLE_SOUND_EFFECT" || asset?.type === "COMPANION_VOICE";
         const isVisualAsset = asset?.type === "CLONE_TALKS" || 
                              asset?.type === "DEFAULT_POPUP" || 
-                             asset?.type === "TRIGGER_POPUP";
+                             asset?.type === "TRIGGER_POPUP" ||
+                             asset?.type === "HUD_POPUP";
         const isUspPoolAsset = asset?.type === "FUNCTION_POPUP";
 
         // 진행 조건 결정 (우선순위: Visual > USP_Pool > Audio > Empty)
@@ -199,7 +200,8 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
         const isVisualAsset = asset?.type === "CLONE_TALKS" || 
                              asset?.type === "DEFAULT_POPUP" || 
                              asset?.type === "TRIGGER_POPUP" ||
-                             asset?.type === "FUNCTION_POPUP";
+                             asset?.type === "FUNCTION_POPUP" ||
+                             asset?.type === "HUD_POPUP";
 
         // 오디오도 비주얼도 없으면 바로 다음으로 진행
         if (!isAudioAsset && !isVisualAsset) {
@@ -241,9 +243,17 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
             return null; // 화면 표시는 별도 effect에서 진행
         }
 
-        // HUD_SAMPLE 처리: effect에서 순차적으로 표시
+        // HUD_POPUP 처리: 3초 유지 후 다음 타임라인으로 이동
         if (asset?.type === "HUD_POPUP") {
-            return <HudSampleLayer />
+            return (
+                <HudSampleLayer
+                    key={currentIdx}
+                    onComplete={() => {
+                        console.log('HUD_POPUP completed after 3 seconds, moving to next timeline');
+                        setTimeout(() => setCurrentIdx(idx => idx + 1), POPUP_COMPLETE_DELAY);
+                    }}
+                />
+            );
         }
 
         // 팝업 UI 처리 (DEFAULT_POPUP, TRIGGER_POPUP 등)
