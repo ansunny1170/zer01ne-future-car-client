@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useRef, useEffect, useMemo } from "react";
-import { StepInfo, AssetsType } from "../type";
+import { StepInfo } from "../type";
 import { bgmDict, bgvDict } from "@/utils/constants";
 
 // Context에서 사용할 타입 정의
@@ -72,6 +72,10 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
     setStepInfo(stepInfo);
     setVideoPath(stepInfo?.bgv?.file_name || bgvDict[Math.floor(Math.random() * bgvDict.length)].file_name || null );
     setBgmPath(stepInfo?.bgm?.file_name || bgmDict[Math.floor(Math.random() * bgmDict.length)].file_name || null);
+
+    if (stepInfo?.step === 1){
+      setVideoPath("intro 01.mp4");
+    }
     
     // stepInfo 변경 시 sfxPath 초기화 - null로 설정
     setSfxPath(null);
