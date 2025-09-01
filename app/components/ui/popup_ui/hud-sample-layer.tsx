@@ -37,10 +37,10 @@ export default function HudSampleLayer({ onComplete }: { onComplete?: () => void
                     transition={{ duration: 0.5, ease: "easeInOut" }}
                     className="absolute inset-0 perspective-1000"
                 >
-                    <div className="absolute bottom-[50px] left-[5%]" style={{ transform: 'scale(0.4) rotateY(15deg)' }}>
+                    <div className="absolute bottom-[24%] left-[12%]" style={{ transform: 'scaleX(0.3) scaleY(0.35) rotateY(18deg)' }}>
                         <HudSamplePopup />
                     </div>
-                    <div className="absolute bottom-[70px] right-[8%]" style={{ transform: 'scale(0.4) rotateY(-10deg)' }}>
+                    <div className="absolute bottom-[15%] right-[16%]" style={{ transform: 'scaleX(0.4) scaleY(0.5) rotateY(-25deg)' }}>
                         <HudSamplePopup />
                     </div>
                 </motion.div>
