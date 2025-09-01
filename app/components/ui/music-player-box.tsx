@@ -19,7 +19,6 @@ export default function MusicPlayerBox({ className }: MusicPlayerBoxProps) {
   const [imageError, setImageError] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const bgmCover = `/assets/bgm_cover/${stepInfo?.bgm?.description}.jpeg`;
-  console.log(bgmCover);
 
   // 이미지 로딩 시도
   useEffect(() => {
