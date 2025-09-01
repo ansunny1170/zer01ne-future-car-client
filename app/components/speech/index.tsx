@@ -274,7 +274,7 @@ export default function Speech({ onTrigger, isProcessing, defaultComment }: { on
         </span>
         {
           !finalText ? (
-            <strong className='opacity-60'>음성으로 알려주세요!</strong>
+            <strong className='opacity-60'>선택지를 참고하여 자유롭게 말해주세요.</strong>
           ) : (
             <strong>{finalText}</strong>
           )
