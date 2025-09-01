@@ -41,6 +41,7 @@ export enum AssetsType {
     DEFAULT_POPUP = 'DEFAULT_POPUP',
     TRIGGER_POPUP = 'TRIGGER_POPUP',
     FUNCTION_POPUP = 'FUNCTION_POPUP',
+    HUD_POPUP = 'HUD_POPUP',
     COMPANION_VOICE = 'COMPANION_VOICE',
     VEHICLE_SOUND_EFFECT = 'VEHICLE_SOUND_EFFECT',
 }
@@ -86,6 +87,10 @@ export interface FunctionPopup {
     type: AssetsType.FUNCTION_POPUP,
     description: string,
 }
+export interface HudPopup {
+    type: AssetsType.HUD_POPUP,
+    description: string,
+}
 export interface VehicleSoundEffect {
     type: AssetsType.VEHICLE_SOUND_EFFECT,
     description: string,
@@ -101,6 +106,7 @@ export type Assets = CloneTalks
   | DefaultPopup 
   | TriggerPopup
   | FunctionPopup
+  | HudPopup
   | VehicleSoundEffect 
   | CompanionVoice
 interface AssetsTimeline {
