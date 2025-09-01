@@ -14,16 +14,13 @@ export default function UspPopupWrapper({ data }: { data: { description: string 
     }
 
     const newItem = data[data.length - 1];
-    
     setDisplayItems(prev => {
       // 이미 같은 아이템이 있는지 확인
       const alreadyExists = prev.some(item => item.description === newItem.description);
       if (alreadyExists) return prev;
 
       const newItemWithId = { ...newItem, id: itemIdCounter, hasPlayed: false };
-      const updated = [...prev, newItemWithId];
-      // 2개 초과시 첫 번째 제거
-      return updated.length > 2 ? updated.slice(-2) : updated;
+      return [...prev, newItemWithId];
     });
     
     setItemIdCounter(prev => prev + 1);
@@ -40,7 +37,7 @@ export default function UspPopupWrapper({ data }: { data: { description: string 
             exit={{ opacity: 0, x: 20 }}
             transition={{ duration: 0.35 }}
             layout // 레이아웃 변경 시 자연스러운 이동
-            className="flex justify-start items-center gap-2 text-white font-semibold max-w-[24vw] bg-black/5 backdrop-blur-2xl p-4 rounded-[24px] overflow-hidden relative"
+            className="flex justify-start items-center gap-2 text-white font-semibold w-[21vw] bg-black/5 backdrop-blur-2xl p-4 rounded-[24px] overflow-hidden relative"
             style={{
               backgroundClip: 'padding-box',
             }}
