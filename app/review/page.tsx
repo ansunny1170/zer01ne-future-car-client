@@ -11,11 +11,27 @@ export default function Review() {
     
     useEffect(() => {
         // 웹소켓 연결 시도 (현재 서버에서 즉시 끊어짐)
-        const ws = new WebSocket('wss://api.ftcar.org/ws/ending-reflection');
+        const ws = new WebSocket('wss://dev.ftcar.org/ws/ending-reflection');
         wsRef.current = ws;
 
-        ws.onopen = () => {
+        ws.onopen = async () => {
             console.log('WebSocket connected');
+            
+            // 초기 데이터 요청
+            try {
+                const response = await fetch('https://dev.ftcar.org/ending-reflection/trigger-from-history/710', {
+                    method: 'POST',
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Initial data:', data);
+                    if (data.data) {
+                        setWsData(data.data);
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to fetch initial data:', error);
+            }
         };
 
         ws.onmessage = (event) => {
