@@ -14,6 +14,8 @@ export default function StepVideoPlayer({ className }:
     const [previousVideoPath, setPreviousVideoPath] = useState<string | null>(null);
     const [isTransitioning, setIsTransitioning] = useState(false);
     const [isCurrentReady, setIsCurrentReady] = useState(false);
+    const [hasCurrentPlayedOnce, setHasCurrentPlayedOnce] = useState(false);
+    const [hasPreviousPlayedOnce, setHasPreviousPlayedOnce] = useState(false);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
     const prevNextVideoPathRef = useRef(nextVideoPath);
 
@@ -29,6 +31,8 @@ export default function StepVideoPlayer({ className }:
                     setPreviousVideoPath(currentVideoPath);
                     setCurrentVideoPath(nextVideoPath);
                     setIsCurrentReady(false);
+                    setHasCurrentPlayedOnce(false);
+                    setHasPreviousPlayedOnce(false);
                     setIsTransitioning(false);
                 }
             }
@@ -66,12 +70,20 @@ export default function StepVideoPlayer({ className }:
                 key={currentVideoPath}
                 src={`${BASE_URL}/${currentVideoPath}`}
                 autoPlay
-                loop
                 muted
+                loop
                 playsInline
                 preload='auto'
                 onCanPlay={() => setIsCurrentReady(true)}
-                className="w-full h-full object-cover absolute inset-0 z-0"
+                onTimeUpdate={(e) => {
+                    const video = e.target as HTMLVideoElement;
+                    if (!hasCurrentPlayedOnce && video.duration > 0 && video.currentTime >= video.duration - 0.2) {
+                        setHasCurrentPlayedOnce(true);
+                    }
+                }}
+                className={`w-full h-full object-cover absolute inset-0 z-0 transition-all duration-[2000ms] ${
+                    hasCurrentPlayedOnce ? 'blur-lg' : ''
+                }`}
             />
             {/* Previous video (fades out above) */}
             {previousVideoPath && (
@@ -79,12 +91,19 @@ export default function StepVideoPlayer({ className }:
                     key={previousVideoPath}
                     src={`${BASE_URL}/${previousVideoPath}`}
                     autoPlay
-                    loop
                     muted
+                    loop
                     playsInline
                     preload='auto'
-                    className={`w-full h-full object-cover absolute inset-0 transition-all duration-800 z-10
-                        ${isTransitioning ? 'opacity-0 scale-150' : 'opacity-100 scale-100'}`}
+                    onTimeUpdate={(e) => {
+                        const video = e.target as HTMLVideoElement;
+                        if (!hasPreviousPlayedOnce && video.duration > 0 && video.currentTime >= video.duration - 0.2) {
+                            setHasPreviousPlayedOnce(true);
+                        }
+                    }}
+                    className={`w-full h-full object-cover absolute inset-0 transition-all duration-800 z-10 ${
+                        isTransitioning ? 'opacity-0 scale-150' : 'opacity-100 scale-100'
+                    } ${hasPreviousPlayedOnce ? 'blur-lg' : ''}`}
                 />
             )}
         </div>
