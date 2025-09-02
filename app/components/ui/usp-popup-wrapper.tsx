@@ -37,20 +37,25 @@ export default function UspPopupWrapper({ data }: { data: { description: string 
             exit={{ opacity: 0, x: 20 }}
             transition={{ duration: 0.35 }}
             layout // 레이아웃 변경 시 자연스러운 이동
-            className="flex justify-start items-center gap-2 text-white font-semibold max-w-[21vw] bg-black/5 backdrop-blur-2xl p-4 rounded-[24px] overflow-hidden relative"
+            className="flex justify-start items-center gap-4 text-white font-semibold max-w-[21vw] backdrop-blur-xl p-6 rounded-[32px] overflow-hidden relative"
             style={{
-              backgroundClip: 'padding-box',
+              background: 'rgba(0, 0, 0, 0.1)',
+              borderRadius: '32px',
+              position: 'relative',
             }}
           >
+            {/* 좌상단 테두리 강조 */}
             <div 
-              className="absolute inset-0 rounded-[24px] opacity-50"
+              className="absolute inset-0 border-[1.5px] border-white/40 bg-white/10 rounded-[32px] pointer-events-none"
               style={{
-                background: 'linear-gradient(-90deg, #4C8BFF 0%, #F7B094 72%, #FFC73B 100%)',
-                padding: '2px',
-                WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-                WebkitMaskComposite: 'xor',
-                mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-                maskComposite: 'exclude',
+                maskImage: 'radial-gradient(ellipse 80% 60% at top left, black 0%, black 60%, transparent 100%)',
+              }}
+            />
+            {/* 우하단 테두리 강조 */}
+            <div 
+              className="absolute inset-0 border-[1.5px] border-white/40 bg-white/10 rounded-[32px] pointer-events-none"
+              style={{
+                maskImage: 'radial-gradient(ellipse 80% 60% at bottom right, black 0%, black 60%, transparent 100%)',
               }}
             />
             <div className="w-[32px] h-[32px] flex items-center justify-center shrink-0 relative z-10">
