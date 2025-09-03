@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from "react";
 export default function Review() {
     const wsRef = useRef<WebSocket | null>(null);
     const [wsData, setWsData] = useState<Reflection[]>([]);
+    const [selectedItem, setSelectedItem] = useState<Reflection | null>(null);
     
     useEffect(() => {
         // 웹소켓 연결 시도 (현재 서버에서 즉시 끊어짐)
@@ -60,8 +61,8 @@ export default function Review() {
 
     return (
         <div className="w-full h-screen flex items-stretch">
-            <DetailArea/>
-            <ListArea data={wsData}/>
+            <DetailArea selectedItem={selectedItem} />
+            <ListArea data={wsData} onItemClick={setSelectedItem} />
         </div>
     );
 }

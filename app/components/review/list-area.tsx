@@ -3,9 +3,10 @@ import { useState, useEffect } from "react";
 
 interface ListAreaProps {
     data: Reflection[];
+    onItemClick: (item: Reflection) => void;
 }
 
-export default function ListArea({ data }: ListAreaProps) {
+export default function ListArea({ data, onItemClick }: ListAreaProps) {
     const [currentPage, setCurrentPage] = useState(0);
     const itemsPerPage = 6;
     const totalPages = Math.ceil(data.length / itemsPerPage);
@@ -34,28 +35,26 @@ export default function ListArea({ data }: ListAreaProps) {
     
     return (
         <div className="bg-black h-full grow p-8 flex flex-col">
-            <ul className="grid grid-cols-3 grid-rows-2 gap-6 flex-1">
-                {[...Array(6)].map((_, index) => {
-                    const item = currentData[index];
-                    return (
-                        <li 
-                            key={index}
-                            className="bg-white p-6 rounded-2xl relative overflow-hidden flex flex-col h-full"
+            <ul className="grid grid-cols-3 gap-6 flex-1">
+                {currentData.map((item, index) => (
+                    <li 
+                        key={index}
+                        className="bg-white p-6 rounded-2xl relative overflow-hidden flex flex-col h-full hover:bg-gray-200 transition-colors"
+                    >
+                        <button 
+                            onClick={() => onItemClick(item)}
+                            className="overflow-hidden flex flex-col gap-2 w-full h-full text-left transition-colors"
                         >
-                            {item && (
-                                <button className="overflow-hidden flex flex-col gap-2">
-                                    <div className=" text-sm">{item.nick_name}</div>
-                                    <div className="font-bold text-lg mb-2">{item.event_title}</div>
-                                    <div className="flex-1 overflow-hidden">
-                                        <p className="text-sm leading-relaxed line-clamp-[8]">
-                                            {item.reflection_text}
-                                        </p>
-                                    </div>
-                                </button>
-                            )}
-                        </li>
-                    );
-                })}
+                            <div className="text-sm">{item.nick_name}</div>
+                            <div className="font-bold text-lg mb-2">{item.event_title}</div>
+                            <div className="flex-1 overflow-hidden">
+                                <p className="text-sm leading-relaxed line-clamp-[8]">
+                                    {item.reflection_text}
+                                </p>
+                            </div>
+                        </button>
+                    </li>
+                ))}
             </ul>
             
             {/* 페이지네이션 컨트롤 */}
