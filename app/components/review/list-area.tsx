@@ -1,43 +1,85 @@
+import { Reflection } from "@/type";
+import { useState, useEffect } from "react";
+
 interface ListAreaProps {
-    data: any[];
+    data: Reflection[];
 }
 
 export default function ListArea({ data }: ListAreaProps) {
-    console.log("data????", data);
+    const [currentPage, setCurrentPage] = useState(0);
+    const itemsPerPage = 6;
+    const totalPages = Math.ceil(data.length / itemsPerPage);
+    
+    const currentData = data.slice(
+        currentPage * itemsPerPage, 
+        (currentPage + 1) * itemsPerPage
+    );
+
+    // 데이터가 변경되면 첫 페이지로 이동
+    useEffect(() => {
+        setCurrentPage(0);
+    }, [data.length]);
+
+    const nextPage = () => {
+        if (currentPage < totalPages - 1) {
+            setCurrentPage(prev => prev + 1);
+        }
+    };
+
+    const prevPage = () => {
+        if (currentPage > 0) {
+            setCurrentPage(prev => prev - 1);
+        }
+    };
+    
     return (
-        <div className="bg-black h-full grow p-8">
-            <div className="grid grid-cols-3 gap-6 h-full">
-                {data.map((item, index) => (
-                    <div 
-                        key={index}
-                        className="bg-white/10 h-1/2 backdrop-blur-md p-6 rounded-2xl border border-white/20 relative overflow-hidden"
-                        style={{
-                            background: 'rgba(255, 255, 255, 0.1)',
-                        }}
+        <div className="bg-black h-full grow p-8 flex flex-col">
+            <ul className="grid grid-cols-3 grid-rows-2 gap-6 flex-1">
+                {[...Array(6)].map((_, index) => {
+                    const item = currentData[index];
+                    return (
+                        <li 
+                            key={index}
+                            className="bg-white p-6 rounded-2xl relative overflow-hidden flex flex-col h-full"
+                        >
+                            {item && (
+                                <button className="overflow-hidden flex flex-col gap-2">
+                                    <div className=" text-sm">{item.nick_name}</div>
+                                    <div className="font-bold text-lg mb-2">{item.event_title}</div>
+                                    <div className="flex-1 overflow-hidden">
+                                        <p className="text-sm leading-relaxed line-clamp-[8]">
+                                            {item.reflection_text}
+                                        </p>
+                                    </div>
+                                </button>
+                            )}
+                        </li>
+                    );
+                })}
+            </ul>
+            
+            {/* 페이지네이션 컨트롤 */}
+            {totalPages > 1 && (
+                <div className="flex justify-center items-center gap-4 mt-8">
+                    <button 
+                        onClick={prevPage}
+                        disabled={currentPage === 0}
+                        className="text-white/60 hover:text-white disabled:opacity-30"
                     >
-                        {/* 선택된 카드 표시 (첫 번째 카드) */}
-                        {index === 0 && (
-                            <>
-                                <div className="absolute top-0 left-0 w-4 h-4 bg-red-500 rounded-full -translate-x-2 -translate-y-2 border-2 border-white" />
-                                <div className="absolute inset-0 border-2 border-red-500 rounded-2xl" />
-                            </>
-                        )}
-                        
-                        <div className="flex items-center gap-2 mb-4">
-                            <div className="w-6 h-6 bg-gray-400 rounded-full flex items-center justify-center">
-                                <span className="text-xs text-white">👤</span>
-                            </div>
-                            <span className="text-white/60 text-sm">관람객 1001 (1/4)</span>
-                        </div>
-                        
-                        <h3 className="text-white font-bold text-lg mb-4">Event Title</h3>
-                        
-                        <p className="text-white/80 text-sm leading-relaxed">
-                            {item.description || "타이틀에 대한 설명 타이틀에 대한 설명타이틀에 대한 설명 타이틀에 대한 설명타이틀에 대한 설명 타이틀에 대한 설명타이틀에 대한 설명 타이틀에 대한 설명 타이틀에 대한 설명타이틀에 대한 설명 타이틀에 대한 설명 타이틀에 대한 설명타이틀에 대한 설명..."}
-                        </p>
-                    </div>
-                ))}
-            </div>
+                        ← 이전
+                    </button>
+                    <span className="text-white">
+                        {currentPage + 1} / {totalPages}
+                    </span>
+                    <button 
+                        onClick={nextPage}
+                        disabled={currentPage === totalPages - 1}
+                        className="text-white/60 hover:text-white disabled:opacity-30"
+                    >
+                        다음 →
+                    </button>
+                </div>
+            )}
         </div>
     );
 }

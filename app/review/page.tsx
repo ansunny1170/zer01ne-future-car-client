@@ -2,12 +2,13 @@
 
 import DetailArea from "@/components/review/detail-area";
 import ListArea from "@/components/review/list-area";
+import { Reflection } from "@/type";
 import { useEffect, useRef, useState } from "react";
 
 
 export default function Review() {
     const wsRef = useRef<WebSocket | null>(null);
-    const [wsData, setWsData] = useState<any[]>([]);
+    const [wsData, setWsData] = useState<Reflection[]>([]);
     
     useEffect(() => {
         // 웹소켓 연결 시도 (현재 서버에서 즉시 끊어짐)
