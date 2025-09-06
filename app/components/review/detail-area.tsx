@@ -1,12 +1,25 @@
 import { Reflection } from "@/type";
+import { useEffect, useRef } from "react";
 
 interface DetailAreaProps {
     selectedItem: Reflection | null;
 }
 
 export default function DetailArea({ selectedItem }: DetailAreaProps) {
+    const scrollRef = useRef<HTMLDivElement>(null);
+    
+    // selectedItem이 변경될 때마다 스크롤을 최상단으로 이동
+    useEffect(() => {
+        if (selectedItem && scrollRef.current) {
+            scrollRef.current.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+    }, [selectedItem]);
+    
     return (
-        <div className="w-1/3 h-full bg-white shrink-0 overflow-y-auto">
+        <div ref={scrollRef} className="w-1/3 h-full bg-white shrink-0 overflow-y-auto">
             <div className="pt-[24px] px-[14px] sticky top-0 bg-white text-[40px]">
                 <h1 className="px-[12px] pb-[12px] text-[32px] font-bold border-b border-black">생성된 체험 이벤트 아카이브</h1>
             </div>
