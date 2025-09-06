@@ -150,3 +150,13 @@ export interface StepInfo {
 //     COMPANION_VOICE = 'COMPANION_VOICE', // 동승자 목소리
 //     VEHICLE_SOUND_EFFECT = 'VEHICLE_SOUND_EFFECT', // 차량음
 // }
+
+export interface Reflection {
+    created_at: string;
+    event_title: string;
+    failed_response: string;
+    id: number;
+    nick_name: string;
+    reflection_text: string;
+    session_id: string;
+}

@@ -109,3 +109,26 @@ body {
     background-position: 0% 50%;
   }
 }
+
+/* Custom scrollbar with opacity transition */
+.custom-scrollbar {
+  transition: scrollbar-color 0.3s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, var(--scrollbar-opacity, 0));
+  border-radius: 4px;
+  transition: opacity 0.3s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.7);
+}

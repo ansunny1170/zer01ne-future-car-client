@@ -5,7 +5,6 @@ import PlayerButtons from "../icons/player-buttons";
 import { useScene } from "@/context/scene-context";
 import { useEffect, useRef, useState } from "react";
 import { getArtistName } from "@/utils";
-import { BASE_S3_LINK } from "@/constants";
 
 interface MusicPlayerBoxProps {
   className?: string;
@@ -19,6 +18,7 @@ export default function MusicPlayerBox({ className }: MusicPlayerBoxProps) {
   const [imageError, setImageError] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const bgmCover = `/assets/bgm_cover/${stepInfo?.bgm?.description}.jpeg`;
+  const artistName = getArtistName()
 
   // 이미지 로딩 시도
   useEffect(() => {
@@ -95,7 +95,7 @@ export default function MusicPlayerBox({ className }: MusicPlayerBoxProps) {
               {stepInfo?.bgm?.description}
             </p>
             <p className={cn("text-[14px] pt-[4px] font-semibold whitespace-nowrap opacity-60", shouldAnimate && "animate-marquee")}>
-              {getArtistName()}
+              {artistName}
             </p>
         </div>
         <div className="opacity-70">
