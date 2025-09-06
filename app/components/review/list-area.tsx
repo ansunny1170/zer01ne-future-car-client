@@ -12,10 +12,13 @@ export default function ListArea({ data, onItemClick, selectedItem }: ListAreaPr
     const [currentPage, setCurrentPage] = useState(0);
     const scrollRef = useRef<HTMLDivElement>(null);
     
-    // 6개씩 페이지로 나누기 (3x2 그리드)
+    // 최신 150개(25페이지 x 6개)로 제한하고 6개씩 페이지로 나누기
+    const maxItems = 25 * 6; // 150개
+    const limitedData = data.slice(0, Math.min(data.length, maxItems));
+    
     const groupedData = [];
-    for (let i = 0; i < data.length; i += 6) {
-        groupedData.push(data.slice(i, i + 6));
+    for (let i = 0; i < limitedData.length; i += 6) {
+        groupedData.push(limitedData.slice(i, i + 6));
     }
 
     const handleScroll = () => {
