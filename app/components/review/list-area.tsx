@@ -221,7 +221,7 @@ export default function ListArea({ data, onItemClick, selectedItem }: ListAreaPr
                                         </span>
                                         {item.nick_name}
                                     </div>
-                                    <div className="font-semibold text-[26px] pb-[24px] leading-[1.2]">{item.event_title}</div>
+                                    <div className="font-semibold text-[26px] pb-[24px] leading-[1.2] break-keep">{item.event_title}</div>
                                     <div className="flex-1 relative overflow-hidden">
                                         <p className="text-sm leading-relaxed">
                                             {item.reflection_text}
