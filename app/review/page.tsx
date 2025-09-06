@@ -59,10 +59,14 @@ export default function Review() {
         };
     }, []);
 
+    // 최대 120개(20페이지 x 6개)로 데이터 제한
+    const limitedWsData = wsData.slice(0, 120);
+    console.log('Original data length:', wsData.length, 'Limited data length:', limitedWsData.length);
+
     return (
         <div className="w-full h-screen flex items-stretch">
             <DetailArea selectedItem={selectedItem} />
-            <ListArea data={wsData} onItemClick={setSelectedItem} />
+            <ListArea data={limitedWsData} onItemClick={setSelectedItem} selectedItem={selectedItem} />
         </div>
     );
 }
