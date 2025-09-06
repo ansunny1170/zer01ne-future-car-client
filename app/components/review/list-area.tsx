@@ -1,3 +1,4 @@
+/* eslint-disable react/display-name */
 import { Reflection } from "@/type";
 import { useState, useEffect, useRef, memo } from "react";
 import { Icons } from "../ui/icons";
@@ -167,15 +168,15 @@ export default function ListArea({ data, onItemClick, selectedItem }: ListAreaPr
     }
     
     return (
-        <div className="bg-black h-full grow p-8 py-[80px] pr-[55px] relative">
+        <div className="bg-black h-full grow p-8 py-[80px] pr-[55px] pb-[60px] relative">
             {currentPage > 0 && groupedData.length > 1 && (
-                <div className="absolute inset-x-0 top-[20px] z-20 flex justify-center">
+                <div className="absolute inset-x-0 top-[20px] z-20 flex justify-center bg-black w-full">
                     <button 
                         onClick={() => {
                             console.log('ArrowUp clicked, currentPage:', currentPage, 'totalPages:', groupedData.length);
                             goToPreviousPage();
                         }}
-                        className="text-white hover:text-gray-300 transition-colors bg-black/40 rounded-full p-4 min-w-[48px] min-h-[48px] flex items-center justify-center cursor-pointer"
+                        className="text-white hover:text-gray-300 transition-colors p-4 min-w-[48px] min-h-[48px] flex items-center justify-center cursor-pointer"
                         style={{ pointerEvents: 'auto' }}
                     >
                         <Icons.arrowUp />
@@ -194,7 +195,7 @@ export default function ListArea({ data, onItemClick, selectedItem }: ListAreaPr
                 {groupedData.map((group, groupIndex) => (
                     <div 
                         key={groupIndex}
-                        className="grid grid-cols-3 grid-rows-2 gap-6 snap-start flex-shrink-0"
+                        className="grid grid-cols-3 grid-rows-2 gap-6 snap-start flex-shrink-0 pb-[20px]"
                         style={{
                             height: '100%',
                             minHeight: '100%',
@@ -234,19 +235,20 @@ export default function ListArea({ data, onItemClick, selectedItem }: ListAreaPr
                     </div>
                 ))}
             </div>
-            {currentPage < groupedData.length - 1 && (
-                <div className="absolute inset-x-0 bottom-[20px] z-20 flex justify-center">
+            <div className="absolute inset-x-0 bottom-[20px] z-20 flex justify-center bg-black w-full min-h-[54px]">
+                {currentPage < groupedData.length - 1 && (
                     <button 
                         onClick={() => {
                             console.log('ArrowDown clicked, currentPage:', currentPage);
                             goToNextPage();
                         }}
-                        className="text-white hover:text-gray-300 transition-colors bg-black/40 rounded-full p-4 min-w-[48px] min-h-[48px] flex items-center justify-center"
+                        className="text-white hover:text-gray-300 transition-colors p-4 min-w-[48px]  flex items-center justify-center"
                     >
                         <Icons.arrowDown />
                     </button>
-                </div>
-            )}
+                )}
+            </div>
+            
             
             {/* 페이지 인디케이터 */}
             {groupedData.length > 1 && (
