@@ -62,7 +62,7 @@ export default function Review() {
     return (
         <div className="w-full h-screen flex items-stretch">
             <DetailArea selectedItem={selectedItem} />
-            <ListArea data={wsData} onItemClick={setSelectedItem} />
+            <ListArea data={wsData} onItemClick={setSelectedItem} selectedItem={selectedItem} />
         </div>
     );
 }
