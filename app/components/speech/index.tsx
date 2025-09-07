@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Icons } from '../ui/icons';
 import { cn } from '@/utils/cn';
 import HyundaiLoading from '../ui/hyundai-loading';
+import { useScene } from '@/context/scene-context';
 
 // Web Speech API 타입 정의
 interface SpeechRecognitionEvent extends Event {
@@ -52,9 +53,22 @@ declare global {
 }
 
 export default function Speech({ onTrigger, isProcessing, defaultComment }: { onTrigger: (text: string) => void, isProcessing: boolean, defaultComment?: string }) {
+  const { stepInfo } = useScene();
   const [finalText, setFinalText] = useState<string | null>(null)
   const [isListening, setIsListening] = useState(false)
   const recognitionRef = useRef<SpeechRecognition | null>(null)
+
+  // stepInfo.step에 따른 동적 텍스트 생성
+  const getPlaceholderText = () => {
+    switch (stepInfo?.step) {
+      case 1:
+        return '가고 싶은 장소와 함께 할 사람을 말해주세요.';
+      case 6:
+        return '오늘 하루 즐거우셨나요? 혹시 더 필요한 게 있으신가요?';
+      default:
+        return '선택지를 참고하여 자유롭게 말해주세요.';
+    }
+  };
   
   // 새로운 키 누름 추적 시스템
   const [pressCount, setPressCount] = useState(0) // 키 누름 횟수
@@ -274,7 +288,7 @@ export default function Speech({ onTrigger, isProcessing, defaultComment }: { on
         </span>
         {
           !finalText ? (
-            <strong className='opacity-60'>선택지를 참고하여 자유롭게 말해주세요.</strong>
+            <strong className='opacity-60'>{getPlaceholderText()}</strong>
           ) : (
             <strong>{finalText}</strong>
           )
