@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import HudSamplePopup from "./hud-sample-popup";
+import HudPopup from "./hud-popup";
 
-export default function HudSampleLayer({ onComplete }: { onComplete?: () => void }) {
+export default function HudLayer({ onComplete, keyName }: { onComplete?: () => void, keyName: string }) {
     const [isVisible, setIsVisible] = useState(false);
 
     useEffect(() => {
@@ -38,10 +38,10 @@ export default function HudSampleLayer({ onComplete }: { onComplete?: () => void
                     className="absolute inset-0 perspective-1000"
                 >
                     <div className="absolute bottom-[24%] left-[12%]" style={{ transform: 'scaleX(0.3) scaleY(0.35) rotateY(18deg)' }}>
-                        <HudSamplePopup />
+                        <HudPopup keyName={keyName} />
                     </div>
                     <div className="absolute bottom-[15%] right-[16%]" style={{ transform: 'scaleX(0.4) scaleY(0.5) rotateY(-25deg)' }}>
-                        <HudSamplePopup />
+                        <HudPopup keyName={keyName} />
                     </div>
                 </motion.div>
             )}

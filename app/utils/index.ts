@@ -14,7 +14,7 @@ export const getArtistName = () => {
     // 확률 기반 아티스트 이름 배열 (가중치 적용)
     const artists = [
         // 가장 높은 확률 (30%)
-        ...Array(30).fill("나츠 & 아키"),
+        ...Array(30).fill("니츠 & 아키"),
         
         // 높은 확률 (각 12%)
         ...Array(12).fill("YE CHAN KIM"),

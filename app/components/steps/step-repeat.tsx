@@ -5,7 +5,7 @@ import CommonPopupUI from "../ui/popup_ui/common";
 import { useEffect, useState, useMemo, useCallback } from "react";
 import UspPopupWrapper from "../ui/usp-popup-wrapper";
 import CloneTalkSplit from "../ui/clone-talk-split";
-import HudSampleLayer from "../ui/popup_ui/hud-sample-layer";
+import HudLayer from "../ui/popup_ui/hud-layer";
 
 
 export default function StepRepeat({ dafultComment }: { dafultComment?: string }) {
@@ -245,9 +245,11 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
 
         // HUD_POPUP 처리: 3초 유지 후 다음 타임라인으로 이동
         if (asset?.type === "HUD_POPUP") {
+            const keyName = asset.id ? asset.id.toString().toUpperCase() : asset.type;
             return (
-                <HudSampleLayer
+                <HudLayer
                     key={currentIdx}
+                    keyName={keyName}
                     onComplete={() => {
                         console.log('HUD_POPUP completed after 3 seconds, moving to next timeline');
                         setTimeout(() => setCurrentIdx(idx => idx + 1), POPUP_COMPLETE_DELAY);

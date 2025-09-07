@@ -27,7 +27,7 @@ export default function UspPopupWrapper({ data }: { data: { description: string 
   }, [data.length]);
 
   return (
-    <ul className="flex flex-col absolute left-[32px] top-[50px] gap-4 items-start text-left z-[60]">
+    <ul className="flex flex-col absolute left-[32px] bottom-[170px] gap-4 items-start text-left z-[60]">
       <AnimatePresence initial={false}>
         {displayItems.map((item, index) => (
           <motion.li
@@ -37,7 +37,7 @@ export default function UspPopupWrapper({ data }: { data: { description: string 
             exit={{ opacity: 0, x: 20 }}
             transition={{ duration: 0.35 }}
             layout // 레이아웃 변경 시 자연스러운 이동
-            className="flex justify-start items-center gap-2 text-white font-semibold max-w-[21vw] bg-black/5 backdrop-blur-2xl p-4 rounded-[24px] overflow-hidden relative"
+            className="flex justify-start items-center gap-2 text-white font-semibold max-w-[21vw] bg-black/5 backdrop-blur-2xl rounded-[24px] overflow-hidden relative px-[24px] py-[12px]"
             style={{
               backgroundClip: 'padding-box',
             }}
@@ -53,43 +53,49 @@ export default function UspPopupWrapper({ data }: { data: { description: string 
                 maskComposite: 'exclude',
               }}
             />
-            <div className="w-[32px] h-[32px] flex items-center justify-center shrink-0 relative z-10">
-              <Lottie
-                key={`lottie-${item.id}`}
-                animationData={JSON.parse(JSON.stringify(loaderAnimation))}
-                loop={false}
-                autoplay={!item.hasPlayed} // 이미 재생된 경우 자동재생 안함
-                style={{ width: '100%', height: '100%' }}
-                rendererSettings={{
-                  preserveAspectRatio: 'xMidYMid slice'
+
+            <div className="flex flex-col items-center justify-center pr-[24px]">
+              <div className="w-[32px] h-[32px] flex items-center justify-center shrink-0 relative z-10">
+                <Lottie
+                  key={`lottie-${item.id}`}
+                  animationData={JSON.parse(JSON.stringify(loaderAnimation))}
+                  loop={false}
+                  autoplay={!item.hasPlayed} // 이미 재생된 경우 자동재생 안함
+                  style={{ width: '120%', height: '120%' }}
+                  rendererSettings={{
+                    preserveAspectRatio: 'xMidYMid slice'
+                  }}
+                  initialSegment={item.hasPlayed ? [loaderAnimation.op - 1, loaderAnimation.op] : undefined} // 재생된 경우 마지막 프레임으로
+                  onComplete={() => {
+                    // 애니메이션 완료 시 hasPlayed를 true로 설정
+                    setDisplayItems(prev => 
+                      prev.map(prevItem => 
+                        prevItem.id === item.id 
+                          ? { ...prevItem, hasPlayed: true }
+                          : prevItem
+                      )
+                    );
+                  }}
+                />
+                
+              </div>
+
+              <b 
+                className="text-[14px] whitespace-nowrap relative z-10 bg-gradient-to-rbg-clip-text text-transparent opacity-90"
+                style={{
+                  background: 'linear-gradient(-90deg, #4C8BFF 0%, #F7B094 72%, #FFC73B 100%)',
+                  WebkitBackgroundClip: 'text',
+                  backgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
                 }}
-                initialSegment={item.hasPlayed ? [loaderAnimation.op - 1, loaderAnimation.op] : undefined} // 재생된 경우 마지막 프레임으로
-                onComplete={() => {
-                  // 애니메이션 완료 시 hasPlayed를 true로 설정
-                  setDisplayItems(prev => 
-                    prev.map(prevItem => 
-                      prevItem.id === item.id 
-                        ? { ...prevItem, hasPlayed: true }
-                        : prevItem
-                    )
-                  );
-                }}
-              />
+              >
+                AI 제안
+              </b>
             </div>
+
 
             <span className="relative z-10">{item.description}</span>
 
-            <b 
-              className="whitespace-nowrap ml-4 relative z-10 bg-gradient-to-rbg-clip-text text-transparent opacity-90"
-              style={{
-                background: 'linear-gradient(-90deg, #4C8BFF 0%, #F7B094 72%, #FFC73B 100%)',
-                WebkitBackgroundClip: 'text',
-                backgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-              }}
-            >
-              AI 제안
-            </b>
           </motion.li>
         ))}
       </AnimatePresence>

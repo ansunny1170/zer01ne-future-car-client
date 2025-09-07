@@ -10,6 +10,7 @@ import { useState } from "react";
 import StepComplete from "../components/steps/step-complete";
 import BottomLayout from "../components/fixed-layout/bottom-layout";
 import TopLayout from "@/components/fixed-layout/top-layout";
+import { IS_PRD } from "@/constants";
 
 export default function Home() {
   const [debug, setDebug] = useState(false);
@@ -111,31 +112,35 @@ export default function Home() {
         {renderStep()}
       </AnimatePresence>
 
-      <div>
-        <button
-          className="absolute top-1/3 left-4 bg-white text-black px-4 py-2 rounded-md z-[999]"
-          onClick={() => {
-            goPrevStep();
-          }}
-        >
-          {stepInfo?.step}
-        </button>
+      {
+        !IS_PRD && (
+          <div>
+            <button
+              className="absolute top-1/3 left-4 bg-white text-black px-4 py-2 rounded-md z-[999]"
+              onClick={() => {
+                goPrevStep();
+              }}
+            >
+              {stepInfo?.step}
+            </button>
 
-        <div className="absolute top-1/3 left-16 max-h-[90vh] overflow-y-auto bg-white max-w-1/2 text-black px-4 py-2 rounded-md z-[999]"> 
-          <button
-            onClick={() => {
-              setDebug(!debug);
-            }}
-          >
-            step info 디버깅
-          </button>
-          {debug && (
-            <pre className="h-[40vh] overflow-y-auto">
-              {JSON.stringify(stepInfo, null, 2)}
-            </pre>
-          )}
-        </div>
-      </div>
+            <div className="absolute top-1/3 left-16 max-h-[90vh] overflow-y-auto bg-white max-w-1/2 text-black px-4 py-2 rounded-md z-[999]"> 
+              <button
+                onClick={() => {
+                  setDebug(!debug);
+                }}
+              >
+                step info 디버깅
+              </button>
+              {debug && (
+                <pre className="h-[40vh] overflow-y-auto">
+                  {JSON.stringify(stepInfo, null, 2)}
+                </pre>
+              )}
+            </div>
+          </div>
+        )
+      }
     </div>
   );
 }

@@ -30,7 +30,7 @@ export default function Step0({ dafultComment }: { dafultComment?: string }) {
     const handleKeyDown = (event: KeyboardEvent) => {
       // S키의 키코드 (83) 또는 한글 'ㄴ' 키를 눌렀을 때
       if ((event.code === 'KeyS') && !isProcessing) {
-        handleSpeechTrigger("시작합시다");
+        handleSpeechTrigger(dafultComment || "시작하자");
       }
     };
 
@@ -43,21 +43,17 @@ export default function Step0({ dafultComment }: { dafultComment?: string }) {
 
   return (
     <div className="pl-8 absolute inset-0 text-white">
-      <motion.div
-        initial={{ opacity: 0, y: 0}}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1 }}
-        className="animate-fade-in absolute inset-0 flex flex-col items-center justify-center backdrop-blur-lg bg-black/10 z-[22]"
+      <div
+        className="animate-fade-in absolute inset-0 flex flex-col items-center justify-center bg-black/10 z-[22]"
       >
-        <HyundaiLoading size={177}/>
+        {/* <HyundaiLoading size={177}/>
         <TextSplitAnimation delay={0.5} text="안녕하세요, 클론-21g입니다." className="text-center text-[83px] font-bold text-shadow-lg"/>
         <p className="text-center text-[36px] pt-[55px]">
           실시간 생성형 AI 체험에 오신 걸 환영합니다.<br/>
           이 체험은 대화로 진행됩니다.<br/>
           시작해 볼까요?
-        </p>
-
-      </motion.div>
+        </p> */}
+      </div>
     </div>
   );
 }
