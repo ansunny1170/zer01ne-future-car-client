@@ -82,7 +82,7 @@ export default function StepVideoPlayer({ className }:
                     }
                 }}
                 className={`w-full h-full object-cover absolute inset-0 z-0 transition-all duration-[2000ms] ${
-                    hasCurrentPlayedOnce ? 'blur-lg' : ''
+                    hasCurrentPlayedOnce && stepInfo?.step ? 'blur-lg' : ''
                 }`}
             />
             {/* Previous video (fades out above) */}
@@ -103,7 +103,7 @@ export default function StepVideoPlayer({ className }:
                     }}
                     className={`w-full h-full object-cover absolute inset-0 transition-all duration-800 z-10 ${
                         isTransitioning ? 'opacity-0 scale-150' : 'opacity-100 scale-100'
-                    } ${hasPreviousPlayedOnce ? 'blur-lg' : ''}`}
+                    } ${hasPreviousPlayedOnce && stepInfo?.step ? 'blur-lg' : ''}`}
                 />
             )}
         </div>

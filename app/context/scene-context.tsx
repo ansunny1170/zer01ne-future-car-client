@@ -75,6 +75,10 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
 
     if (!stepInfo?.step){
       setVideoPath("intro1_1.mp4");
+    } 
+
+    if (stepInfo?.step === 1) {
+      setVideoPath("intro 01.mp4");
     }
     
     // stepInfo 변경 시 sfxPath 초기화 - null로 설정
