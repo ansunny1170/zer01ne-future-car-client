@@ -73,8 +73,8 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
     setVideoPath(stepInfo?.bgv?.file_name || bgvDict[Math.floor(Math.random() * bgvDict.length)].file_name || null );
     setBgmPath(stepInfo?.bgm?.file_name || bgmDict[Math.floor(Math.random() * bgmDict.length)].file_name || null);
 
-    if (stepInfo?.step === 1){
-      setVideoPath("intro 01.mp4");
+    if (!stepInfo?.step){
+      setVideoPath("intro1_1.mp4");
     }
     
     // stepInfo 변경 시 sfxPath 초기화 - null로 설정

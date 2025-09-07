@@ -7,7 +7,7 @@ export default function StepVideoPlayer({ className }:
     {
         className?: string
     }) {
-    const { videoPath } = useScene();
+    const { videoPath, stepInfo } = useScene();
     const BASE_URL = BASE_S3_LINK;
     const nextVideoPath = videoPath ? `${videoPath}` : null;
     const [currentVideoPath, setCurrentVideoPath] = useState<string | null>(nextVideoPath);
@@ -70,8 +70,8 @@ export default function StepVideoPlayer({ className }:
                 key={currentVideoPath}
                 src={`${BASE_URL}/${currentVideoPath}`}
                 autoPlay
-                muted
-                loop
+                muted = {stepInfo?.step ? true : false}
+                loop = {stepInfo?.step ? true : false}
                 playsInline
                 preload='auto'
                 onCanPlay={() => setIsCurrentReady(true)}
@@ -91,7 +91,7 @@ export default function StepVideoPlayer({ className }:
                     key={previousVideoPath}
                     src={`${BASE_URL}/${previousVideoPath}`}
                     autoPlay
-                    muted
+                    muted = {stepInfo?.step ? true : false}
                     loop
                     playsInline
                     preload='auto'
