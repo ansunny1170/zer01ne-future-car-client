@@ -90,6 +90,7 @@ export interface FunctionPopup {
 export interface HudPopup {
     type: AssetsType.HUD_POPUP,
     description: string,
+    id: string,
 }
 export interface VehicleSoundEffect {
     type: AssetsType.VEHICLE_SOUND_EFFECT,
