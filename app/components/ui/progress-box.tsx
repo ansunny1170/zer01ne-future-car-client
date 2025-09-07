@@ -1,19 +1,28 @@
 /* eslint-disable @next/next/no-img-element */
 import { useScene } from "@/context/scene-context";
+import { useState, useEffect } from "react";
 
 export default function ProgressBox() {
   const {stepInfo} = useScene();
   const progress = Number(stepInfo?.step);
   const totalStep = 7;
+  const [currentSpeed, setCurrentSpeed] = useState(60);
+
+  // 60~70 범위에서 천천히 랜덤 속도 변경
+  useEffect(() => {
+    const speedInterval = setInterval(() => {
+      // 60 ~ 70 범위에서 정수 랜덤 값 생성
+      const randomSpeed = Math.floor(Math.random() * 5) + 60;
+      setCurrentSpeed(randomSpeed);
+    }, 2000 + Math.random() * 3000); // 2~5초 간격으로 변경
+
+    return () => clearInterval(speedInterval);
+  }, []);
   
   return (
     <div className="flex gap-[48px] items-center justify-between text-center text-white">
       <div className="opacity-90 flex">
-        <p className="flex items-center justify-center -translate-y-[48px]">
-          <img src="/assets/images/icon_handle.svg" alt="progress-box" className="w-[36px] h-[36px]" />
-        </p>
-
-        <p className="text-[65px] font-semibold pl-[30px] pr-[20px]">68</p>
+        <p id="progress-box-speed" className="text-[65px] font-semibold pl-[30px] pr-[20px]">{currentSpeed}</p>
 
         <div className="flex flex-col items-center justify-center leading-[1.4]">
           <p className="text-[20px] text-[#FF3826] font-bold">100</p>

@@ -64,7 +64,7 @@ export default function MusicPlayerBox({ className }: MusicPlayerBoxProps) {
   }, [stepInfo?.bgm?.file_name]);
 
   return (
-    <div className={cn("flex items-center p-[16px] gap-[16px] text-white", className)}>
+    <div className={cn("flex items-center p-[16px] gap-[16px] text-white backdrop-blur-lg rounded-[24px]", className)}>
         <div className="w-[62px] h-[62px] rounded-[7px] bg-[#C6C6C6]/20 grow flex items-center justify-center relative overflow-hidden">
           {imageLoaded && !imageError ? (
             <img 
@@ -98,7 +98,7 @@ export default function MusicPlayerBox({ className }: MusicPlayerBoxProps) {
               {artistName}
             </p>
         </div>
-        <div className="opacity-70">
+        <div className="opacity-70 pl-[20px]">
           <PlayerButtons />
         </div>
     </div>
