@@ -7,7 +7,7 @@ export default function StepVideoPlayer({ className }:
     {
         className?: string
     }) {
-    const { videoPath } = useScene();
+    const { videoPath, stepInfo } = useScene();
     const BASE_URL = BASE_S3_LINK;
     const nextVideoPath = videoPath ? `${videoPath}` : null;
     const [currentVideoPath, setCurrentVideoPath] = useState<string | null>(nextVideoPath);
@@ -70,8 +70,8 @@ export default function StepVideoPlayer({ className }:
                 key={currentVideoPath}
                 src={`${BASE_URL}/${currentVideoPath}`}
                 autoPlay
-                muted
-                loop
+                muted = {stepInfo?.step ? true : false}
+                loop = {stepInfo?.step ? true : false}
                 playsInline
                 preload='auto'
                 onCanPlay={() => setIsCurrentReady(true)}
@@ -82,7 +82,7 @@ export default function StepVideoPlayer({ className }:
                     }
                 }}
                 className={`w-full h-full object-cover absolute inset-0 z-0 transition-all duration-[2000ms] ${
-                    hasCurrentPlayedOnce ? 'blur-lg' : ''
+                    hasCurrentPlayedOnce && stepInfo?.step ? 'blur-lg' : ''
                 }`}
             />
             {/* Previous video (fades out above) */}
@@ -91,7 +91,7 @@ export default function StepVideoPlayer({ className }:
                     key={previousVideoPath}
                     src={`${BASE_URL}/${previousVideoPath}`}
                     autoPlay
-                    muted
+                    muted = {stepInfo?.step ? true : false}
                     loop
                     playsInline
                     preload='auto'
@@ -103,7 +103,7 @@ export default function StepVideoPlayer({ className }:
                     }}
                     className={`w-full h-full object-cover absolute inset-0 transition-all duration-800 z-10 ${
                         isTransitioning ? 'opacity-0 scale-150' : 'opacity-100 scale-100'
-                    } ${hasPreviousPlayedOnce ? 'blur-lg' : ''}`}
+                    } ${hasPreviousPlayedOnce && stepInfo?.step ? 'blur-lg' : ''}`}
                 />
             )}
         </div>
