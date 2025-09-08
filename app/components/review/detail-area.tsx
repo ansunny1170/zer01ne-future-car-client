@@ -66,14 +66,14 @@ export default function DetailArea({ selectedItem }: DetailAreaProps) {
         <div 
             ref={scrollRef} 
             onScroll={handleScroll}
-            className="w-1/3 h-full bg-white shrink-0 overflow-y-auto custom-scrollbar"
+            className="w-1/3 h-full bg-[#E9E7E6] shrink-0 overflow-y-auto custom-scrollbar"
             style={{
                 '--scrollbar-opacity': showScrollbar && isScrollable ? '0.5' : '0',
                 scrollbarWidth: 'thin',
                 scrollbarColor: `rgba(0, 0, 0, ${showScrollbar && isScrollable ? 0.5 : 0}) transparent`,
             } as React.CSSProperties & { '--scrollbar-opacity': string }}
         >
-            <div className="pt-[24px] px-[14px] sticky top-0 bg-white text-[40px]">
+            <div className="pt-[24px] px-[14px] sticky top-0 bg-[#E9E7E6] text-[40px]">
                 <h1 className="px-[12px] pb-[12px] text-[32px] font-bold border-b border-black">생성된 체험 이벤트 아카이브</h1>
             </div>
             {selectedItem ? (
