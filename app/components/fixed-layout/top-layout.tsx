@@ -7,10 +7,20 @@ import { motion } from "framer-motion";
 
 /* eslint-disable @next/next/no-img-element */
 export default function TopLayout() {
-    const {stepNumber} = useScene();
+    const {stepInfo,stepNumber} = useScene();
+    const passenger_count = stepInfo?.passenger_state?.total || 1;
 
     return (
         <div className="absolute inset-0 z-[6] perspective-1000">
+            {/* 상단 좌측 영역 */}
+            {
+                stepNumber > 1 && (
+                    <div className="fixed left-[40px] top-[66px] z-20">
+                        <img src={`/assets/images/img_topview_0${passenger_count}.svg`} alt="fixed-layout" className="w-[68px]" />
+                    </div>
+                )
+            }
+
             {/* 상단 우측 영역 */}
             <div className="z-[20] drop-shadow-[0_0_10px_rgba(0,0,0,0.5)] text-white/[0.6] text-[23px] font-semibold pt-[52px] pr-[38px] fixed left-0 top-0 w-full flex justify-end">
                 <div className="flex justify-end items-center gap-[24px]">
