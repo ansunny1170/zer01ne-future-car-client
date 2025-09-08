@@ -56,6 +56,7 @@ export interface PassengerState {
     user: number,
     companion1: number,
     companion2: number,
+    total: number,
 }
 export interface BackgroundVideo {
     type: AssetsType.VIDEO,
