@@ -18,6 +18,7 @@ export default function StepVideoPlayer({ className }:
     const [hasPreviousPlayedOnce, setHasPreviousPlayedOnce] = useState(false);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
     const prevNextVideoPathRef = useRef(nextVideoPath);
+    const noLoop = !stepInfo?.step || (stepInfo?.step && stepInfo?.step < 2) ? false : true;
 
     useEffect(() => {
         // nextVideoPath가 변경될 때만 비디오 전환
@@ -70,8 +71,8 @@ export default function StepVideoPlayer({ className }:
                 key={currentVideoPath}
                 src={`${BASE_URL}/${currentVideoPath}`}
                 autoPlay
-                muted = {stepInfo?.step ? true : false}
-                loop = {stepInfo?.step ? true : false}
+                muted = {noLoop}
+                loop = {noLoop}
                 playsInline
                 preload='auto'
                 onCanPlay={() => setIsCurrentReady(true)}
@@ -82,7 +83,7 @@ export default function StepVideoPlayer({ className }:
                     }
                 }}
                 className={`w-full h-full object-cover absolute inset-0 z-0 transition-all duration-[2000ms] ${
-                    hasCurrentPlayedOnce && stepInfo?.step ? 'blur-lg' : ''
+                    hasCurrentPlayedOnce && noLoop ? 'blur-lg' : ''
                 }`}
             />
             {/* Previous video (fades out above) */}
@@ -91,7 +92,7 @@ export default function StepVideoPlayer({ className }:
                     key={previousVideoPath}
                     src={`${BASE_URL}/${previousVideoPath}`}
                     autoPlay
-                    muted = {stepInfo?.step ? true : false}
+                    muted = {noLoop}
                     loop
                     playsInline
                     preload='auto'
@@ -103,7 +104,7 @@ export default function StepVideoPlayer({ className }:
                     }}
                     className={`w-full h-full object-cover absolute inset-0 transition-all duration-800 z-10 ${
                         isTransitioning ? 'opacity-0 scale-150' : 'opacity-100 scale-100'
-                    } ${hasPreviousPlayedOnce && stepInfo?.step ? 'blur-lg' : ''}`}
+                    } ${hasPreviousPlayedOnce && noLoop ? 'blur-lg' : ''}`}
                 />
             )}
         </div>

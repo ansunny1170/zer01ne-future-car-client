@@ -55,7 +55,7 @@ export default function UspPopupWrapper({ data }: { data: { description: string 
             />
 
             <div className="flex flex-col items-center justify-center pr-[24px]">
-              <div className="w-[32px] h-[32px] flex items-center justify-center shrink-0 relative z-10">
+              <div className="w-[42px] h-[42px] flex items-center justify-center shrink-0 relative z-10">
                 <Lottie
                   key={`lottie-${item.id}`}
                   animationData={JSON.parse(JSON.stringify(loaderAnimation))}

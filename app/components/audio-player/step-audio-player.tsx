@@ -21,9 +21,9 @@ export default function StepAudioPlayer() {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, []);
 
-    // stepInfo?.step 유무에 따른 볼륨 조절
+    // stepInfo?.step 조건에 따른 볼륨 조절
     useEffect(() => {
-        const targetVolume = stepInfo?.step ? 0.85 : 0.4; // step 있으면 85%, 없으면 40%
+        const targetVolume = (!stepInfo?.step || stepInfo.step < 2) ? 0.4 : 0.85; // step 없거나 2 미만이면 40%, 나머지는 85%
         
         if (targetVolume === currentVolume) return;
         

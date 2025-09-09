@@ -3,7 +3,7 @@ import { cn } from "@/utils/cn";
 export default function BasicPopupBox({children, type = "warm", className}: {children: React.ReactNode, type?: "warm" | "cold", className?: string}) {
 
   return (
-    <div className="relative w-fit rounded-[32px] overflow-hidden text-white shadow-2xl/50">  
+    <div className="relative w-fit rounded-[32px] overflow-hidden text-white box-shadow-2xl/50">  
           {/* 그라데이션 */}
           <p className={cn(
             "absolute inset-0 scale-[calc(100%+2px)] blur-lg opacity-40 transition-all duration-300",
