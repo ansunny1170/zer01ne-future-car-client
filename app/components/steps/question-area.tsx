@@ -81,7 +81,7 @@ export default function QuestionArea({
 
             {
                 isProcessing && (
-                    <div className="fixed top-[5%] w-full flex flex-col items-center justify-center">
+                    <div className="fixed top-[5%] w-full flex flex-col items-center justify-center drop-shadow-2xl">
                         <HyundaiLoading size={177} text="더 좋은 응답을 위해 생각하는 중입니다..."/>
                     </div>
                 )
