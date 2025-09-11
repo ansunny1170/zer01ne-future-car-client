@@ -318,4 +318,11 @@ export const Icons = {
             </svg>
         )
     },
+    filledArrowRight: () => {
+        return (
+            <svg width="8" height="9" viewBox="0 0 8 9" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path opacity="0.5" d="M0.933594 1.05746C0.933594 0.223032 1.89529 -0.244384 2.55142 0.271145L6.93283 3.71368C7.4424 4.11406 7.4424 4.88594 6.93283 5.28632L2.55141 8.72886C1.89529 9.24439 0.933594 8.77697 0.933594 7.94254V1.05746Z" fill="white"/>
+            </svg>
+        )
+    },
 }
