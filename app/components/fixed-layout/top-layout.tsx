@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 /* eslint-disable @next/next/no-img-element */
 export default function TopLayout() {
     const {stepInfo,stepNumber} = useScene();
-    const passenger_count = stepInfo?.passenger_state?.total || 1;
+    const passenger_count = stepInfo?.passenger_state?.total || 0;
 
     return (
         <div className="absolute inset-0 z-[6] perspective-1000">

@@ -7,7 +7,6 @@ import UspPopupWrapper from "../ui/usp-popup-wrapper";
 import CloneTalkSplit from "../ui/clone-talk-split";
 import HudLayer from "../ui/popup_ui/hud-layer";
 
-
 export default function StepRepeat({ dafultComment }: { dafultComment?: string }) {
     const BASE_URL = BASE_S3_LINK;
     const { stepInfo, setSfxPath, setOnSfxComplete } = useScene();
@@ -288,6 +287,8 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
 
     return (
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+            <div className="fixed inset-0 h-1/3 bg-[linear-gradient(to_top,rgba(0,0,0,0)_0%,rgba(0,0,0,0.35)_100%)]"/>
+
             {renderContent()}
 
             <UspPopupWrapper data={currentUspPool} />

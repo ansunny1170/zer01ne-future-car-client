@@ -6,7 +6,7 @@ export default function StepAudioPlayer() {
     // 키보드 아무키나 누르면 audio태그 활성화
     const [isSfxActive, setIsSfxActive] = useState(false);
     const [isBgmActive, setIsBgmActive] = useState(false);
-    const [currentVolume, setCurrentVolume] = useState(0.4); // 초기 볼륨 40%
+    const [currentVolume, setCurrentVolume] = useState(0.3); // 초기 볼륨 40%
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const bgmRef = useRef<HTMLAudioElement>(null);
     const BASE_URL = BASE_S3_LINK;
@@ -21,9 +21,9 @@ export default function StepAudioPlayer() {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, []);
 
-    // stepInfo?.step 유무에 따른 볼륨 조절
+    // stepInfo?.step 조건에 따른 볼륨 조절
     useEffect(() => {
-        const targetVolume = stepInfo?.step ? 0.85 : 0.4; // step 있으면 85%, 없으면 40%
+        const targetVolume = (!stepInfo?.step || stepInfo.step < 2) ? 0.3 : 0.85; // step 없거나 2 미만이면 30%, 나머지는 85%
         
         if (targetVolume === currentVolume) return;
         
@@ -102,7 +102,7 @@ export default function StepAudioPlayer() {
         console.log('Playing audio:', audioUrl);
         
         audioRef.current = new Audio(audioUrl);
-        audioRef.current.volume = currentVolume; // 현재 동적 볼륨으로 설정
+        audioRef.current.volume = 1.0; // SFX는 항상 최대 볼륨
         audioRef.current.onerror = (error) => {
             console.error('Audio load error:', error);
             console.error('Failed URL:', audioUrl);
@@ -116,7 +116,7 @@ export default function StepAudioPlayer() {
         audioRef.current.onended = () => {
             playSequential(list, idx + 1);
         };
-    }, [BASE_URL, onSfxComplete, currentVolume]);
+    }, [BASE_URL, onSfxComplete]);
 
     useEffect(() => {
         if (!isSfxActive) return;
