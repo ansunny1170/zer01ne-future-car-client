@@ -11,6 +11,7 @@ import StepComplete from "../components/steps/step-complete";
 import BottomLayout from "../components/fixed-layout/bottom-layout";
 import TopLayout from "@/components/fixed-layout/top-layout";
 import { IS_PRD } from "@/constants";
+import Step1 from "@/components/steps/step1";
 
 export default function Home() {
   const [debug, setDebug] = useState(false);
@@ -47,7 +48,7 @@ export default function Home() {
             exit="exit"
             transition={{ duration: 0.05 }}
           >
-            <StepRepeat dafultComment="제로원 팀원들이랑 다같이 야구보러 갔다가 제로원데이전시보러 가려고"/>
+            <Step1 dafultComment="제로원 팀원들이랑 다같이 야구보러 갔다가 제로원데이전시보러 가려고"/>
           </motion.div>
         );
       case 6:

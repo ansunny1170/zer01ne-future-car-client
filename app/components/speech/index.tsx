@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
@@ -281,8 +282,8 @@ export default function Speech({ onTrigger, isProcessing, defaultComment }: { on
     isProcessing ? (
       <HyundaiLoading/>
     ) : (
-    <div className="flex flex-col gap-4 items-center justify-center max-w-[80vw]">
-      <div className='flex items-center justify-center gap-4 p-4 backdrop-blur-2xl rounded-full bg-[#003A66]/30 text-[#9DE6FF]'>
+    <div className="flex flex-col gap-[25px] items-center justify-center max-w-[80vw]">
+      <div className='flex items-center justify-center gap-4 p-4 backdrop-blur-2xl rounded-full bg-[#003A66]/30 text-[#9DE6FF] text-[20px]'>
         <span className={cn('animate-pulse', isListening && 'animate-in')}>
           <Icons.leftQuote/>
         </span>
@@ -295,6 +296,15 @@ export default function Speech({ onTrigger, isProcessing, defaultComment }: { on
         }
         <span className={cn('animate-pulse', isListening && 'animate-in')}>
           <Icons.rightQuote/>
+        </span>
+      </div>
+
+      <div className='flex items-center gap-[8px]'>
+        <img src={isListening ? "/assets/images/icon_mic_on.svg" : "/assets/images/icon_mic_off.svg"} alt="mic" className='w-[34px]' />
+        <span className='text-[18px] text-shadow-sm text-white'>
+          {
+            isListening ? '버튼을 길게 누르면 메시지가 전달됩니다' : '버튼을 누르면 마이크가 켜집니다'
+          }
         </span>
       </div>
     </div>
