@@ -148,7 +148,7 @@ export default function Speech({ onTrigger, isProcessing, defaultComment }: { on
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key.toLowerCase() === 's' || event.key.toLowerCase() === 'ㄴ') {
+      if (event.code === 'KeyS') {
         event.preventDefault()
         
         // 이미 키가 눌려있다면 무시 (키 반복 방지)
@@ -172,7 +172,7 @@ export default function Speech({ onTrigger, isProcessing, defaultComment }: { on
     }
 
     const handleKeyUp = (event: KeyboardEvent) => {
-      if (event.key.toLowerCase() === 's' || event.key.toLowerCase() === 'ㄴ') {
+      if (event.code === 'KeyS') {
         event.preventDefault()
         
         // 길게 누름 타이머가 있으면 취소
