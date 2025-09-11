@@ -1,61 +1,64 @@
-import { STEP_DUMMY } from "@/utils/constants";
-import MovingCards from "../moving-cards";
+import { useScene } from "@/context/scene-context";
+import QuestionArea from "./question-area";
+import DummySpeech from "../speech/dummy-speech";
 import { motion } from "framer-motion";
+import { useEffect, useRef } from "react";
 
-export default function Step1() {
-    
-    // Framer Motion variants
-    const container = {
-        hidden: { opacity: 1 },
-        visible: {
-            opacity: 1,
-            transition: {       
-                staggerChildren: 0.1,  // 글자 간 딜레이 조정
-                delayChildren: 0.3     // 전체 시작 전 딜레이
+const DummyText = [
+    "{이름}과 함께 바다 구경가고 싶어",
+    "아이와 함께 캠핑 가고 싶어",
+    "혼자서 사무실 갔다가 등산 가자",
+    "{이름}을 픽업하고 제로원 전시에 가자",
+]
+
+export default function Step1({ dafultComment }: { dafultComment?: string }) {
+    const { stepInfo } = useScene();
+    const { question, choices } = stepInfo || {};
+
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.code === 'KeyS') {
+                event.stopPropagation();
+                event.preventDefault();
+                
+                const videos = document.querySelectorAll('video');
+                videos.forEach(video => {
+                    video.muted = true;
+                });
             }
-        }
-    };
+        };
 
-    const letterVariants = {
-        hidden: {
-            opacity: 0,
-        },
-        visible: {
-            opacity: 1,
-            transition: {
-                duration: 0.3  // 각 글자 페이드인 시간
-            }
-        }
-    };
+        window.addEventListener('keydown', handleKeyDown, { capture: true });
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown, { capture: true });
+        };
+    }, []);
 
-    // 텍스트를 한 글자씩 분리
-    const text = STEP_DUMMY[1].text;
-    const chars = text.split('').map((char, index) => {
-        if (char === '\n') return <br key={`br-${index}`} />;
-        if (char === ' ') return <span key={`space-${index}`}>&nbsp;</span>;
-        return (
-            <motion.span
-                key={index}
-                variants={letterVariants}
-                className="inline-block text-3xl font-extrabold"  // 글자 간격 유지를 위해 추가
-            >
-                {char}
-            </motion.span>
-        );
-    });
-    
     return (
-        <div className="animate-fade-in absolute inset-0 text-amber-50 text-xl flex flex-col items-center justify-center text-center">
-            <motion.h1
-                className="text-2xl font-bold text-white mb-8"
-                variants={container}
-                initial="hidden"
-                animate="visible"
-            >
-                {chars}
-            </motion.h1>
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+            <div className="fixed inset-0 h-1/3 bg-[linear-gradient(to_top,rgba(0,0,0,0)_0%,rgba(0,0,0,0.35)_100%)]"/>
+            <QuestionArea 
+                mainText={question || ""} 
+                buttons={(choices || []).reduce((acc, choice) => {
+                    acc[choice?.usp || ""] = choice?.description || "";
+                    return acc;
+                }, {} as { [key: string]: string })} 
+                defaultComment={dafultComment}
+            />
 
-            <MovingCards/>
+            {/* DummySpeechLayer */}
+            <ul className="absolute bottom-[120px] flex gap-[16px] w-[80%] items-center justify-center flex-wrap">
+                {DummyText.map((text, index) => (
+                    <motion.li 
+                        key={index}
+                        initial={{ opacity: 0, y: 100 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 1, ease: "easeInOut", delay: index * 0.2, staggerChildren: 0.2 }}
+                    >
+                        <DummySpeech dummyText={text} />
+                    </motion.li>
+                ))}
+            </ul>
         </div>
     );
 }

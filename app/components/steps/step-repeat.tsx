@@ -7,7 +7,6 @@ import UspPopupWrapper from "../ui/usp-popup-wrapper";
 import CloneTalkSplit from "../ui/clone-talk-split";
 import HudLayer from "../ui/popup_ui/hud-layer";
 
-
 export default function StepRepeat({ dafultComment }: { dafultComment?: string }) {
     const BASE_URL = BASE_S3_LINK;
     const { stepInfo, setSfxPath, setOnSfxComplete } = useScene();
@@ -304,8 +303,6 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
                     defaultComment={dafultComment}
                 />
             )}
-
-            
         </div>
     );
 }

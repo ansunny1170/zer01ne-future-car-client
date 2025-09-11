@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import { useScene } from "@/context/scene-context";
+import { Icons } from "./icons";
 
 export default function NavigationBox() {
   const {stepInfo} = useScene();
@@ -10,30 +11,13 @@ export default function NavigationBox() {
             <img src="/assets/images/icon_flag.svg" alt="navigation-box" className="w-[21px]" />
         </div>
 
-        <div className="flex gap-[14px] items-center whitespace-nowrap text-[20px]">
+        <div className="flex gap-[8px] items-center whitespace-nowrap text-[20px]">
           <p className="text-[14px]">{stepInfo?.path_state?.detour1 || ''}</p>
-          <p>→</p>
+          <p><Icons.filledArrowRight /></p>
           <p className="text-[14px]">{stepInfo?.path_state?.detour2 || ''}</p>
-          <p>→</p>
+          <p><Icons.filledArrowRight /></p>
           <p className="text-[14px]">{stepInfo?.path_state?.destination || ''}</p>
         </div>
-
-
-        {/* <div className="leading-[1.4] whitespace-nowrap">
-            <p className="text-[20px] font-bold opacity-90">{stepInfo?.path_state?.destination || ''}</p>
-            <div className="flex items-center gap-[4px] opacity-80">
-              <p className="text-[14px]">{stepInfo?.path_state?.detour1 || ''}</p>
-
-              {
-                stepInfo?.path_state?.detour2 && (
-                  <>
-                    <p>→</p>
-                    <p className="text-[14px]">{stepInfo?.path_state?.detour2 || ''}</p>
-                  </>
-                )
-              }
-            </div>
-        </div> */}
     </div>
   );
 } 

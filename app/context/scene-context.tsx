@@ -71,7 +71,16 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     setStepInfo(stepInfo);
     setVideoPath(stepInfo?.bgv?.file_name || bgvDict[Math.floor(Math.random() * bgvDict.length)].file_name || null );
-    setBgmPath(stepInfo?.bgm?.file_name || bgmDict[Math.floor(Math.random() * bgmDict.length)].file_name || null);
+    
+    // step이 undefined이거나 1일 때는 동일한 BGM 유지, 그 외에는 새로운 BGM
+    if (stepInfo?.step === undefined || stepInfo?.step === 1) {
+      // 이미 BGM이 설정되어 있다면 유지, 없다면 첫 번째 BGM 사용
+      if (!bgmPath) {
+        setBgmPath(bgmDict[Math.floor(Math.random() * bgmDict.length)].file_name);
+      }
+    } else {
+      setBgmPath(stepInfo?.bgm?.file_name || bgmDict[Math.floor(Math.random() * bgmDict.length)].file_name || null);
+    }
 
     if (!stepInfo?.step){
       setVideoPath("intro1_1.mp4");
