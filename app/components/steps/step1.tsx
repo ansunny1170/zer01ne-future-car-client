@@ -2,6 +2,7 @@ import { useScene } from "@/context/scene-context";
 import QuestionArea from "./question-area";
 import DummySpeech from "../speech/dummy-speech";
 import { motion } from "framer-motion";
+import { useEffect, useRef } from "react";
 
 const DummyText = [
     "{이름}과 함께 바다 구경가고 싶어",
@@ -13,6 +14,25 @@ const DummyText = [
 export default function Step1({ dafultComment }: { dafultComment?: string }) {
     const { stepInfo } = useScene();
     const { question, choices } = stepInfo || {};
+
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.code === 'KeyS') {
+                event.stopPropagation();
+                event.preventDefault();
+                
+                const videos = document.querySelectorAll('video');
+                videos.forEach(video => {
+                    video.muted = true;
+                });
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown, { capture: true });
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown, { capture: true });
+        };
+    }, []);
 
     return (
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
