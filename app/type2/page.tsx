@@ -14,7 +14,7 @@ import { IS_PRD } from "@/constants";
 
 export default function Home() {
   const [debug, setDebug] = useState(false);
-  const { stepNumber, setStepNumber, lastSceneNumber, goPrevStep, stepInfo } = useScene();
+  const { stepNumber, goPrevStep, stepInfo } = useScene();
 
   const fadeVariants = {
     initial: { opacity: 0 },
@@ -47,7 +47,7 @@ export default function Home() {
             exit="exit"
             transition={{ duration: 0.05 }}
           >
-            <StepRepeat dafultComment="아이랑 산으로 캠핑"/>
+            <StepRepeat dafultComment="제로원 팀원들이랑 다같이 야구보러 갔다가 제로원데이전시보러 가려고"/>
           </motion.div>
         );
       case 6:
