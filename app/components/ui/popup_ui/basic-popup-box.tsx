@@ -16,6 +16,7 @@ export default function BasicPopupBox({children, type = "warm", className}: {chi
           <p className="absolute inset-0 [mask-image:linear-gradient(to_top,white_0%,transparent_100%)] backdrop-blur-2xl"/>
           {/* 기본블러 */}
           <p className="absolute inset-0 [mask-image:linear-gradient(to_top,white_0%,transparent_100%)] backdrop-blur-2xl"/>
+          <p className="absolute inset-0 [mask-image:linear-gradient(to_top,white_0%,transparent_100%)] backdrop-blur-3xl"/>
           {/* 기본 테두리 */}
           <p className="absolute inset-0 border-[1.5px] border-white/40 bg-white/10 rounded-[32px] [mask-image:linear-gradient(to_top,black_0%,transparent_80%)]"/>
           {/* overlay 테두리 */}

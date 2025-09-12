@@ -33,7 +33,7 @@ export default function TopLayout() {
             </div>
 
             {/* 하단 좌측 영역 */}
-            <div className="fixed right-1/2 bottom-[40px] -translate-x-[7.5vw] flex gap-[21px]">
+            <div className="fixed right-1/2 bottom-[40px] -translate-x-[10vw] flex gap-[21px]">
                 <div className="rotate-y--15">
                     <ProgressBox/>
                 </div>

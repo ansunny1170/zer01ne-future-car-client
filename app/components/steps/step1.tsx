@@ -46,7 +46,7 @@ export default function Step1({ dafultComment }: { dafultComment?: string }) {
             />
 
             {/* DummySpeechLayer */}
-            <ul className="absolute bottom-[120px] flex gap-[16px] w-[80%] items-center justify-center flex-wrap">
+            <ul className="absolute bottom-[180px] flex gap-[16px] w-[70%] items-center justify-center flex-wrap z-[99]">
                 {DummyText.map((text, index) => (
                     <motion.li 
                         key={index}
