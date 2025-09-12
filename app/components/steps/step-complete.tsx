@@ -262,7 +262,7 @@ export default function StepComplete() {
                     >
                       <h1 className="text-[96px] font-bold">체험이 모두 끝났습니다!</h1>
                       <HyundaiLoading/>
-                      <p className="text-[45px] opacity-80">뒷쪽 출구로 퇴장해 주세요.</p>
+                      <p className="text-[28px] opacity-60">뒷쪽 출구로 퇴장해 주세요.</p>
                     </motion.div>
                   </div>
                 )       

@@ -6,7 +6,7 @@ export default function NavigationBox() {
   const {stepInfo} = useScene();
 
   return (
-    <div className="flex items-center gap-[10px] text-white border-2 border-red-500 w-[350px]">
+    <div className="flex items-center gap-[10px] text-white w-[350px]">
         <div className="flex items-center justify-center">
             <img src="/assets/images/icon_flag.svg" alt="navigation-box" className="w-[16px]" />
         </div>
