@@ -74,7 +74,7 @@ export default function StepVideoPlayer({ className }:
                 muted = {noLoop}
                 loop = {noLoop}
                 playsInline
-                preload='auto'
+                preload='metadata'
                 onCanPlay={() => setIsCurrentReady(true)}
                 onTimeUpdate={(e) => {
                     const video = e.target as HTMLVideoElement;
@@ -95,7 +95,7 @@ export default function StepVideoPlayer({ className }:
                     muted = {noLoop}
                     loop
                     playsInline
-                    preload='auto'
+                    preload='metadata'
                     onTimeUpdate={(e) => {
                         const video = e.target as HTMLVideoElement;
                         if (!hasPreviousPlayedOnce && video.duration > 0 && video.currentTime >= video.duration - 0.2) {

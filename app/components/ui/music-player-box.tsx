@@ -64,8 +64,8 @@ export default function MusicPlayerBox({ className }: MusicPlayerBoxProps) {
   }, [stepInfo?.bgm?.file_name]);
 
   return (
-    <div className={cn("flex items-center p-[16px] gap-[16px] text-white backdrop-blur-lg rounded-[24px]", className)}>
-        <div className="w-[62px] h-[62px] rounded-[7px] bg-[#C6C6C6]/20 grow flex items-center justify-center relative overflow-hidden">
+    <div className={cn("w-[280px] flex items-center p-[12px] gap-[16px] text-white backdrop-blur-lg rounded-[18px]", className)}>
+        <div className="w-[52px] h-[52px] aspect-square rounded-[7px] bg-[#C6C6C6]/20 flex items-center justify-center relative overflow-hidden">
           {imageLoaded && !imageError ? (
             <img 
               src={bgmCover} 
@@ -84,7 +84,7 @@ export default function MusicPlayerBox({ className }: MusicPlayerBoxProps) {
             </div>
           )}
         </div>
-        <div className="leading-[1.2] max-w-[100px] overflow-hidden">
+        <div className="leading-[1.2] grow max-w-[200px] overflow-hidden">
             <p 
               ref={textRef}
               className={cn(
@@ -94,11 +94,11 @@ export default function MusicPlayerBox({ className }: MusicPlayerBoxProps) {
             >
               {stepInfo?.bgm?.description}
             </p>
-            <p className={cn("text-[14px] pt-[4px] font-semibold whitespace-nowrap opacity-60", shouldAnimate && "animate-marquee")}>
+            <p className={cn("text-[14px] pt-[4px] font-semibold whitespace-nowrap text-ellipsis overflow-hidden opacity-60")}>
               {artistName}
             </p>
         </div>
-        <div className="opacity-70 pl-[20px]">
+        <div className="opacity-70">
           <PlayerButtons />
         </div>
     </div>

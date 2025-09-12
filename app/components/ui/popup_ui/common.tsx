@@ -158,7 +158,7 @@ export default function CommonPopupUI({keyName, text, description, onComplete}: 
                 </p>
                 <div className="leading-[1.2]">
                     <h1 className="text-[42px] font-bold">{text || popupDict[keyName]?.defaultText}</h1>
-                    <p className="text-[22px] opacity-80">{description}</p>
+                    <p className="text-[22px] pt-[10px] opacity-80">{description}</p>
                 </div>
             </div>
         </BasicPopupBox>
