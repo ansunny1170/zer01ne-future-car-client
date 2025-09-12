@@ -18,7 +18,6 @@ export default function Step1({ dafultComment }: { dafultComment?: string }) {
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.code === 'KeyS') {
-                event.stopPropagation();
                 event.preventDefault();
                 
                 const videos = document.querySelectorAll('video');
@@ -28,9 +27,9 @@ export default function Step1({ dafultComment }: { dafultComment?: string }) {
             }
         };
 
-        window.addEventListener('keydown', handleKeyDown, { capture: true });
+        window.addEventListener('keydown', handleKeyDown);
         return () => {
-            window.removeEventListener('keydown', handleKeyDown, { capture: true });
+            window.removeEventListener('keydown', handleKeyDown);
         };
     }, []);
 
