@@ -24,9 +24,9 @@ export default function ProgressBox() {
       <div className="opacity-90 flex">
         <p id="progress-box-speed" className="text-[65px] font-semibold pl-[30px] pr-[20px]">{currentSpeed}</p>
 
-        <div className="flex flex-col items-center justify-center leading-[1.4]">
+        <div className="flex flex-col items-center justify-center leading-[1.3]">
           <p className="text-[20px] text-[#FF3826] font-bold">100</p>
-          <p className="text-[16px] uppercase">km/h</p>
+          <p className="text-[16px] uppercase opacity-80">km/h</p>
         </div>
       </div>
 
@@ -41,13 +41,13 @@ export default function ProgressBox() {
       </div>
 
       <ul className="flex gap-[27px] opacity-90 uppercase">
-        <li className="leading-[1.4]">
+        <li className="leading-[1.3]">
           <p className="text-[20px] font-bold">21</p>
-          <p className="text-[16px]">km</p>
+          <p className="text-[16px] opacity-80">km</p>
         </li>
-        <li className="leading-[1.4]">
+        <li className="leading-[1.3]">
           <p className="text-[20px] font-bold">13:00</p>
-          <p className="text-[16px]">ETA</p>
+          <p className="text-[16px] opacity-80">ETA</p>
         </li>
       </ul>
     </div>

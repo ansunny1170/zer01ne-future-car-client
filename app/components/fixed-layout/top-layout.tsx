@@ -22,10 +22,10 @@ export default function TopLayout() {
             }
 
             {/* 상단 우측 영역 */}
-            <div className="z-[20] drop-shadow-[0_0_10px_rgba(0,0,0,0.5)] text-white/[0.6] text-[23px] font-semibold pt-[52px] pr-[38px] fixed left-0 top-0 w-full flex justify-end">
+            <div className="z-[20] drop-shadow-[0_0_10px_rgba(0,0,0,0.5)] text-white/[0.6] text-[20px] font-semibold pt-[52px] pr-[38px] fixed left-0 top-0 w-full flex justify-end">
                 <div className="flex justify-end items-center gap-[24px]">
-                    <p className="flex items-center gap-[8px]">
-                        <img src="/assets/images/img_battery.png" alt="fixed-layout" className="w-[35px] opacity-60" />
+                    <p className="flex items-center">
+                        <img src="/assets/images/img_battery.png" alt="fixed-layout" className="w-[28px] opacity-60" />
                         <span>68%</span>
                     </p>
                     <span>{getFormattedTime()}</span>
@@ -33,17 +33,19 @@ export default function TopLayout() {
             </div>
 
             {/* 하단 좌측 영역 */}
-            <div className="fixed right-1/2 bottom-[40px] -translate-x-[7.5vw] flex gap-[21px]">
-                <div className="rotate-y--15">
-                    <ProgressBox/>
-                </div>
-
-                
-            </div>
+            {
+                stepNumber > 1 && (
+                    <div className="fixed right-1/2 bottom-[48px] -translate-x-[10vw] flex gap-[21px]">
+                        <div>
+                            <ProgressBox/>
+                        </div>
+                    </div>
+                )
+            }
 
             {/* 하단 우측 영역 */}
             <motion.div 
-                className="fixed left-1/2 bottom-[40px] translate-x-[7.5vw] opacity-0"
+                className="fixed left-1/2 bottom-[56px] translate-x-[9.2vw] opacity-0"
                 animate={{
                     opacity: stepNumber > 1 ? 1 : 0,
                 }}
@@ -52,7 +54,7 @@ export default function TopLayout() {
                     ease: "easeInOut",
                 }}
             >
-                <div className="flex gap-[40px] rotate-y-15">
+                <div className="flex gap-[30px]">
                     <NavigationBox />
                     <MusicPlayerBox />
                 </div>
@@ -65,17 +67,19 @@ export default function TopLayout() {
             </div>
 
             {/* 프레임 블러 영역 */}
-            <div 
-                className="fixed left-0 bottom-[22px] w-full"
-            >
-                <img id="frame-middle-blur" src="/assets/images/img_frame_middle.svg" alt="fixed-layout" className="w-full" />
-            </div>
-
+            {
+                stepNumber > 1 &&(
+                    <div 
+                        className="fixed left-0 bottom-[22px] w-full"
+                    >
+                        <img id="frame-middle-blur" src="/assets/images/img_frame_middle.svg" alt="fixed-layout" className="w-full" />
+                    </div>
+                )
+            }
 
             <div className="fixed left-0 bottom-0 w-full">
                 <img src="/assets/images/img_frame_bottom.png" alt="fixed-layout" className="w-full" />
             </div>
-
         </div>
     );
 }
