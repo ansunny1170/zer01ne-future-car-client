@@ -34,7 +34,7 @@ export default function TopLayout() {
 
             {/* 하단 좌측 영역 */}
             <div className="fixed right-1/2 bottom-[40px] -translate-x-[10vw] flex gap-[21px]">
-                <div className="rotate-y--15">
+                <div>
                     <ProgressBox/>
                 </div>
 
@@ -43,7 +43,7 @@ export default function TopLayout() {
 
             {/* 하단 우측 영역 */}
             <motion.div 
-                className="fixed left-1/2 bottom-[40px] translate-x-[7.5vw] opacity-0"
+                className="fixed left-1/2 bottom-[46px] translate-x-[9.2vw] opacity-0"
                 animate={{
                     opacity: stepNumber > 1 ? 1 : 0,
                 }}
@@ -52,7 +52,7 @@ export default function TopLayout() {
                     ease: "easeInOut",
                 }}
             >
-                <div className="flex gap-[40px] rotate-y-15">
+                <div className="flex gap-[25px]">
                     <NavigationBox />
                     <MusicPlayerBox />
                 </div>
