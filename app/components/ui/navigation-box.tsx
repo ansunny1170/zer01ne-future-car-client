@@ -6,12 +6,12 @@ export default function NavigationBox() {
   const {stepInfo} = useScene();
 
   return (
-    <div className="flex items-center gap-[10px] text-white w-[350px]">
-        <div className="flex items-center justify-center">
+    <div className="flex justify-start items-center gap-[14px] text-white w-[350px] ">
+        <div className="flex items-center justify-center shrink-0">
             <img src="/assets/images/icon_flag.svg" alt="navigation-box" className="w-[16px]" />
         </div>
 
-        <div className="flex gap-[8px] items-center whitespace-nowrap text-[16px] font-semibold">
+        <div className="flex w-full gap-[8px] justify-between items-center text-[16px] font-semibold break-keep text-center">
           <p>{stepInfo?.path_state?.detour1 || ''}</p>
           <p><Icons.filledArrowRight /></p>
           <p>{stepInfo?.path_state?.detour2 || ''}</p>

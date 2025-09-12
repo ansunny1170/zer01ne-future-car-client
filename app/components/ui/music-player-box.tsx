@@ -64,8 +64,8 @@ export default function MusicPlayerBox({ className }: MusicPlayerBoxProps) {
   }, [stepInfo?.bgm?.file_name]);
 
   return (
-    <div className={cn("flex items-center p-[12px] gap-[16px] text-white backdrop-blur-lg rounded-[18px]", className)}>
-        <div className="w-[52px] h-[52px] rounded-[7px] bg-[#C6C6C6]/20 grow flex items-center justify-center relative overflow-hidden">
+    <div className={cn("w-[280px] flex items-center p-[12px] gap-[16px] text-white backdrop-blur-lg rounded-[18px]", className)}>
+        <div className="w-[52px] h-[52px] aspect-square rounded-[7px] bg-[#C6C6C6]/20 flex items-center justify-center relative overflow-hidden">
           {imageLoaded && !imageError ? (
             <img 
               src={bgmCover} 
@@ -84,7 +84,7 @@ export default function MusicPlayerBox({ className }: MusicPlayerBoxProps) {
             </div>
           )}
         </div>
-        <div className="leading-[1.2] max-w-[150px] overflow-hidden">
+        <div className="leading-[1.2] grow max-w-[200px] overflow-hidden">
             <p 
               ref={textRef}
               className={cn(

@@ -33,13 +33,15 @@ export default function TopLayout() {
             </div>
 
             {/* 하단 좌측 영역 */}
-            <div className="fixed right-1/2 bottom-[48px] -translate-x-[10vw] flex gap-[21px]">
-                <div>
-                    <ProgressBox/>
-                </div>
-
-                
-            </div>
+            {
+                stepNumber > 1 && (
+                    <div className="fixed right-1/2 bottom-[48px] -translate-x-[10vw] flex gap-[21px]">
+                        <div>
+                            <ProgressBox/>
+                        </div>
+                    </div>
+                )
+            }
 
             {/* 하단 우측 영역 */}
             <motion.div 
@@ -52,7 +54,7 @@ export default function TopLayout() {
                     ease: "easeInOut",
                 }}
             >
-                <div className="flex gap-[25px]">
+                <div className="flex gap-[30px]">
                     <NavigationBox />
                     <MusicPlayerBox />
                 </div>
@@ -65,17 +67,19 @@ export default function TopLayout() {
             </div>
 
             {/* 프레임 블러 영역 */}
-            <div 
-                className="fixed left-0 bottom-[22px] w-full"
-            >
-                <img id="frame-middle-blur" src="/assets/images/img_frame_middle.svg" alt="fixed-layout" className="w-full" />
-            </div>
-
+            {
+                stepNumber > 1 &&(
+                    <div 
+                        className="fixed left-0 bottom-[22px] w-full"
+                    >
+                        <img id="frame-middle-blur" src="/assets/images/img_frame_middle.svg" alt="fixed-layout" className="w-full" />
+                    </div>
+                )
+            }
 
             <div className="fixed left-0 bottom-0 w-full">
                 <img src="/assets/images/img_frame_bottom.png" alt="fixed-layout" className="w-full" />
             </div>
-
         </div>
     );
 }
