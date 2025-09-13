@@ -69,7 +69,7 @@ export default function StepVideoPlayer({ className }:
             {/* New video (always below) */}
             <video
                 key={currentVideoPath}
-                src={`${BASE_URL}/${currentVideoPath}`}
+                src={`${stepInfo?.step ? BASE_URL : ''}/${currentVideoPath}`}
                 autoPlay
                 muted = {noLoop}
                 loop = {noLoop}
