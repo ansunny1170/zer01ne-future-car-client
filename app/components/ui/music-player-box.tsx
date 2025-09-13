@@ -48,7 +48,7 @@ export default function MusicPlayerBox({ className }: MusicPlayerBoxProps) {
   useEffect(() => {
     if (textRef.current && stepInfo?.bgm?.file_name) {
       const textWidth = textRef.current.scrollWidth;
-      const containerWidth = 100; // max-w-[100px]
+      const containerWidth = 200; // max-w-[200px]
       setShouldAnimate(textWidth > containerWidth);
       
       if (textWidth > containerWidth) {
