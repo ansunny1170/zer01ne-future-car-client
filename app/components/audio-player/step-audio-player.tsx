@@ -71,7 +71,6 @@ export default function StepAudioPlayer() {
             const handleCanPlayThrough = () => {
                 if (bgmRef.current) {
                     bgmRef.current.play().catch(error => {
-                        console.error('BGM play error:', error);
                     });
                 }
                 bgmRef.current?.removeEventListener('canplaythrough', handleCanPlayThrough);
@@ -91,7 +90,6 @@ export default function StepAudioPlayer() {
     const playSequential = useCallback((list: string[], idx: number) => {
         if (idx >= list.length) {
             // 모든 재생 완료
-            console.log('All audio completed, calling onSfxComplete');
             if (onSfxComplete) {
                 onSfxComplete();
             }
@@ -99,18 +97,13 @@ export default function StepAudioPlayer() {
         }
         
         const audioUrl = `${BASE_URL}/${list[idx]}`;
-        console.log('Playing audio:', audioUrl);
         
         audioRef.current = new Audio(audioUrl);
         audioRef.current.volume = 1.0; // SFX는 항상 최대 볼륨
         audioRef.current.onerror = (error) => {
-            console.error('Audio load error:', error);
-            console.error('Failed URL:', audioUrl);
         };
         
         audioRef.current.play().catch(error => {
-            console.error('Audio play error:', error);
-            console.error('Failed URL:', audioUrl);
         });
         
         audioRef.current.onended = () => {
@@ -121,16 +114,12 @@ export default function StepAudioPlayer() {
     useEffect(() => {
         if (!isSfxActive) return;
         if (!sfxPath || sfxPath.length === 0) {
-            console.log('StepAudioPlayer: No valid sfxPath to play');
             return;
         }
         
-        console.log('StepAudioPlayer: Attempting to play audio:', sfxPath);
-        console.log('Full audio URLs:', sfxPath.map(path => `${BASE_URL}/${path}`));
         
         // 새로운 오디오 재생 전에 기존 오디오가 재생 중인지 확인
         if (audioRef.current && !audioRef.current.paused) {
-            console.log('Previous audio still playing, waiting for completion...');
             // 기존 오디오가 끝나면 새 오디오 재생하도록 대기
             const currentAudio = audioRef.current;
             const originalOnEnded = currentAudio.onended;
@@ -157,7 +146,6 @@ export default function StepAudioPlayer() {
             }
         };
     }, [sfxPath, isSfxActive, playSequential]);
-    console.log("sfxPath", sfxPath);
     
     return (
         // bgtm

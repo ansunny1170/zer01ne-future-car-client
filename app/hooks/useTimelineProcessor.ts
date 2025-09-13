@@ -61,7 +61,6 @@ export function useTimelineProcessor() {
   const createAudioCompletion = useCallback((audioAsset: any): Promise<void> => {
     return new Promise((resolve) => {
       const audioFiles = audioAsset?.file_name ? [audioAsset.file_name] : [];
-      console.log('Starting direct audio processing:', audioFiles);
       
       // Context를 통해 오디오 재생 시작
       setSfxPath(audioFiles);
@@ -69,13 +68,11 @@ export function useTimelineProcessor() {
       // 하지만 완료는 직접 계산된 시간으로 처리 (더 안정적)
       const estimatedDuration = 2000; // 단일 파일당 평균 2초로 가정
       setTimeout(() => {
-        console.log('Audio estimated completion');
         resolve();
       }, estimatedDuration);
       
       // Fallback: Context 콜백도 설정 (더 정확한 완료 시점)
       setOnSfxComplete(() => {
-        console.log('Audio actual completion via context');
         resolve();
       });
     });
@@ -124,7 +121,6 @@ export function useTimelineProcessor() {
     const item = assets_timeline[currentIdx];
     const result = analyzeTimelineItem(item);
     
-    console.log(`Processing timeline ${currentIdx}:`, { type: result.type, item });
     
     try {
       if (result.type === 'VISUAL') {
@@ -136,11 +132,9 @@ export function useTimelineProcessor() {
       setState('WAITING_COMPLETION');
       await result.completion;
       
-      console.log(`Timeline ${currentIdx} completed`);
       setCurrentIdx(prev => prev + 1);
       
     } catch (error) {
-      console.error('Timeline processing error:', error);
       setCurrentIdx(prev => prev + 1); // 에러 시에도 진행
     } finally {
       setIsProcessing(false);

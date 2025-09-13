@@ -29,7 +29,6 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
     // stepInfo가 변경될 때 상태 초기화
     useEffect(() => {
         if (stepInfo) {
-            console.log('StepInfo updated, resetting timeline:', stepInfo);
             setCurrentIdx(0);
             setQuestionFlag(false);
             setCurrentUspPool([]);
@@ -113,7 +112,6 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
             }
         }
         
-        console.log(`Found consecutive audio items from ${startIdx} to ${currentIndex - 1}:`, audioFiles);
         return { audioFiles, endIdx: currentIndex };
     }, [assets_timeline]);
 
@@ -122,7 +120,6 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
         if (!assets_timeline || isTimelineFinished) return;
 
         const item = assets_timeline[currentIdx];
-        console.log(`Processing timeline ${currentIdx}:`, item);
         
         // 🎯 assets가 단일 객체로 변경됨에 따른 수정
         const asset = item.assets; // 단일 객체
@@ -136,26 +133,21 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
 
         // 진행 조건 결정 (우선순위: Visual > USP_Pool > Audio > Empty)
         if (isVisualAsset) {
-            console.log('Timeline has visual elements - waiting for visual completion');
             
             // 비주얼과 함께 오디오도 백그라운드에서 재생 (단일 객체는 백그라운드 오디오 없음)
             setOnSfxComplete(undefined); // Visual 완료를 기다림
         } else if (isUspPoolAsset) {
-            console.log('Timeline has USP Pool - handled by separate effect');
             setOnSfxComplete(undefined); // USP Pool effect에서 처리
         } else if (isAudioAsset) {
-            console.log('Audio asset detected - checking for consecutive audio sequence');
             
             // 연속된 오디오 아이템들을 찾아서 한 번에 처리
             const { audioFiles, endIdx } = getConsecutiveAudioItems(currentIdx);
             
             if (audioFiles.length > 1) {
-                console.log(`Processing consecutive audio sequence (${audioFiles.length} files):`, audioFiles);
                 
                 // 연속 오디오 완료 콜백 설정
                 const capturedEndIdx = endIdx;
                 setOnSfxComplete(() => {
-                    console.log(`Consecutive audio sequence completed, jumping to timeline ${capturedEndIdx}`);
                     setTimeout(() => {
                         setCurrentIdx(capturedEndIdx);
                     }, AUDIO_COMPLETE_DELAY);
@@ -165,7 +157,6 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
                 setSfxPath(audioFiles);
             } else {
                 // 단일 오디오 처리 (기존 로직)
-                console.log('Single audio timeline - processing:', asset.file_name, 'currentIdx:', currentIdx);
                 
                 const capturedIdx = currentIdx;
                 const capturedFileName = asset.file_name;
@@ -174,20 +165,16 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
                 setSfxPath(null);
                 
                 setOnSfxComplete(() => {
-                    console.log(`Audio COMPLETED for timeline ${capturedIdx} (${capturedFileName}), moving to next timeline after ${AUDIO_COMPLETE_DELAY}ms`);
                     setTimeout(() => {
-                        console.log(`Actually moving to next timeline from ${capturedIdx} to ${capturedIdx + 1}`);
                         setCurrentIdx(capturedIdx + 1);
                     }, AUDIO_COMPLETE_DELAY);
                 });
                 
                 setTimeout(() => {
-                    console.log('Starting audio playback for:', capturedFileName);
                     setSfxPath([capturedFileName]);
                 }, 10);
             }
         } else {
-            console.log('Timeline is empty - moving immediately');
             // 빈 타임라인은 빈 아이템 처리 useEffect에서 처리
             setOnSfxComplete(undefined);
         }
@@ -209,7 +196,6 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
 
         // 오디오도 비주얼도 없으면 바로 다음으로 진행
         if (!isAudioAsset && !isVisualAsset) {
-            console.log('Empty timeline item, moving to next');
             const timer = setTimeout(() => setCurrentIdx(idx => idx + 1), AUDIO_COMPLETE_DELAY);
             return () => clearTimeout(timer);
         }
@@ -223,12 +209,10 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
         }
 
         const item = assets_timeline[currentIdx];
-        console.log('Rendering timeline item:', currentIdx, item);
         
         // 🎯 단일 객체로 변경된 assets 처리
         const asset = item.assets;
         
-        console.log('Asset type found:', asset?.type);
 
         // CloneTalk인 경우
         if (asset?.type === "CLONE_TALKS" && "text" in asset) {
@@ -255,7 +239,6 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
                     key={currentIdx}
                     keyName={keyName}
                     onComplete={() => {
-                        console.log('HUD_POPUP completed after 3 seconds, moving to next timeline');
                         setTimeout(() => setCurrentIdx(idx => idx + 1), POPUP_COMPLETE_DELAY);
                     }}
                 />
@@ -264,7 +247,6 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
 
         // 팝업 UI 처리 (DEFAULT_POPUP, TRIGGER_POPUP 등)
         if (asset?.type === "DEFAULT_POPUP" || asset?.type === "TRIGGER_POPUP") {
-            console.log('Rendering popup:', asset);
             // id가 있으면 id를 keyName으로 사용, 없으면 type 사용
             const keyName = asset.id ? asset.id.toString().toUpperCase() : asset.type;
             return (
@@ -274,7 +256,6 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
                     text={asset.description}
                     description={asset.subtext_popup}
                     onComplete={() => {
-                        console.log('Popup completed, moving to next timeline');
                         setTimeout(() => setCurrentIdx(idx => idx + 1), POPUP_COMPLETE_DELAY);
                     }}
                 />
@@ -282,7 +263,6 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
         }
 
         // 처리되지 않은 경우 (오디오나 비주얼 요소가 모두 없음)
-        console.log('No content found, should move to next timeline');
         
         // 즉시 상태 업데이트 대신 useEffect에서 처리하도록 변경
         return null;

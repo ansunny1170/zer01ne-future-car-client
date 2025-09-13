@@ -79,7 +79,6 @@ export default function Speech({ onTrigger, isProcessing, defaultComment }: { on
 
   const startRecognition = () => {
     if (recognitionRef.current && !isProcessing) {
-      console.log('🎙️ 녹음 시작')
       setFinalText(null)
       recognitionRef.current.start()
     }
@@ -87,18 +86,14 @@ export default function Speech({ onTrigger, isProcessing, defaultComment }: { on
 
   const restartRecording = () => {
     if (recognitionRef.current) {
-      console.log('🔄 재녹음 시작')
-      console.log('🔄 현재 isListening:', isListening)
       
       setFinalText(null)
       
       // 강제로 isListening을 false로 설정하고 새로 시작
       try {
-        console.log('🔄 음성 인식 중단...')
         recognitionRef.current.stop()
         setIsListening(false) // 강제로 false 설정
       } catch (error) {
-        console.log('🔄 중단 중 에러:', error)
       }
       
       // 재시작 시도 (여러 번 시도)
@@ -108,16 +103,12 @@ export default function Speech({ onTrigger, isProcessing, defaultComment }: { on
       const tryRestart = () => {
         if (!isProcessing && recognitionRef.current && retryCount < maxRetries) {
           try {
-            console.log(`🔄 재시작 시도 ${retryCount + 1}/${maxRetries}, isListening:`, isListening)
             recognitionRef.current.start()
-            console.log('🔄 재시작 성공')
           } catch (error) {
-            console.log(`🔄 재시작 실패 ${retryCount + 1}:`, error)
             retryCount++
             if (retryCount < maxRetries) {
               setTimeout(tryRestart, 100) // 100ms 후 다시 시도
             } else {
-              console.log('🔄 최대 재시도 횟수 초과')
             }
           }
         }
@@ -129,20 +120,13 @@ export default function Speech({ onTrigger, isProcessing, defaultComment }: { on
   }
 
   const sendTrigger = () => {
-    console.log('📤 sendTrigger 호출됨')
-    console.log('📤 finalText:', finalText)
-    console.log('📤 recognitionRef.current:', !!recognitionRef.current)
     
     if (finalText && recognitionRef.current) {
-      console.log('📤 조건 만족: onTrigger 실행')
       recognitionRef.current.stop()
       onTrigger(finalText)
       setPressCount(0) // 전송 후 초기화
       setFinalText(null)
     } else {
-      console.log('❌ 조건 불만족: onTrigger 실행 안됨')
-      console.log('❌ finalText 있음?', !!finalText)
-      console.log('❌ recognitionRef 있음?', !!recognitionRef.current)
     }
   }
 
@@ -155,13 +139,10 @@ export default function Speech({ onTrigger, isProcessing, defaultComment }: { on
         if (keyDownTimeRef.current !== 0) return
         
         keyDownTimeRef.current = Date.now()
-        console.log('⬇️ 키 다운 - 시간 기록 시작')
         
         // pressCount가 0이 아닐 때만 길게 누름 타이머 설정
         if (pressCount > 0) {
-          console.log('⏱️ 길게 누름 타이머 시작')
           longPressTimerRef.current = setTimeout(() => {
-            console.log('⏰ 길게 누름 타이머 만료 - onTrigger 실행')
             sendTrigger()
             // 타이머 실행 후 정리
             longPressTimerRef.current = null
@@ -177,7 +158,6 @@ export default function Speech({ onTrigger, isProcessing, defaultComment }: { on
         
         // 길게 누름 타이머가 있으면 취소
         if (longPressTimerRef.current) {
-          console.log('⏹️ 길게 누름 타이머 취소')
           clearTimeout(longPressTimerRef.current)
           longPressTimerRef.current = null
         }
@@ -185,21 +165,13 @@ export default function Speech({ onTrigger, isProcessing, defaultComment }: { on
         const pressDuration = Date.now() - keyDownTimeRef.current
         keyDownTimeRef.current = 0 // 시간 초기화
         
-        console.log(`🔍 키 누름 분석:`)
-        console.log(`  - 누름 시간: ${pressDuration}ms`)
-        console.log(`  - pressCount: ${pressCount}`)
-        console.log(`  - longPressThreshold: ${longPressThreshold}ms`) 
-        console.log(`  - finalText: "${finalText}"`)
-        console.log(`  - isListening: ${isListening}`)
 
         if (pressCount === 0) {
           // 1번째: 녹음 시작
-          console.log('✅ 1번째 키: 녹음 시작')
           setPressCount(1)
           startRecognition()
         } else {
           // 2번째 이상: 짧게 누름만 처리 (길게 누름은 이미 타이머에서 처리됨)
-          console.log(`🔄 짧게 누름 (${pressDuration}ms): 재녹음`)
           restartRecording()
         }
       }
@@ -242,7 +214,6 @@ export default function Speech({ onTrigger, isProcessing, defaultComment }: { on
     recognition.lang = 'ko-KR'
 
     recognition.onstart = () => {
-      console.log("음성 인식 시작")
       setIsListening(true)
     }
 
@@ -251,18 +222,15 @@ export default function Speech({ onTrigger, isProcessing, defaultComment }: { on
         .map((r) => r[0].transcript)
         .join('')
 
-      console.log('🎤 음성 인식 결과:', transcript)
       setFinalText(transcript)
       // 자동 타이머 제거 - 사용자가 S키로만 제어
     }
 
     recognition.onerror = (event) => {
-      console.log(event)
       setIsListening(false)
     }
 
     recognition.onend = () => {
-      console.log("🔚 음성 인식 종료")
       setIsListening(false)
       // API 완료 시에만 pressCount 초기화
       if (!isProcessing) {
