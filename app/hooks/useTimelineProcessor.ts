@@ -147,7 +147,7 @@ export function useTimelineProcessor() {
     if (assets_timeline && !isProcessing && state === 'IDLE') {
       processCurrentItem();
     }
-  }, [assets_timeline, currentIdx, isProcessing, state, processCurrentItem]);
+  }, [assets_timeline, currentIdx, isProcessing, state]);
   
   // stepInfo 변경 시 리셋
   useEffect(() => {
