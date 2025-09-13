@@ -2,7 +2,7 @@ import { useScene } from "@/context/scene-context";
 import { BASE_S3_LINK } from "@/constants";
 import QuestionArea from "./question-area";
 import CommonPopupUI from "../ui/popup_ui/common";
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import UspPopupWrapper from "../ui/usp-popup-wrapper";
 import CloneTalkSplit from "../ui/clone-talk-split";
 import HudLayer from "../ui/popup_ui/hud-layer";
@@ -15,6 +15,7 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
     // 현재 보여줄 timeline 인덱스
     const [currentIdx, setCurrentIdx] = useState(0);
     const [currentUspPool, setCurrentUspPool] = useState<any[]>([]);
+    const preloadedAudio = useRef<Map<string, HTMLAudioElement>>(new Map());
     
     // 타이밍 설정 변수들
     const COMPONENT_SHOW_DELAY = 0; // 컴포넌트 표시 지연 시간 (ms) - timeline 시작 속도
@@ -26,7 +27,49 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
     const AUDIO_COMPLETE_DELAY = 500; // 음성요소 완료 후 지연 시간 (ms)
     // 오디오 처리를 위한 별도 useEffect
 
-    // stepInfo가 변경될 때 상태 초기화
+    // 오디오 에셋 preload 함수
+    const preloadAudioAssets = useCallback(() => {
+        if (!assets_timeline) return;
+        
+        console.log(`🔄 오디오 에셋 preload 시작`);
+        
+        // 기존 preload된 오디오들 정리
+        preloadedAudio.current.forEach((audio) => {
+            audio.pause();
+            audio.src = '';
+        });
+        preloadedAudio.current.clear();
+        
+        // 모든 타임라인에서 오디오 파일 수집
+        const audioFiles = new Set<string>();
+        assets_timeline.forEach((item) => {
+            const asset = item.assets;
+            if ((asset?.type === "VEHICLE_SOUND_EFFECT" || asset?.type === "COMPANION_VOICE") && asset.file_name) {
+                audioFiles.add(asset.file_name);
+            }
+        });
+        
+        // 각 오디오 파일 preload
+        audioFiles.forEach((fileName) => {
+            const audio = new Audio(`${BASE_URL}/${fileName}`);
+            audio.preload = 'auto';
+            audio.volume = 1.0;
+            
+            audio.addEventListener('canplaythrough', () => {
+                console.log(`✅ 오디오 preload 완료: ${fileName}`);
+            });
+            
+            audio.addEventListener('error', (error) => {
+                console.log(`❌ 오디오 preload 실패: ${fileName}`, error);
+            });
+            
+            preloadedAudio.current.set(fileName, audio);
+        });
+        
+        console.log(`📝 총 ${audioFiles.size}개 오디오 파일 preload 시작: [${Array.from(audioFiles).join(', ')}]`);
+    }, [assets_timeline, BASE_URL]);
+
+    // stepInfo가 변경될 때 상태 초기화 및 오디오 preload
     useEffect(() => {
         if (stepInfo) {
             setCurrentIdx(0);
@@ -36,6 +79,9 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
             // 기존 오디오 완료 콜백 초기화
             setOnSfxComplete(undefined);
             
+            // 오디오 에셋 preload
+            preloadAudioAssets();
+            
             // assets_timeline이 null인 경우에만 질문 표시
             // step 2에서는 타임라인이 비어있어도 바로 질문을 표시하지 않음
             if (!stepInfo.assets_timeline && stepInfo.question && stepInfo.step !== 2) {
@@ -44,7 +90,7 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
                 }, QUESTION_SHOW_DELAY);
             }
         }
-    }, [stepInfo, setOnSfxComplete]);
+    }, [stepInfo, setOnSfxComplete, preloadAudioAssets]);
 
     // timeline 처리 완료 여부
     const isTimelineFinished = useMemo(() => {

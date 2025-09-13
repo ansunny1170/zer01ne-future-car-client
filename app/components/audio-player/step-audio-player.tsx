@@ -88,50 +88,80 @@ export default function StepAudioPlayer() {
     // sfxpath 배열 바뀌면 하나씩 순차적으로 재생할 것. 중간에 200ms 간격으로 재생.
     // 순차 재생 함수
     const playSequential = useCallback((list: string[], idx: number) => {
+        console.log(`🎶 playSequential 호출 - idx: ${idx}/${list.length}, 파일: ${list[idx] || 'none'}`);
+        
         if (idx >= list.length) {
             // 모든 재생 완료
+            console.log(`🏁 모든 오디오 재생 완료 - onSfxComplete 콜백 호출`);
             if (onSfxComplete) {
                 onSfxComplete();
             }
             return;
         }
         
-        const audioUrl = `${BASE_URL}/${list[idx]}`;
+        const fileName = list[idx];
+        console.log(`▶️ 오디오 재생 시작: ${fileName}`);
         
+        // 새로운 Audio 객체 생성 (preload와 별개로)
+        const audioUrl = `${BASE_URL}/${fileName}`;
         audioRef.current = new Audio(audioUrl);
         audioRef.current.volume = 1.0; // SFX는 항상 최대 볼륨
+        audioRef.current.preload = 'auto';
+        
         audioRef.current.onerror = (error) => {
+            console.log(`❌ 오디오 로드 에러: ${fileName}`, error);
         };
         
-        audioRef.current.play().catch(error => {
+        // canplaythrough 이벤트를 기다린 후 재생 (즉시 재생 보장)
+        audioRef.current.addEventListener('canplaythrough', () => {
+            console.log(`🎵 오디오 로드 완료 - 재생 시작: ${fileName}`);
+            audioRef.current?.play().catch(error => {
+                console.log(`❌ 오디오 재생 에러: ${fileName}`, error);
+            });
         });
         
         audioRef.current.onended = () => {
+            console.log(`✅ 오디오 재생 완료: ${fileName} - 다음 파일로 진행`);
             playSequential(list, idx + 1);
         };
+        
+        // 즉시 로드 시작
+        audioRef.current.load();
     }, [BASE_URL, onSfxComplete]);
 
     useEffect(() => {
-        if (!isSfxActive) return;
+        console.log(`🔄 StepAudioPlayer useEffect 실행 - isSfxActive: ${isSfxActive}, sfxPath: [${(sfxPath || []).join(', ')}]`);
+        if (!isSfxActive) {
+            console.log(`⚠️ isSfxActive가 false라서 오디오 처리하지 않음`);
+            return;
+        }
         if (!sfxPath || sfxPath.length === 0) {
+            console.log(`⚠️ sfxPath가 비어있어서 오디오 처리하지 않음`);
             return;
         }
         
+        console.log(`🎵 StepAudioPlayer - 새로운 sfxPath 배열: [${sfxPath.join(', ')}]`);
         
-        // 새로운 오디오 재생 전에 기존 오디오가 재생 중인지 확인
+        // 기존 오디오가 재생 중이면 완료될 때까지 기다린 후 새로운 배열 재생
         if (audioRef.current && !audioRef.current.paused) {
-            // 기존 오디오가 끝나면 새 오디오 재생하도록 대기
+            console.log(`⏳ 기존 오디오 완료 대기 중... 완료 후 새로운 배열 재생`);
             const currentAudio = audioRef.current;
             const originalOnEnded = currentAudio.onended;
             
             currentAudio.onended = () => {
-                // 기존 onended 처리
-                if (originalOnEnded) originalOnEnded.call(currentAudio, new Event('ended'));
+                // 기존 onended 처리 (원래 단일 파일의 완료 콜백)
+                if (originalOnEnded) {
+                    console.log(`🔄 기존 onended 콜백 실행`);
+                    originalOnEnded.call(currentAudio, new Event('ended'));
+                }
                 
-                // 새 오디오 재생
-                setTimeout(() => {
-                    playSequential(sfxPath, 0);
-                }, 100);
+                // 새 배열 재생 (첫 번째 파일은 이미 재생 완료되었으므로 1번 인덱스부터)
+                console.log(`🎶 기존 오디오 완료 - 나머지 배열 재생: [${sfxPath.slice(1).join(', ')}]`);
+                if (sfxPath.length > 1) {
+                    playSequential(sfxPath, 1);
+                } else {
+                    console.log(`✅ 단일 파일 재생 완료`);
+                }
             };
             return; // 현재 재생 중이므로 바로 리턴
         }
