@@ -14,10 +14,8 @@ export const useSpeechProcessing = () => {
     mutationFn: ({ session_id, user_message, is_new_session }) =>
       speechApi.processSpeech({ session_id, user_message, is_new_session }),
     onSuccess: (data) => {
-      console.log('Speech processed successfully:', data);
     },
     onError: (error) => {
-      console.error('Speech processing failed:', error);
     },
     onSettled: () => {
       // 요청 완료(성공/실패) 시 동시 실행 잠금 해제

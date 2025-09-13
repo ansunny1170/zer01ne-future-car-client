@@ -83,7 +83,7 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     if (!stepInfo?.step){
-      setVideoPath("intro1_1.mp4");
+      setVideoPath("assets/video/intro1_1.mp4");
     } 
 
     if (stepInfo?.step === 1) {

@@ -37,7 +37,7 @@ export default function UspPopupWrapper({ data }: { data: { description: string 
             exit={{ opacity: 0, x: 20 }}
             transition={{ duration: 0.35 }}
             layout // 레이아웃 변경 시 자연스러운 이동
-            className="flex justify-start items-center gap-2 text-white font-semibold max-w-[21vw] bg-black/5 backdrop-blur-2xl rounded-[24px] overflow-hidden relative px-[24px] py-[12px]"
+            className="break-keep flex justify-start items-center gap-2 text-white font-semibold max-w-[21vw] bg-black/5 backdrop-blur-2xl rounded-[24px] overflow-hidden relative px-[24px] py-[12px]"
             style={{
               backgroundClip: 'padding-box',
             }}

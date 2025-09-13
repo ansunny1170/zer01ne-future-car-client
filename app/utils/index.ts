@@ -26,8 +26,8 @@ export const getArtistName = () => {
         // 중간~낮은 확률 (각 6%)
         ...Array(6).fill("YUMI LIM"),
         ...Array(6).fill("JIN HWA LEE"),
-        ...Array(6).fill("IL HOO SEO"),
-        ...Array(6).fill("JIN BUM KIM"),
+        ...Array(6).fill("IL HO SEO"),
+        ...Array(6).fill("JIN BEOM KIM"),
         ...Array(6).fill("CHAE WON JUNG"),
         
         // 낮은 확률 (2%)
