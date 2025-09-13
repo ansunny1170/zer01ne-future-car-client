@@ -300,13 +300,7 @@ export default function Speech({ onTrigger, isProcessing, defaultComment }: { on
       </div>
 
       <div className='flex items-center gap-[8px]'>
-        {
-          isListening ? (
-            <Icons.MicOn />
-          ) : (
-            <Icons.MicOff />
-          )
-        }
+        <img src={isListening ? "/assets/images/icon_mic_on.png" : "/assets/images/icon_mic_off.png"} alt="mic" className='w-[34px]' />
         <span className='text-[18px] text-shadow-sm text-white'>
           {
             isListening ? '버튼을 길게 누르면 메시지가 전달됩니다' : '버튼을 누르면 마이크가 켜집니다'
