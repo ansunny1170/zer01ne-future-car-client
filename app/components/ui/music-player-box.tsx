@@ -17,13 +17,14 @@ export default function MusicPlayerBox({ className }: MusicPlayerBoxProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [artistName, setArtistName] = useState(() => getArtistName());
   const bgmCover = `/assets/bgm_cover/${stepInfo?.bgm?.description}.jpeg`;
-  const artistName = getArtistName()
 
   // 이미지 로딩 시도
   useEffect(() => {
     if (stepInfo?.bgm?.description) {
       setIsTransitioning(true);
+      setArtistName(getArtistName());
       
       // 페이드 아웃 후 새 이미지 로드
       setTimeout(() => {
@@ -48,7 +49,7 @@ export default function MusicPlayerBox({ className }: MusicPlayerBoxProps) {
   useEffect(() => {
     if (textRef.current && stepInfo?.bgm?.file_name) {
       const textWidth = textRef.current.scrollWidth;
-      const containerWidth = 100; // max-w-[100px]
+      const containerWidth = 200; // max-w-[200px]
       setShouldAnimate(textWidth > containerWidth);
       
       if (textWidth > containerWidth) {

@@ -91,7 +91,7 @@ export default function VideoPlayer({ direction, className }:
                     loop
                     muted
                     playsInline
-                    preload='metadata'
+                    preload='auto'
                     onCanPlay={() => setIsCurrentReady(true)}
                     className="w-full h-full object-cover absolute inset-0 -z-[1]"
                 />
@@ -106,7 +106,7 @@ export default function VideoPlayer({ direction, className }:
                     loop
                     muted
                     playsInline
-                    preload='metadata'
+                    preload='auto'
                     className={`w-full h-full object-cover absolute inset-0 transition-all duration-800 z-1
                         ${isTransitioning ? 'opacity-0 scale-150' : 'opacity-100 scale-100'}`}
                 />

@@ -69,12 +69,12 @@ export default function StepVideoPlayer({ className }:
             {/* New video (always below) */}
             <video
                 key={currentVideoPath}
-                src={`${BASE_URL}/${currentVideoPath}`}
+                src={`${stepInfo?.step ? BASE_URL : ''}/${currentVideoPath}`}
                 autoPlay
                 muted = {noLoop}
                 loop = {noLoop}
                 playsInline
-                preload='metadata'
+                preload='auto'
                 onCanPlay={() => setIsCurrentReady(true)}
                 onTimeUpdate={(e) => {
                     const video = e.target as HTMLVideoElement;
@@ -95,7 +95,7 @@ export default function StepVideoPlayer({ className }:
                     muted = {noLoop}
                     loop
                     playsInline
-                    preload='metadata'
+                    preload='auto'
                     onTimeUpdate={(e) => {
                         const video = e.target as HTMLVideoElement;
                         if (!hasPreviousPlayedOnce && video.duration > 0 && video.currentTime >= video.duration - 0.2) {
