@@ -37,8 +37,9 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
             // 기존 오디오 완료 콜백 초기화
             setOnSfxComplete(undefined);
             
-            // assets_timeline이 null인 경우 질문 표시
-            if (!stepInfo.assets_timeline && stepInfo.question) {
+            // assets_timeline이 null인 경우에만 질문 표시
+            // step 2에서는 타임라인이 비어있어도 바로 질문을 표시하지 않음
+            if (!stepInfo.assets_timeline && stepInfo.question && stepInfo.step !== 2) {
                 setTimeout(() => {
                     setQuestionFlag(true);
                 }, QUESTION_SHOW_DELAY);
@@ -55,9 +56,13 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
     // 타임라인이 끝났을 때 questionFlag를 true로 설정
     useEffect(() => {
         if (isTimelineFinished && !questionFlag) {
-            setQuestionFlag(true);
+            // step 2에서는 더 긴 지연시간 적용
+            const delay = stepInfo?.step === 2 ? QUESTION_SHOW_DELAY + 500 : 0;
+            setTimeout(() => {
+                setQuestionFlag(true);
+            }, delay);
         }
-    }, [isTimelineFinished, questionFlag]);
+    }, [isTimelineFinished, questionFlag, stepInfo]);
 
 
     // FUNCTION_POPUP 순차 표시 처리 (단일 객체로 수정)

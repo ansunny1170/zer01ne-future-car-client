@@ -46,7 +46,10 @@ export default function QuestionArea({
             return;
          }
          setStepInfo(response as unknown as StepInfo);
-         goNextStep();
+         // stepInfo 업데이트 후 잠시 대기 후 다음 스텝으로 이동
+         setTimeout(() => {
+           goNextStep();
+         }, 10);
         } catch (error) {
           console.error('Speech processing failed:', error);
         } finally {
