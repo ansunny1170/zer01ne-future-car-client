@@ -154,9 +154,15 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
             const isAudioAsset = asset?.type === "VEHICLE_SOUND_EFFECT" || asset?.type === "COMPANION_VOICE";
             const isOtherAsset = asset?.type && asset.type !== "VEHICLE_SOUND_EFFECT" && asset.type !== "COMPANION_VOICE";
             
-            // 오디오이고 다른 요소가 없으면 수집
+            // 🔧 오디오이고 다른 요소가 없으면 수집 (preload 성공한 파일만)
             if (isAudioAsset && !isOtherAsset && asset.file_name) {
-                audioFiles.push(asset.file_name);
+                const preloadedAudioFile = preloadedAudio.current.get(asset.file_name);
+                if (preloadedAudioFile && !preloadedAudioFile.error) {
+                    audioFiles.push(asset.file_name);
+                    console.log(`🎵 연속 오디오 수집: ${asset.file_name} (인덱스: ${currentIndex})`);
+                } else {
+                    console.log(`⚠️ 오디오 로드 실패로 건너뛰기: ${asset.file_name} (인덱스: ${currentIndex})`);
+                }
                 currentIndex++;
             } else {
                 break;
@@ -204,13 +210,39 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
                     }, AUDIO_COMPLETE_DELAY);
                 });
                 
-                // 모든 오디오 파일을 순차 재생
-                setSfxPath(audioFiles);
+                // 🔧 유효한 오디오 파일들을 순차 재생
+                if (audioFiles.length > 0) {
+                    setSfxPath(audioFiles);
+                    console.log(`🎵 연속 오디오 재생 시작: [${audioFiles.join(', ')}], 완료 후 인덱스: ${capturedEndIdx}`);
+                } else {
+                    // 모든 오디오가 로드 실패한 경우 바로 다음으로 진행
+                    console.log(`⚠️ 모든 연속 오디오 로드 실패 - 다음 인덱스로 진행: ${capturedEndIdx}`);
+                    setTimeout(() => {
+                        setCurrentIdx(capturedEndIdx);
+                    }, AUDIO_COMPLETE_DELAY);
+                }
             } else {
                 // 단일 오디오 처리 (기존 로직)
-                
                 const capturedIdx = currentIdx;
                 const capturedFileName = asset.file_name;
+                
+                // 🔧 오디오 파일이 없거나 preload 실패한 경우 처리
+                if (!capturedFileName) {
+                    console.log(`⚠️ 오디오 파일명이 없음 - 다음 인덱스로 진행: ${capturedIdx + 1}`);
+                    setTimeout(() => {
+                        setCurrentIdx(capturedIdx + 1);
+                    }, AUDIO_COMPLETE_DELAY);
+                    return;
+                }
+                
+                const preloadedAudioFile = preloadedAudio.current.get(capturedFileName);
+                if (!preloadedAudioFile || preloadedAudioFile.error) {
+                    console.log(`⚠️ 오디오 preload 실패로 건너뛰기: ${capturedFileName} (인덱스: ${capturedIdx})`);
+                    setTimeout(() => {
+                        setCurrentIdx(capturedIdx + 1);
+                    }, AUDIO_COMPLETE_DELAY);
+                    return;
+                }
                 
                 setOnSfxComplete(undefined);
                 setSfxPath(null);

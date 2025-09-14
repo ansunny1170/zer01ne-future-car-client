@@ -68,7 +68,7 @@ export default function StepVideoPlayer({ className }:
         <div className={cn("absolute inset-0 overflow-hidden isolate bg-gray-900", className)}>
             {/* New video (always below) */}
             <video
-                key={currentVideoPath}
+                key={`${stepInfo?.step ? BASE_URL : ''}/${currentVideoPath}`}
                 src={`${stepInfo?.step ? BASE_URL : ''}/${currentVideoPath}`}
                 autoPlay
                 muted = {noLoop}
@@ -89,13 +89,13 @@ export default function StepVideoPlayer({ className }:
             {/* Previous video (fades out above) */}
             {previousVideoPath && (
                 <video
-                    key={previousVideoPath}
+                    key={`${BASE_URL}/${previousVideoPath}`}
                     src={`${BASE_URL}/${previousVideoPath}`}
                     autoPlay
                     muted = {noLoop}
                     loop
                     playsInline
-                    preload='auto'
+                    preload='none'
                     onTimeUpdate={(e) => {
                         const video = e.target as HTMLVideoElement;
                         if (!hasPreviousPlayedOnce && video.duration > 0 && video.currentTime >= video.duration - 0.2) {
