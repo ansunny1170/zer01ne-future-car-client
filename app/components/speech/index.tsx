@@ -54,7 +54,7 @@ declare global {
 }
 
 export default function Speech({ onTrigger, isProcessing, defaultComment }: { onTrigger: (text: string) => void, isProcessing: boolean, defaultComment?: string }) {
-  const { stepInfo, setIsRecording } = useScene();
+  const { stepInfo } = useScene();
   const [finalText, setFinalText] = useState<string | null>(null)
   const [isListening, setIsListening] = useState(false)
   const recognitionRef = useRef<SpeechRecognition | null>(null)
