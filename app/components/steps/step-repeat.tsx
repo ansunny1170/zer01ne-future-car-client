@@ -55,7 +55,12 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
             audio.preload = 'auto';
             audio.volume = 1.0;
             
+            // 🔧 preload 시 자동 재생 방지
+            audio.muted = true;
+            
             audio.addEventListener('canplaythrough', () => {
+                // 🔧 preload 완료 후 mute 해제 (실제 재생은 timeline에서만)
+                audio.muted = false;
                 console.log(`✅ 오디오 preload 완료: ${fileName}`);
             });
             
