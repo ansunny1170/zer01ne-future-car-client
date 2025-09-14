@@ -11,7 +11,7 @@ export default function StepAudioPlayer() {
     const bgmRef = useRef<HTMLAudioElement>(null);
     const BASE_URL = BASE_S3_LINK;
     // 현재 재생할 오디오 경로
-    const { bgmPath, sfxPath, onSfxComplete, stepInfo } = useScene();
+    const { bgmPath, sfxPath, onSfxComplete, stepInfo, preloadedAudio } = useScene();
     useEffect(() => {
         const handleKeyDown = () => {
             setIsSfxActive(true);
@@ -102,32 +102,53 @@ export default function StepAudioPlayer() {
         const fileName = list[idx];
         console.log(`▶️ 오디오 재생 시작: ${fileName}`);
         
-        // 새로운 Audio 객체 생성 (preload와 별개로)
-        const audioUrl = `${BASE_URL}/${fileName}`;
-        audioRef.current = new Audio(audioUrl);
-        audioRef.current.volume = 1.0; // SFX는 항상 최대 볼륨
-        audioRef.current.preload = 'auto';
-        
-        audioRef.current.onerror = (error) => {
-            console.log(`❌ 오디오 로드 에러: ${fileName}`, error);
-        };
-        
-        // canplaythrough 이벤트를 기다린 후 재생 (즉시 재생 보장)
-        audioRef.current.addEventListener('canplaythrough', () => {
-            console.log(`🎵 오디오 로드 완료 - 재생 시작: ${fileName}`);
-            audioRef.current?.play().catch(error => {
-                console.log(`❌ 오디오 재생 에러: ${fileName}`, error);
+        // preload된 오디오 사용 (있으면), 없으면 새로 생성
+        const preloadedAudioElement = preloadedAudio.get(fileName);
+        if (preloadedAudioElement && !preloadedAudioElement.error) {
+            console.log(`🔄 preload된 오디오 사용: ${fileName}`);
+            audioRef.current = preloadedAudioElement;
+            audioRef.current.volume = 1.0; // SFX는 항상 최대 볼륨
+            audioRef.current.muted = false; // preload에서 muted되어 있으니 해제
+            
+            audioRef.current.onended = () => {
+                console.log(`✅ 오디오 재생 완료: ${fileName} - 다음 파일로 진행`);
+                playSequential(list, idx + 1);
+            };
+            
+            // 즉시 재생 (이미 로드 완료됨)
+            audioRef.current.currentTime = 0; // 처음부터 재생
+            audioRef.current.play().catch(error => {
+                console.log(`❌ preload 오디오 재생 에러: ${fileName}`, error);
             });
-        });
-        
-        audioRef.current.onended = () => {
-            console.log(`✅ 오디오 재생 완료: ${fileName} - 다음 파일로 진행`);
-            playSequential(list, idx + 1);
-        };
-        
-        // 즉시 로드 시작
-        audioRef.current.load();
-    }, [BASE_URL, onSfxComplete]);
+        } else {
+            console.log(`🆕 새로운 Audio 객체 생성: ${fileName}`);
+            // 새로운 Audio 객체 생성 (fallback)
+            const audioUrl = `${BASE_URL}/${fileName}`;
+            audioRef.current = new Audio(audioUrl);
+            audioRef.current.volume = 1.0; // SFX는 항상 최대 볼륨
+            audioRef.current.preload = 'auto';
+            
+            audioRef.current.onerror = (error) => {
+                console.log(`❌ 오디오 로드 에러: ${fileName}`, error);
+            };
+            
+            // canplaythrough 이벤트를 기다린 후 재생 (즉시 재생 보장)
+            audioRef.current.addEventListener('canplaythrough', () => {
+                console.log(`🎵 오디오 로드 완료 - 재생 시작: ${fileName}`);
+                audioRef.current?.play().catch(error => {
+                    console.log(`❌ 오디오 재생 에러: ${fileName}`, error);
+                });
+            });
+            
+            audioRef.current.onended = () => {
+                console.log(`✅ 오디오 재생 완료: ${fileName} - 다음 파일로 진행`);
+                playSequential(list, idx + 1);
+            };
+            
+            // 즉시 로드 시작
+            audioRef.current.load();
+        }
+    }, [BASE_URL, onSfxComplete, preloadedAudio]);
 
     useEffect(() => {
         console.log(`🔄 StepAudioPlayer useEffect 실행 - isSfxActive: ${isSfxActive}, sfxPath: [${(sfxPath || []).join(', ')}]`);

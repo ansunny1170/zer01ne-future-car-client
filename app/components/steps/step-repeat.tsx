@@ -9,7 +9,7 @@ import HudLayer from "../ui/popup_ui/hud-layer";
 
 export default function StepRepeat({ dafultComment }: { dafultComment?: string }) {
     const BASE_URL = BASE_S3_LINK;
-    const { stepInfo, setSfxPath, setOnSfxComplete } = useScene();
+    const { stepInfo, setSfxPath, setOnSfxComplete, setPreloadedAudio } = useScene();
     const { assets_timeline, question, choices } = stepInfo || {};
     const [questionFlag, setQuestionFlag] = useState(false);
     // 현재 보여줄 timeline 인덱스
@@ -59,8 +59,7 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
             audio.muted = true;
             
             audio.addEventListener('canplaythrough', () => {
-                // 🔧 preload 완료 후 mute 해제 (실제 재생은 timeline에서만)
-                audio.muted = false;
+                // 🔧 preload 완료 후에도 mute 유지 (실제 재생시에만 unmute)
                 console.log(`✅ 오디오 preload 완료: ${fileName}`);
             });
             
@@ -72,7 +71,10 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
         });
         
         console.log(`📝 총 ${audioFiles.size}개 오디오 파일 preload 시작: [${Array.from(audioFiles).join(', ')}]`);
-    }, [assets_timeline, BASE_URL]);
+        
+        // Context에 preloaded audio 공유
+        setPreloadedAudio(preloadedAudio.current);
+    }, [assets_timeline, BASE_URL, setPreloadedAudio]);
 
     // stepInfo가 변경될 때 상태 초기화 및 오디오 preload
     useEffect(() => {
