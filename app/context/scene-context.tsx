@@ -30,6 +30,8 @@ export type SceneContextType = {
   setStepInfo: (s: StepInfo | null) => void;
   sessionId: string | null;
   setSessionId: (s: string | null) => void;
+  preloadedAudio: Map<string, HTMLAudioElement>;
+  setPreloadedAudio: (audioMap: Map<string, HTMLAudioElement>) => void;
   reStart: () => void;
 };
 
@@ -47,6 +49,7 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
   const [onSfxComplete, setOnSfxComplete] = useState<(() => void) | undefined>();
   const [stepInfo, setStepInfo] = useState<StepInfo | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [preloadedAudio, setPreloadedAudio] = useState<Map<string, HTMLAudioElement>>(new Map());
 
   // BroadcastChannel 동기화 로직 추가
   const senderId = useRef(Date.now() + Math.random()).current;
@@ -141,6 +144,8 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
         setStepInfo,
         sessionId,
         setSessionId,
+        preloadedAudio,
+        setPreloadedAudio,
         reStart
       }}
     >

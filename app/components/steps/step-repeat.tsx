@@ -9,7 +9,7 @@ import HudLayer from "../ui/popup_ui/hud-layer";
 
 export default function StepRepeat({ dafultComment }: { dafultComment?: string }) {
     const BASE_URL = BASE_S3_LINK;
-    const { stepInfo, setSfxPath, setOnSfxComplete } = useScene();
+    const { stepInfo, setSfxPath, setOnSfxComplete, setPreloadedAudio } = useScene();
     const { assets_timeline, question, choices } = stepInfo || {};
     const [questionFlag, setQuestionFlag] = useState(false);
     // 현재 보여줄 timeline 인덱스
@@ -24,7 +24,7 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
     const USP_POOL_FINAL_DELAY = 1000; // USP Pool 마지막 지연 (ms)
     const CLONE_TALK_DELAY = 1000; // CloneTalk 완료 후 지연 (ms)
     const POPUP_COMPLETE_DELAY = 500; // 팝업 완료 후 지연 (ms)
-    const AUDIO_COMPLETE_DELAY = 500; // 음성요소 완료 후 지연 시간 (ms)
+    const AUDIO_COMPLETE_DELAY = 50; // 음성요소 완료 후 지연 시간 (ms)
     // 오디오 처리를 위한 별도 useEffect
 
     // 오디오 에셋 preload 함수
@@ -59,8 +59,7 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
             audio.muted = true;
             
             audio.addEventListener('canplaythrough', () => {
-                // 🔧 preload 완료 후 mute 해제 (실제 재생은 timeline에서만)
-                audio.muted = false;
+                // 🔧 preload 완료 후에도 mute 유지 (실제 재생시에만 unmute)
                 console.log(`✅ 오디오 preload 완료: ${fileName}`);
             });
             
@@ -72,7 +71,10 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
         });
         
         console.log(`📝 총 ${audioFiles.size}개 오디오 파일 preload 시작: [${Array.from(audioFiles).join(', ')}]`);
-    }, [assets_timeline, BASE_URL]);
+        
+        // Context에 preloaded audio 공유
+        setPreloadedAudio(preloadedAudio.current);
+    }, [assets_timeline, BASE_URL, setPreloadedAudio]);
 
     // stepInfo가 변경될 때 상태 초기화 및 오디오 preload
     useEffect(() => {
@@ -196,67 +198,10 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
         } else if (isUspPoolAsset) {
             setOnSfxComplete(undefined); // USP Pool effect에서 처리
         } else if (isAudioAsset) {
-            
-            // 연속된 오디오 아이템들을 찾아서 한 번에 처리
-            const { audioFiles, endIdx } = getConsecutiveAudioItems(currentIdx);
-            
-            if (audioFiles.length > 1) {
-                
-                // 연속 오디오 완료 콜백 설정
-                const capturedEndIdx = endIdx;
-                setOnSfxComplete(() => {
-                    setTimeout(() => {
-                        setCurrentIdx(capturedEndIdx);
-                    }, AUDIO_COMPLETE_DELAY);
-                });
-                
-                // 🔧 유효한 오디오 파일들을 순차 재생
-                if (audioFiles.length > 0) {
-                    setSfxPath(audioFiles);
-                    console.log(`🎵 연속 오디오 재생 시작: [${audioFiles.join(', ')}], 완료 후 인덱스: ${capturedEndIdx}`);
-                } else {
-                    // 모든 오디오가 로드 실패한 경우 바로 다음으로 진행
-                    console.log(`⚠️ 모든 연속 오디오 로드 실패 - 다음 인덱스로 진행: ${capturedEndIdx}`);
-                    setTimeout(() => {
-                        setCurrentIdx(capturedEndIdx);
-                    }, AUDIO_COMPLETE_DELAY);
-                }
-            } else {
-                // 단일 오디오 처리 (기존 로직)
-                const capturedIdx = currentIdx;
-                const capturedFileName = asset.file_name;
-                
-                // 🔧 오디오 파일이 없거나 preload 실패한 경우 처리
-                if (!capturedFileName) {
-                    console.log(`⚠️ 오디오 파일명이 없음 - 다음 인덱스로 진행: ${capturedIdx + 1}`);
-                    setTimeout(() => {
-                        setCurrentIdx(capturedIdx + 1);
-                    }, AUDIO_COMPLETE_DELAY);
-                    return;
-                }
-                
-                const preloadedAudioFile = preloadedAudio.current.get(capturedFileName);
-                if (!preloadedAudioFile || preloadedAudioFile.error) {
-                    console.log(`⚠️ 오디오 preload 실패로 건너뛰기: ${capturedFileName} (인덱스: ${capturedIdx})`);
-                    setTimeout(() => {
-                        setCurrentIdx(capturedIdx + 1);
-                    }, AUDIO_COMPLETE_DELAY);
-                    return;
-                }
-                
-                setOnSfxComplete(undefined);
-                setSfxPath(null);
-                
-                setOnSfxComplete(() => {
-                    setTimeout(() => {
-                        setCurrentIdx(capturedIdx + 1);
-                    }, AUDIO_COMPLETE_DELAY);
-                });
-                
-                setTimeout(() => {
-                    setSfxPath([capturedFileName]);
-                }, 10);
-            }
+            // 🔧 오디오 에셋은 별도 useEffect에서 처리하므로 여기서는 스킵
+            console.log(`🎵 오디오 에셋 스킵 - 별도 useEffect에서 처리: ${asset?.type} (인덱스: ${currentIdx})`);
+            setOnSfxComplete(undefined);
+            return;
         } else {
             // 빈 타임라인은 빈 아이템 처리 useEffect에서 처리
             setOnSfxComplete(undefined);
@@ -284,6 +229,43 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
         }
     }, [assets_timeline, currentIdx, isTimelineFinished]);
 
+    // 오디오 에셋 처리 전용 useEffect
+    useEffect(() => {
+        if (!assets_timeline || isTimelineFinished) return;
+
+        const item = assets_timeline[currentIdx];
+        const asset = item.assets;
+        
+        const isAudioAsset = asset?.type === "VEHICLE_SOUND_EFFECT" || asset?.type === "COMPANION_VOICE";
+        
+        if (isAudioAsset && asset.file_name) {
+            console.log(`🎵 오디오 재생 시작: ${asset.type} (인덱스: ${currentIdx})`);
+            
+            // 오디오 재생 시작
+            setSfxPath([asset.file_name]);
+            
+            // preloaded audio에서 실제 duration 가져오기, 없으면 추정값 사용
+            const preloadedAudioFile = preloadedAudio.current.get(asset.file_name);
+            const actualDuration = preloadedAudioFile?.duration ? preloadedAudioFile.duration * 1000 : 
+                                  (asset.file_name.includes('aw') || asset.file_name.includes('am') ? 3000 : 2000);
+            
+            console.log(`⏰ 오디오 길이: ${actualDuration}ms (${asset.file_name})`);
+            
+            // 오디오 길이만큼 대기 후 다음 인덱스로 이동
+            const timer = setTimeout(() => {
+                console.log(`✅ 오디오 완료 - 다음 인덱스로: ${currentIdx + 1}`);
+                setSfxPath(null); // 오디오 정리
+                setCurrentIdx(idx => idx + 1);
+            }, actualDuration);
+            
+            // cleanup function
+            return () => {
+                clearTimeout(timer);
+                setSfxPath(null);
+            };
+        }
+    }, [assets_timeline, currentIdx, isTimelineFinished, setSfxPath]);
+
     // 현재 보여줄 콘텐츠 결정
     const renderContent = () => {  
         if (!assets_timeline || isTimelineFinished) {
@@ -295,6 +277,13 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
         
         // 🎯 단일 객체로 변경된 assets 처리
         const asset = item.assets;
+        
+        // 🔧 오디오 에셋일 때는 빈 div 렌더링 (재생과 타이밍은 useEffect에서 처리)
+        const isAudioAsset = asset?.type === "VEHICLE_SOUND_EFFECT" || asset?.type === "COMPANION_VOICE";
+        if (isAudioAsset) {
+            console.log(`🎵 오디오 에셋 렌더링 - 빈 div 표시: ${asset.type} (인덱스: ${currentIdx})`);
+            return <div className="w-full h-full" />; // 빈 div 렌더링
+        }
         
 
         // CloneTalk인 경우

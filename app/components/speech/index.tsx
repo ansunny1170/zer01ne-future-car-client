@@ -77,6 +77,7 @@ export default function Speech({ onTrigger, isProcessing, defaultComment }: { on
   const longPressThreshold = 1200 // 1200ms 이상이면 길게 누름
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null) // 길게 누름 타이머
 
+
   const startRecognition = () => {
     if (recognitionRef.current && !isProcessing) {
       setFinalText(null)
@@ -215,6 +216,11 @@ export default function Speech({ onTrigger, isProcessing, defaultComment }: { on
 
     recognition.onstart = () => {
       setIsListening(true)
+      // BGM 볼륨 낮추기
+      const bgmAudio = document.querySelector('audio[loop]') as HTMLAudioElement
+      if (bgmAudio) {
+        bgmAudio.volume = 0.22
+      }
     }
 
     recognition.onresult = (event) => {
@@ -228,10 +234,20 @@ export default function Speech({ onTrigger, isProcessing, defaultComment }: { on
 
     recognition.onerror = (event) => {
       setIsListening(false)
+      // BGM 볼륨 복구
+      const bgmAudio = document.querySelector('audio[loop]') as HTMLAudioElement
+      if (bgmAudio) {
+        bgmAudio.volume = 0.5 // 원래 볼륨으로 복구
+      }
     }
 
     recognition.onend = () => {
       setIsListening(false)
+      // BGM 볼륨 복구
+      const bgmAudio = document.querySelector('audio[loop]') as HTMLAudioElement
+      if (bgmAudio) {
+        bgmAudio.volume = 0.5 // 원래 볼륨으로 복구
+      }
       // API 완료 시에만 pressCount 초기화
       if (!isProcessing) {
         // pressCount는 전송 후에만 초기화되도록 수정
