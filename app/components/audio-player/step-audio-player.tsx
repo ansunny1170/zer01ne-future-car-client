@@ -23,7 +23,7 @@ export default function StepAudioPlayer() {
 
     // stepInfo?.step 조건에 따른 볼륨 조절
     useEffect(() => {
-        const targetVolume = (!stepInfo?.step || stepInfo.step < 2) ? 0.3 : 0.85; // step 없거나 2 미만이면 30%, 나머지는 85%
+        const targetVolume = (!stepInfo?.step || stepInfo.step < 2) ? 0.3 : 0.5; // step 없거나 2 미만이면 30%, 나머지는 65%
         
         if (targetVolume === currentVolume) return;
         
