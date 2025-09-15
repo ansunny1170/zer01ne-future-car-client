@@ -16,6 +16,7 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
     const [currentIdx, setCurrentIdx] = useState(0);
     const [currentUspPool, setCurrentUspPool] = useState<any[]>([]);
     const preloadedAudio = useRef<Map<string, HTMLAudioElement>>(new Map());
+    const audioTimersRef = useRef<{playTimer?: NodeJS.Timeout, progressTimer?: NodeJS.Timeout}>({});
     
     // 타이밍 설정 변수들
     const COMPONENT_SHOW_DELAY = 0; // 컴포넌트 표시 지연 시간 (ms) - timeline 시작 속도
@@ -241,26 +242,46 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
         if (isAudioAsset && asset.file_name) {
             console.log(`🎵 오디오 재생 시작: ${asset.type} (인덱스: ${currentIdx})`);
             
-            // 오디오 재생 시작
-            setSfxPath([asset.file_name]);
+            // 기존 타이머들 정리
+            if (audioTimersRef.current.playTimer) {
+                clearTimeout(audioTimersRef.current.playTimer);
+            }
+            if (audioTimersRef.current.progressTimer) {
+                clearTimeout(audioTimersRef.current.progressTimer);
+            }
             
-            // preloaded audio에서 실제 duration 가져오기, 없으면 추정값 사용
-            const preloadedAudioFile = preloadedAudio.current.get(asset.file_name);
-            const actualDuration = preloadedAudioFile?.duration ? preloadedAudioFile.duration * 1000 : 
-                                  (asset.file_name.includes('aw') || asset.file_name.includes('am') ? 3000 : 2000);
+            // 🔧 모든 오디오 에셋에 지연을 추가하여 로딩 완료를 보장
+            const playDelay = 100;
             
-            console.log(`⏰ 오디오 길이: ${actualDuration}ms (${asset.file_name})`);
-            
-            // 오디오 길이만큼 대기 후 다음 인덱스로 이동
-            const timer = setTimeout(() => {
-                console.log(`✅ 오디오 완료 - 다음 인덱스로: ${currentIdx + 1}`);
-                setSfxPath(null); // 오디오 정리
-                setCurrentIdx(idx => idx + 1);
-            }, actualDuration);
+            audioTimersRef.current.playTimer = setTimeout(() => {
+                // 오디오 재생 시작
+                setSfxPath([asset.file_name]);
+                
+                // preloaded audio에서 실제 duration 가져오기, 없으면 추정값 사용
+                const preloadedAudioFile = preloadedAudio.current.get(asset.file_name);
+                const actualDuration = preloadedAudioFile?.duration ? preloadedAudioFile.duration * 1000 : 
+                                      (asset.file_name.includes('aw') || asset.file_name.includes('am') ? 3000 : 2000);
+                
+                console.log(`⏰ 오디오 길이: ${actualDuration}ms (${asset.file_name})`);
+                
+                // 오디오 길이만큼 대기 후 다음 인덱스로 이동
+                audioTimersRef.current.progressTimer = setTimeout(() => {
+                    console.log(`✅ 오디오 완료 - 다음 인덱스로: ${currentIdx + 1}`);
+                    setSfxPath(null); // 오디오 정리
+                    setCurrentIdx(idx => idx + 1);
+                }, actualDuration);
+            }, playDelay);
             
             // cleanup function
             return () => {
-                clearTimeout(timer);
+                if (audioTimersRef.current.playTimer) {
+                    clearTimeout(audioTimersRef.current.playTimer);
+                    audioTimersRef.current.playTimer = undefined;
+                }
+                if (audioTimersRef.current.progressTimer) {
+                    clearTimeout(audioTimersRef.current.progressTimer);
+                    audioTimersRef.current.progressTimer = undefined;
+                }
                 setSfxPath(null);
             };
         }
