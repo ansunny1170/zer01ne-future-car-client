@@ -176,4 +176,5 @@ body {
 button {
   -webkit-tap-highlight-color: transparent !important;
   -webkit-touch-callout: none !important;
+  outline: none !important;
 }
