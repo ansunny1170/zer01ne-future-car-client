@@ -66,7 +66,7 @@ export default function MusicPlayerBox({ className }: MusicPlayerBoxProps) {
 
   return (
     <div className={cn("w-[280px] flex items-center p-[12px] gap-[16px] text-white backdrop-blur-lg rounded-[18px]", className)}>
-        <div className="w-[52px] h-[52px] aspect-square rounded-[7px] bg-[#C6C6C6]/20 flex items-center justify-center relative overflow-hidden">
+        <div className="w-[52px] h-[52px] aspect-square shrink-0 rounded-[7px] bg-[#C6C6C6]/20 flex items-center justify-center relative overflow-hidden">
           {imageLoaded && !imageError ? (
             <img 
               src={bgmCover} 
