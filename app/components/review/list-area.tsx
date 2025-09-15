@@ -52,7 +52,7 @@ export default function ListArea({ data, onItemClick, selectedItem }: ListAreaPr
             <div className="absolute right-1/2 translate-x-1/2 top-[20px] z-20">
                 <button 
                     onClick={scrollToTop}
-                    className="text-white rounded-full p-3 transition-colors"
+                    className="text-white rounded-full p-3 transition-colors focus:opacity-70"
                 >
                     <Icons.scrollTop />
                 </button>
