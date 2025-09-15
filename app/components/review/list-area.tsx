@@ -58,13 +58,14 @@ export default function ListArea({ data, onItemClick, selectedItem }: ListAreaPr
                 </button>
             </div>
             
-            <div 
+            <div
                 ref={scrollRef}
                 onScroll={handleScroll}
                 className="h-full overflow-y-auto snap-y snap-mandatory scrollbar-hide"
                 style={{
                     scrollbarWidth: 'none',
                     msOverflowStyle: 'none',
+                    WebkitOverflowScrolling: 'touch',
                 }}
             >
                 {groupedData.map((group, groupIndex) => (
