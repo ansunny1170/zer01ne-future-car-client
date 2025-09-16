@@ -16,9 +16,44 @@ export default function StepVideoPlayer({ className }:
     const [isCurrentReady, setIsCurrentReady] = useState(false);
     const [hasCurrentPlayedOnce, setHasCurrentPlayedOnce] = useState(false);
     const [hasPreviousPlayedOnce, setHasPreviousPlayedOnce] = useState(false);
+    const [isVideoActive, setIsVideoActive] = useState(false);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const currentVideoRef = useRef<HTMLVideoElement | null>(null);
+    const previousVideoRef = useRef<HTMLVideoElement | null>(null);
     const prevNextVideoPathRef = useRef(nextVideoPath);
     const noLoop = !stepInfo?.step || (stepInfo?.step && stepInfo?.step < 2) ? false : true;
+
+    useEffect(() => {
+        const handleKeyDown = () => {
+            setIsVideoActive(true);
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
+
+    // isVideoActive가 true가 되면 autoPlay를 시도하고, 실패하면 수동 재생
+    useEffect(() => {
+        if (isVideoActive) {
+            // autoPlay가 작동하지 않을 경우를 대비해 타이머로 fallback
+            const fallbackTimer = setTimeout(() => {
+                const videos = [
+                    { ref: currentVideoRef.current, name: 'current' },
+                    { ref: previousVideoRef.current, name: 'previous' }
+                ];
+                
+                videos.forEach(({ ref, name }) => {
+                    if (ref && ref.paused) {
+                        console.log(`AutoPlay failed, trying manual play for ${name} video`);
+                        ref.play().catch(error => {
+                            console.log(`Manual play failed for ${name} video:`, error);
+                        });
+                    }
+                });
+            }, 100); // 100ms 후에 체크
+
+            return () => clearTimeout(fallbackTimer);
+        }
+    }, [isVideoActive]);
 
     useEffect(() => {
         // nextVideoPath가 변경될 때만 비디오 전환
@@ -68,14 +103,20 @@ export default function StepVideoPlayer({ className }:
         <div className={cn("absolute inset-0 overflow-hidden isolate bg-gray-900", className)}>
             {/* New video (always below) */}
             <video
+                ref={currentVideoRef}
                 key={`${stepInfo?.step ? BASE_URL : ''}/${currentVideoPath}`}
                 src={`${stepInfo?.step ? BASE_URL : ''}/${currentVideoPath}`}
-                autoPlay
+                autoPlay={isVideoActive}
                 muted = {noLoop}
                 loop = {noLoop}
                 playsInline
                 preload='auto'
-                onCanPlay={() => setIsCurrentReady(true)}
+                onCanPlay={() => {
+                    setIsCurrentReady(true);
+                }}
+                onPlay={() => {
+                    console.log('Current video started playing via autoPlay');
+                }}
                 onTimeUpdate={(e) => {
                     const video = e.target as HTMLVideoElement;
                     if (!hasCurrentPlayedOnce && video.duration > 0 && video.currentTime >= video.duration - 0.2) {
@@ -89,9 +130,10 @@ export default function StepVideoPlayer({ className }:
             {/* Previous video (fades out above) */}
             {previousVideoPath && (
                 <video
+                    ref={previousVideoRef}
                     key={`${BASE_URL}/${previousVideoPath}`}
                     src={`${BASE_URL}/${previousVideoPath}`}
-                    autoPlay
+                    autoPlay={isVideoActive}
                     muted = {noLoop}
                     loop
                     playsInline
