@@ -2,13 +2,13 @@ import { useScene } from "@/context/scene-context";
 import QuestionArea from "./question-area";
 import DummySpeech from "../speech/dummy-speech";
 import { motion } from "framer-motion";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 
 const DummyText = [
-    "{이름}과 함께 바다 구경가고 싶어",
-    "아이와 함께 캠핑 가고 싶어",
-    "혼자서 사무실 갔다가 등산 가자",
-    "{이름}을 픽업하고 제로원 전시에 가자",
+    "(이름}과 함께 {장소}가고 싶어",
+    "{이름}과 함께 {목적}가고 싶어",
+    "{장소1} 갔다가 {장소2}가자",
+    "{이름}이랑 제로원데이 보러가자",
 ]
 
 export default function Step1({ dafultComment }: { dafultComment?: string }) {
