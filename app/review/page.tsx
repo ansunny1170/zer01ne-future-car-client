@@ -4,6 +4,7 @@ import DetailArea from "@/components/review/detail-area";
 import ListArea from "@/components/review/list-area";
 import { Reflection } from "@/type";
 import { useEffect, useRef, useState } from "react";
+import { IS_PRD } from "@/constants";
 
 
 export default function Review() {
@@ -13,7 +14,7 @@ export default function Review() {
     
     useEffect(() => {
         // 웹소켓 연결 시도 (현재 서버에서 즉시 끊어짐)
-        const ws = new WebSocket('wss://dev.ftcar.org/ws/ending-reflection');
+        const ws = new WebSocket(IS_PRD ? 'wss://api.ftcar.org/ws/ending-reflection' : 'wss://dev.ftcar.org/ws/ending-reflection');
         wsRef.current = ws;
 
         ws.onopen = async () => {
@@ -21,7 +22,7 @@ export default function Review() {
             
             // 초기 데이터 요청
             try {
-                const response = await fetch('https://dev.ftcar.org/ending-reflection/trigger-from-history/710', {
+                const response = await fetch(IS_PRD ? 'https://api.ftcar.org/ending-reflection/trigger-from-history/710' : 'https://dev.ftcar.org/ending-reflection/trigger-from-history/710', {
                     method: 'POST',
                 });
                 if (response.ok) {
