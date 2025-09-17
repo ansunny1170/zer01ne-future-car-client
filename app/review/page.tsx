@@ -4,7 +4,7 @@ import DetailArea from "@/components/review/detail-area";
 import ListArea from "@/components/review/list-area";
 import { Reflection } from "@/type";
 import { useEffect, useRef, useState } from "react";
-
+import { IS_PRD } from "@/constants";
 
 export default function Review() {
     const wsRef = useRef<WebSocket | null>(null);
@@ -13,7 +13,7 @@ export default function Review() {
     
     useEffect(() => {
         // 웹소켓 연결 시도 (현재 서버에서 즉시 끊어짐)
-        const ws = new WebSocket('wss://dev.ftcar.org/ws/ending-reflection');
+        const ws = new WebSocket(IS_PRD ? 'wss://api.ftcar.org/ws/ending-reflection' : 'wss://dev.ftcar.org/ws/ending-reflection');
         wsRef.current = ws;
 
         ws.onopen = async () => {
@@ -21,15 +21,20 @@ export default function Review() {
             
             // 초기 데이터 요청
             try {
-                const response = await fetch('https://dev.ftcar.org/ending-reflection/trigger-from-history/710', {
-                    method: 'POST',
+                const response = await fetch(IS_PRD ? 'https://api.ftcar.org/ending-reflection/' : 'https://dev.ftcar.org/ending-reflection/', {
+                    method: 'GET',
                 });
                 if (response.ok) {
                     const data = await response.json();
                     console.log('Initial data:', data);
-                    if (data.data) {
-                        setWsData(data.data);
-                    }
+
+                    // API 응답 형태가 환경마다 다를 수 있어 방어적으로 처리
+                    setWsData(Array.isArray(data) ? data : []);
+                    // if (IS_PRD) {
+                    // } else {
+                    //     const extracted = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
+                    //     setWsData(extracted);
+                    // }
                 }
             } catch (error) {
                 console.error('Failed to fetch initial data:', error);
@@ -39,7 +44,7 @@ export default function Review() {
         ws.onmessage = (event) => {
             console.log('Received:', event.data);
             const message = JSON.parse(event.data);
-            if (message.type === 'reflection_update' && message.data) {
+            if (message.type === 'reflection_update' && Array.isArray(message.data)) {
                 setWsData(message.data);
             }
         };
@@ -60,7 +65,8 @@ export default function Review() {
     }, []);
 
     // 최대 120개(20페이지 x 6개)로 데이터 제한
-    const limitedWsData = wsData.slice(0, 120);
+    const safeWsData = Array.isArray(wsData) ? wsData : [];
+    const limitedWsData = safeWsData.slice(0, 120);
     console.log('Original data length:', wsData.length, 'Limited data length:', limitedWsData.length);
 
     return (
