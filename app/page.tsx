@@ -1,87 +1,147 @@
-"use client";
+  "use client";
 
-import VideoPlayer from "./components/video-player";
-import Scene1 from "./components/scenes/scene1";
-import Scene2 from "./components/scenes/scene2";
-import { useScene } from "./context/scene-context";
-import Scene3 from "./components/scenes/scene3";
-import Scene4 from "./components/scenes/scene4";
-import Scene5 from "./components/scenes/scene5";
-import Scene6 from "./components/scenes/scene6";
-import Scene7 from "./components/scenes/scene7";
+import Step0 from "@/components/steps/step0";
+import StepRepeat from "@/components/steps/step-repeat";
+import { useScene } from "@/context/scene-context";
+import { AnimatePresence, motion } from "framer-motion";
+import StepAudioPlayer from "@/components/audio-player/step-audio-player";
+import StepVideoPlayer from "@/components/video-player/step-video-player";
+import { useState } from "react";
+import StepComplete from "@/components/steps/step-complete";
+import BottomLayout from "@/components/fixed-layout/bottom-layout";
+import TopLayout from "@/components/fixed-layout/top-layout";
+import { IS_PRD } from "@/constants";
+import Step1 from "@/components/steps/step1";
 
 export default function Home() {
-  const { sceneNumber, category, categoryNumber, setSceneNumber, setCategory, setCategoryNumber, lastSceneNumber } = useScene();
+  const [debug, setDebug] = useState(false);
+  const { stepNumber, goPrevStep, stepInfo } = useScene();
+
+  const fadeVariants = {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    exit: { opacity: 0 }
+  };
 
   const renderStep = () => {
-    switch (sceneNumber) {
-      case 0:
-        return <Scene1/>;
+    switch (stepInfo?.step) {
+      case undefined:
+        return (
+          <motion.div
+            key="step0"
+            variants={fadeVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 0.05 }}
+          >
+            <Step0 dafultComment="출발하자"/>
+          </motion.div>
+        );
       case 1:
-        return <Scene1/>;
-      case 2:
-        return <Scene2/>;
-      case 3:
-        return <Scene3/>;
-      case 4:
-        return <Scene4 />;
-      case 5:
-        return <Scene5 />;
+        return (
+          <motion.div
+            key="step1"
+            variants={fadeVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 0.05 }}
+          >
+            <Step1 dafultComment="제로원 팀원들이랑 다같이 야구보러 갔다가 제로원데이전시보러 가려고"/>
+          </motion.div>
+        );
       case 6:
-        return <Scene6 />;
+        return (
+          <motion.div
+            key="step6"
+            variants={fadeVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 0.05 }}
+          >
+            <StepRepeat dafultComment="네 감사해요"/>
+          </motion.div>
+        );
       case 7:
-        return <Scene7 />;
+        return (
+          <motion.div
+            key="step7"
+            variants={fadeVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 0.05 }}
+          >
+            <StepComplete/>
+          </motion.div>
+        );
       default:
-        return null;
+        return (
+          <motion.div
+            key={`step${stepNumber}`}
+            variants={fadeVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 0.05 }}
+          >
+            <StepRepeat/>
+          </motion.div>
+        );
     }
   };
 
   return (
-    <div className="flex flex-col items-start justify-center text-left h-screen cursor-none123 overflow-hidden">
-      <VideoPlayer
-        direction="center"
-      />
+    <div className="flex flex-col items-start justify-center text-left w-full h-full overflow-hidden">
 
-      {/* <div className="hidden">
-        <audio 
-          key={category}
-          src={`/audios/${category}_music.m4a`} 
-          autoPlay
-          loop
-        />
-      </div> */}
+      {
+        stepNumber > 0 && (
+          <>
+            <TopLayout/>
+            <BottomLayout/>
+          </>
+        )
+      }
 
-      {renderStep()}
+      <StepVideoPlayer/>
 
-      <div>
-        {
-          sceneNumber > 0 && (
-          <button
-            className="absolute top-4 left-4 bg-white text-black px-4 py-2 rounded-md z-10"
-            onClick={() => {
-              setSceneNumber(sceneNumber - 1);
-              setCategory("a");
-              setCategoryNumber(1);
-            }}
-            disabled={sceneNumber === 1}
-          >
-            이전 스텝 / {sceneNumber} / {category} / {categoryNumber}
-          </button>
-        )}
+      <StepAudioPlayer/> 
 
-        {
-          sceneNumber === lastSceneNumber && (
+      <AnimatePresence>
+        {renderStep()}
+      </AnimatePresence>
+
+      {
+        !IS_PRD && (
+          <div>
             <button
-              className="absolute top-4 right-4 bg-white text-black px-4 py-2 rounded-md"
+              className="absolute top-[15%] left-4 bg-white text-black px-4 py-2 rounded-md z-[999]"
               onClick={() => {
-                setSceneNumber(1);
+                goPrevStep();
               }}
             >
-              처음으로
+              {stepInfo?.step}
             </button>
-          )
-        }
-      </div>
+
+            <div className="absolute top-[15%] left-16 max-h-[90vh] overflow-y-auto bg-white max-w-1/2 text-black px-4 py-2 rounded-md z-[999]"> 
+              <button
+                onClick={() => {
+                  setDebug(!debug);
+                }}
+              >
+                step info 디버깅
+              </button>
+              {debug && (
+                <pre className="h-[40vh] overflow-y-auto">
+                  {JSON.stringify(stepInfo, null, 2)}
+                </pre>
+              )}
+            </div>
+          </div>
+        )
+      }
     </div>
   );
 }
