@@ -114,7 +114,7 @@ export default function Home() {
       </AnimatePresence>
 
       {
-        !IS_PRD && (
+        // !IS_PRD && (
           <div>
             <button
               className="absolute top-[15%] left-4 bg-white text-black px-4 py-2 rounded-md z-[999]"
@@ -140,7 +140,7 @@ export default function Home() {
               )}
             </div>
           </div>
-        )
+        // )
       }
     </div>
   );
