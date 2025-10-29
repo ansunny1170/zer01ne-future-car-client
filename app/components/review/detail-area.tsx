@@ -89,6 +89,13 @@ export default function DetailArea({ selectedItem }: DetailAreaProps) {
                     
                     <div className="text-[20px] whitespace-pre-wrap">
                         {selectedItem.reflection_text}
+                        {
+                            selectedItem.failed_response && (
+                                <p className="text-red-500">
+                                    {selectedItem.failed_response}
+                                </p>
+                            )
+                        }
                     </div>
                 </div>
             ) : (
