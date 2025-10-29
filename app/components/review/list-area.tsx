@@ -101,6 +101,13 @@ export default function ListArea({ data, onItemClick, selectedItem }: ListAreaPr
                                     <div className="flex-1 relative overflow-hidden">
                                         <p className="text-sm leading-relaxed">
                                             {item.reflection_text}
+                                            {
+                                                item.failed_response && (
+                                                    <pre className="text-red-500">
+                                                        {item.failed_response}
+                                                    </pre>
+                                                )
+                                            }
                                         </p>
                                         <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-white to-transparent pointer-events-none" />
                                     </div>
