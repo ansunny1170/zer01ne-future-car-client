@@ -1,64 +1,138 @@
-# CLAUDE.md — zer01ne-future-car-client
+# CLAUDE.md
 
-FutureCar UX 시나리오 데모의 프론트엔드. 차량 내 UX 시나리오를 단계별로 재생하고,
-음성/WebSocket으로 백엔드(FastAPI)와 상호작용하는 Next.js 앱.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## 스택
-
-- **Next.js 15.3.3** (App Router) + **React 19** + **TypeScript**
-- 패키지 매니저: **yarn 4.4.1** (Corepack). npm 쓰지 말 것
-- 상태/데이터: `@tanstack/react-query`, `axios`
-- 애니메이션: `framer-motion`, `lottie-react`
-- 스타일: Tailwind CSS 3.3
-
-## 명령
+## Commands
 
 ```bash
-yarn install      # 의존성 설치 (yarn 4)
-yarn dev          # 개발 서버 (localhost:3000)
-yarn build        # 프로덕션 빌드
-yarn start        # 빌드 결과 실행
-yarn lint         # ESLint (단, 빌드는 lint 무시하도록 설정됨)
+yarn dev      # start dev server (localhost:3000)
+yarn build    # production build (ESLint errors ignored — see next.config.ts)
+yarn lint     # run ESLint
 ```
 
-## 환경변수
+There are no tests. The package manager is **Yarn 4** (`yarn@4.4.1`); do not use npm or pnpm.
 
-`.env.local` (로컬) / Vercel 환경변수에 설정:
+## Environment Variables
 
-| 변수 | 의미 |
+| Variable | Purpose |
 |---|---|
-| `NEXT_PUBLIC_API_URL` | 백엔드 REST 베이스 URL (예: `https://api.ftcar.org`) |
-| `NEXT_PUBLIC_IS_PRD` | `"true"`면 운영 모드 (아래 함정 참고) |
+| `NEXT_PUBLIC_API_URL` | Backend base URL (e.g. `https://dev.ftcar.org` or `https://api.ftcar.org`) |
+| `NEXT_PUBLIC_IS_PRD` | `"true"` for production; controls API/WebSocket hosts and debug UI |
 
-## 디렉터리
+## Path Alias
 
-- `app/` — App Router 루트. webpack alias `@` → `app/` ([next.config.ts](next.config.ts))
-  - `components/` — 화면 구성요소 (scenes, steps, review, speech, video-player, ui 등)
-  - `context/`, `hooks/`, `utils/`, `type/` — 공통 로직/타입
-  - `api/speech/` — 음성 관련 API 클라이언트 (axios, baseURL = `BASE_API_LINK`)
-  - `left/`, `right/`, `review/` — 주요 페이지
-- `constants.ts` — 전역 상수 (S3 주소, API 주소, IS_PRD)
+`@` resolves to the `app/` directory (configured in `next.config.ts` via webpack alias). Use `@/components/...`, `@/context/...`, etc.
 
-## ⚠️ 함정 / 주의
+## Architecture Overview
 
-- **백엔드 주소가 코드에 하드코딩됨**: [app/review/page.tsx](app/review/page.tsx)에서
-  WebSocket/fetch 주소가 `IS_PRD` 값으로 분기됨:
-  - 운영(`IS_PRD=true`): `wss://api.ftcar.org/ws/...`, `https://api.ftcar.org/...`
-  - 개발(`IS_PRD=false`): `wss://dev.ftcar.org/...`, `https://dev.ftcar.org/...`
-  → 백엔드 도메인이 바뀌면 **`constants.ts`의 env뿐 아니라 이 하드코딩도 함께 확인**할 것.
-- **S3 주소 고정**: `BASE_S3_LINK = https://future-car.s3.ap-northeast-2.amazonaws.com`
-  ([constants.ts](app/constants.ts)). 버킷/리전 변경 시 수정 필요.
-- `reactStrictMode: false`, 빌드 시 ESLint 무시(`ignoreDuringBuilds: true`) 설정돼 있음.
+This is a **Next.js 15 / React 19** kiosk experience for Hyundai Motor Group ("Zero-One"), built as a linear multi-step interactive scenario driven by a conversational AI backend.
 
-## 배포 (Vercel)
+### Two Routes
 
-- 호스팅: **Vercel** (GitHub `ansunny1170/zer01ne-future-car-client` 연동)
-- 도메인: `ftcar.org`, `www.ftcar.org`
-- 운영 배포 시 env: `NEXT_PUBLIC_API_URL=https://api.ftcar.org`, `NEXT_PUBLIC_IS_PRD=true`
-- 백엔드(FastAPI)는 Vercel이 아닌 별도 호스팅(Railway 예정). WebSocket이 상시 연결이라 서버리스 부적합.
+- `/` — the main interactive experience
+- `/review` — a real-time reflection display (WebSocket + REST from `ftcar.org`)
 
-## Git / 인증
+### Central State: `SceneContext` (`app/context/scene-context.tsx`)
 
-- origin: `https://github.com/ansunny1170/zer01ne-future-car-client.git`
-- 로컬 credential helper가 `ansunny1170` 계정으로 인증하도록 설정돼 있음
-  (전역 gh 활성 계정과 무관하게 동작).
+`SceneProvider` wraps the entire app and is the single source of truth for:
+
+- `stepNumber` / `stepInfo` — current step index and full scenario data from the API
+- `videoPath`, `bgmPath`, `sfxPath` — active media paths
+- `sessionId` — groups API calls per session
+- `preloadedAudio` — `Map<string, HTMLAudioElement>` shared between StepRepeat and the audio player
+- `BroadcastChannel("my-channel")` — syncs state across browser tabs
+
+### Step Flow
+
+```
+stepNumber=0  → Step0      (intro; fires first API call, then goNextStep)
+stepNumber=1  → Step1      (speech UI for trip input)
+stepNumber=2-5 → StepRepeat (generic step; driven by stepInfo from API)
+stepNumber=6  → StepRepeat (outro speech)
+stepNumber=7  → StepComplete (end screen; S/ㄴ key restarts)
+```
+
+`renderStep()` in `app/page.tsx` switches on `stepInfo?.step`, not `stepNumber`.
+
+### API Layer (`app/api/speech/index.ts`)
+
+Single endpoint: `POST /scenario`
+
+```ts
+{ session_id: string, user_message: string, is_new_session: boolean }
+→ SpeechResponse { success, message, data: StepInfo }   // type
+```
+
+`useSpeechProcessing` (`app/hooks/useSpeechProcessing.ts`) wraps this with TanStack Query and a global mutex flag to prevent concurrent submissions.
+
+> ⚠️ The TS type and the runtime usage diverge: call sites do `setStepInfo(response as unknown as StepInfo)` (i.e. cast the whole response, not `response.data`). When adding new call sites, match the existing pattern. Details: `.claude/rules/api.md`.
+
+### `StepInfo` Type (`app/type/index.ts`)
+
+The API response `data` field is typed as `StepInfo`. Key fields:
+
+- `step` (1–7) — which step UI to render
+- `bgv` / `bgm` / `sfx` — media file names served from S3
+- `assets_timeline[]` — ordered list of UI/audio events to play sequentially
+- `question` + `choices[]` — shown after the timeline completes
+- `path_state` — routing state (not directly rendered)
+
+### Timeline System (`StepRepeat`, `StepComplete`)
+
+`assets_timeline` is processed sequentially by index (`currentIdx`). Each item's `assets` is a single discriminated-union object typed by `AssetsType`:
+
+| Type | Rendered as |
+|---|---|
+| `CLONE_TALKS` | `CloneTalkSplit` — typewriter text; advances on `onComplete` |
+| `DEFAULT_POPUP` / `TRIGGER_POPUP` | `CommonPopupUI` — image popup; advances on `onComplete` |
+| `HUD_POPUP` | `HudLayer` — HUD overlay |
+| `FUNCTION_POPUP` | `UspPopupWrapper` — USP feature cards, timed |
+| `VEHICLE_SOUND_EFFECT` / `COMPANION_VOICE` | Audio only; audio element loaded from preload map |
+
+After the timeline finishes, `questionFlag` becomes `true` and `QuestionArea` / `QuestionButtons` appear. The user speaks (Web Speech API, Korean `ko-KR`) via the `Speech` component.
+
+### Media
+
+- **Background video**: `StepVideoPlayer` plays `videoPath` (a filename served from S3 `future-car` bucket: `BASE_S3_LINK`).
+- **BGM**: `StepAudioPlayer` plays `bgmPath` in a loop at 0.5 volume; volume drops to 0.22 while mic is active.
+- **SFX**: also via `StepAudioPlayer`; file names come from `sfxPath` in context. Audio files are preloaded in `StepRepeat.preloadAudioAssets()` at step start.
+
+### Keyboard Controls (demo kiosk)
+
+`S` key (also maps to Korean `ㄴ`):
+- First press → starts mic recording
+- Subsequent short press → restarts recording
+- Long press (≥1200 ms) → submits recorded text
+- `Space` → submits `defaultComment` (hardcoded demo phrase) without mic
+
+### Fonts
+
+`HyundaiSansUI_JP_KR_Latin` is the primary font (loaded as `--font-hyundai` CSS variable). Tailwind's `font-sans` defaults to it.
+
+### `reactStrictMode: false`
+
+Strict mode is intentionally disabled. Many timeline effects rely on single-fire `useEffect` semantics and would double-trigger under strict mode.
+
+## Project-Wide Invariants
+
+These apply everywhere in this repo. Topic-specific rules live in `.claude/rules/` and load only when Claude reads matching files.
+
+- **No tests.** Don't add test runners, test configs, or `*.test.*` files. The kiosk is validated by hand.
+- **`reactStrictMode: false`** is intentional (see above). Don't flip it.
+- **Don't `git commit` to `main`/`master`.** The PreToolUse hook in `.claude/settings.json` blocks it.
+- **Don't restructure `app/components/steps/`.** The `Step0 / Step1 / StepRepeat / StepComplete` split is the contract with `app/page.tsx:renderStep()`.
+- **Korean comments are intentional.** Don't translate or strip existing Korean comments — they encode product intent (e.g. the `❌사용하지 않습니다` markers in `StepInfo`).
+- **Don't bulk-remove `console.log`s.** They are demo/QA instrumentation. New code can omit them.
+
+## Where to find more rules
+
+- `.claude/rules/timeline.md` — when editing `step-repeat.tsx`, `step-complete.tsx`, or `scene-context.tsx`
+- `.claude/rules/api.md` — when editing `app/api/**` or `app/hooks/use*.ts`
+- `.claude/rules/popup-ui.md` — when editing `app/components/ui/popup_ui/**`
+- `.claude/rules/react-conventions.md` — for any `.tsx` / `.ts` file under `app/`
+
+Skills (loaded on demand by Claude when relevant):
+- `add-assets-type` — adding a new `AssetsType` enum value
+- `add-popup-keyname` — registering a new popup keyName
+- `step-debug` — diagnosing timeline / audio / playback bugs
+- `scenario-mock` — driving the UI without the backend
