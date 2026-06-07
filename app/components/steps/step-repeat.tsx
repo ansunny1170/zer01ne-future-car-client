@@ -16,7 +16,7 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
     const [currentIdx, setCurrentIdx] = useState(0);
     const [currentUspPool, setCurrentUspPool] = useState<any[]>([]);
     const preloadedAudio = useRef<Map<string, HTMLAudioElement>>(new Map());
-    const audioTimersRef = useRef<{playTimer?: NodeJS.Timeout, progressTimer?: NodeJS.Timeout}>({});
+    const audioTimersRef = useRef<{playTimer?: NodeJS.Timeout, progressTimer?: NodeJS.Timeout, retryTimer?: NodeJS.Timeout}>({});
     
     // 타이밍 설정 변수들
     const COMPONENT_SHOW_DELAY = 0; // 컴포넌트 표시 지연 시간 (ms) - timeline 시작 속도
@@ -116,6 +116,25 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
             }, delay);
         }
     }, [isTimelineFinished, questionFlag, stepInfo]);
+
+    // → (오른쪽 화살표): 미디어 로딩 실패로 멈췄을 때 현재 세그먼트를 건너뛰고 다음으로 진행 (임시 수동 스킵)
+    useEffect(() => {
+        const handleSkip = (event: KeyboardEvent) => {
+            if (event.code !== 'ArrowRight') return;
+            if (!assets_timeline || isTimelineFinished) return;
+            event.preventDefault();
+            // 진행 중인 타이머/재시도 루프 모두 정리
+            if (audioTimersRef.current.playTimer) clearTimeout(audioTimersRef.current.playTimer);
+            if (audioTimersRef.current.progressTimer) clearTimeout(audioTimersRef.current.progressTimer);
+            if (audioTimersRef.current.retryTimer) clearTimeout(audioTimersRef.current.retryTimer);
+            audioTimersRef.current = {};
+            setSfxPath(null);
+            console.log(`⏭️ 수동 건너뛰기 (→): 인덱스 ${currentIdx} → ${currentIdx + 1}`);
+            setCurrentIdx(idx => idx + 1);
+        };
+        window.addEventListener('keydown', handleSkip);
+        return () => window.removeEventListener('keydown', handleSkip);
+    }, [assets_timeline, isTimelineFinished, currentIdx, setSfxPath]);
 
 
     // FUNCTION_POPUP 순차 표시 처리 (단일 객체로 수정)
@@ -276,8 +295,9 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
                         }, actualDuration);
                     } else {
                         // duration이 아직 로드되지 않았으면 50ms 후 재시도
+                        // (미디어 누락 시 무한 대기 → → 키로 수동 건너뛰기 가능)
                         console.log(`⏳ duration 로딩 대기 중: ${asset.file_name}`);
-                        setTimeout(waitForDurationAndPlay, 50);
+                        audioTimersRef.current.retryTimer = setTimeout(waitForDurationAndPlay, 50);
                     }
                 };
                 
@@ -293,6 +313,10 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
                 if (audioTimersRef.current.progressTimer) {
                     clearTimeout(audioTimersRef.current.progressTimer);
                     audioTimersRef.current.progressTimer = undefined;
+                }
+                if (audioTimersRef.current.retryTimer) {
+                    clearTimeout(audioTimersRef.current.retryTimer);
+                    audioTimersRef.current.retryTimer = undefined;
                 }
                 setSfxPath(null);
             };
