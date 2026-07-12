@@ -10,7 +10,7 @@ env:
 
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm  # 네이티브 arm64(public repo 무료) — QEMU 에뮬 제거로 빌드 단축
     permissions:
       contents: read
       packages: write
