@@ -2,7 +2,7 @@ name: Build & Deploy Frontend
 
 on:
   push:
-    branches: [main]
+    branches: [main-2026]
 
 env:
   REGISTRY: ghcr.io
