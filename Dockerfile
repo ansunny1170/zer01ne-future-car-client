@@ -11,9 +11,9 @@ WORKDIR /app
 # 의존성 정의 파일만 먼저 복사 (Docker 레이어 캐시 극대화)
 # 소스코드 변경 시에도 lockfile이 안 바뀌면 이 스테이지는 캐시 재사용
 COPY package.json yarn.lock .yarnrc.yml ./
-COPY .yarn/ ./.yarn/
 
 # --immutable: lockfile 변경 방지 (프로덕션 빌드 안전장치)
+# yarn 4 는 corepack 이 제공하므로 .yarn/ 를 repo 에 두지 않는다(gitignore).
 RUN yarn install --immutable
 
 # ============================================
@@ -25,9 +25,8 @@ RUN corepack enable
 
 WORKDIR /app
 
-# deps 스테이지에서 설치된 node_modules와 .yarn 재사용
+# deps 스테이지에서 설치된 node_modules 재사용
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/.yarn ./.yarn
 
 # 소스코드 전체 복사
 COPY . .

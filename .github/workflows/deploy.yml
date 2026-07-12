@@ -6,7 +6,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: ansunny1170/future-car-frontend  # compose 의 image 이름과 일치
 
 jobs:
   build-and-deploy:
@@ -40,7 +40,10 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      # Mac Studio 는 Tailscale 사설망이라 클라우드 러너가 SSH 로 못 닿음 → 당분간 수동 배포.
+      # self-hosted 러너(Mac Studio)를 붙이면 이 if: false 를 제거해 CD 재활성화.
       - name: Deploy to Mac Studio
+        if: false
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.MAC_STUDIO_HOST }}
