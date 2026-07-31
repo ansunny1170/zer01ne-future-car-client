@@ -136,6 +136,9 @@ export default function Home() {
               {stepInfo?.flatAssetsParsed && (
                 <span className="ml-2 text-red-600 font-bold">flat asset 파싱 진행함</span>
               )}
+              {typeof stepInfo?.aiResponseTime === "number" && (
+                <span className="ml-2 text-blue-600 font-bold">AI 응답시간 {stepInfo.aiResponseTime}초</span>
+              )}
               {debug && (
                 <pre className="h-[40vh] overflow-y-auto">
                   {JSON.stringify(stepInfo, null, 2)}
