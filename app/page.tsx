@@ -139,6 +139,13 @@ export default function Home() {
               {typeof stepInfo?.aiResponseTime === "number" && (
                 <span className="ml-2 text-blue-600 font-bold">AI 응답시간 {stepInfo.aiResponseTime}초</span>
               )}
+              {stepInfo?.aiModel && (
+                <span className="ml-2 text-blue-600 font-bold">
+                  model {stepInfo.aiModel}
+                  {stepInfo.aiReasoningEffort ? ` · reasoning ${stepInfo.aiReasoningEffort}` : ""}
+                  {stepInfo.aiVerbosity ? ` · verbosity ${stepInfo.aiVerbosity}` : ""}
+                </span>
+              )}
               {debug && (
                 <pre className="h-[40vh] overflow-y-auto">
                   {JSON.stringify(stepInfo, null, 2)}
