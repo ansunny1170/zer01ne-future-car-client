@@ -274,30 +274,37 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
             
             audioTimersRef.current.playTimer = setTimeout(() => {
                 const preloadedAudioFile = preloadedAudio.current.get(asset.file_name);
-                
+
                 // 🔧 duration이 유효할 때까지 기다린 후 재생 시작
+                let durationRetryCount = 0;
+                const MAX_DURATION_RETRIES = 10; // 재시도 10회(약 500ms) 후에도 안 잡히면 파일 누락으로 보고 스킵
                 const waitForDurationAndPlay = () => {
                     if (preloadedAudioFile && preloadedAudioFile.duration && preloadedAudioFile.duration > 0) {
                         // duration이 유효하면 재생 시작
                         console.log(`🎵 오디오 duration 확인됨: ${preloadedAudioFile.duration}초`);
                         setSfxPath([asset.file_name]);
-                        
+
                         const baseDuration = preloadedAudioFile.duration * 1000;
                         const actualDuration = baseDuration + 200; // 200ms 버퍼
-                        
+
                         console.log(`⏰ 오디오 길이: ${baseDuration}ms + 버퍼 200ms = ${actualDuration}ms (${asset.file_name})`);
-                        
+
                         // 오디오 길이만큼 대기 후 다음 인덱스로 이동
                         audioTimersRef.current.progressTimer = setTimeout(() => {
                             console.log(`✅ 오디오 완료 - 다음 인덱스로: ${currentIdx + 1}`);
                             setSfxPath(null);
                             setCurrentIdx(idx => idx + 1);
                         }, actualDuration);
-                    } else {
-                        // duration이 아직 로드되지 않았으면 50ms 후 재시도
-                        // (미디어 누락 시 무한 대기 → → 키로 수동 건너뛰기 가능)
-                        console.log(`⏳ duration 로딩 대기 중: ${asset.file_name}`);
+                    } else if (durationRetryCount < MAX_DURATION_RETRIES) {
+                        // duration이 아직 로드되지 않았으면 50ms 후 재시도 (최대 10회)
+                        durationRetryCount++;
+                        console.log(`⏳ duration 로딩 대기 중 (${durationRetryCount}/${MAX_DURATION_RETRIES}): ${asset.file_name}`);
                         audioTimersRef.current.retryTimer = setTimeout(waitForDurationAndPlay, 50);
+                    } else {
+                        // 재시도 한도 초과 → 파일 누락으로 판단, 무한 대기 대신 다음 인덱스로 스킵
+                        console.warn(`⚠️ 오디오 파일 없음 - ${MAX_DURATION_RETRIES}회 재시도 후 건너뜀: ${asset.file_name} → 다음 인덱스로: ${currentIdx + 1}`);
+                        setSfxPath(null);
+                        setCurrentIdx(idx => idx + 1);
                     }
                 };
                 
