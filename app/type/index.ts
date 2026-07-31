@@ -142,6 +142,9 @@ export interface StepInfo {
     path_state?: PathState, // ✅ 사용하는 데이터입니다. 경로 상태입니다.
     flatAssetsParsed?: boolean, // 🔧 GPT가 assets 래퍼를 빼먹은(flat) 항목을 서버가 보정 파싱했을 때 true (디버깅 표시용)
     aiResponseTime?: number, // ⏱️ AI 요청→응답 소요 시간(초). 서버가 측정해서 내려줌 (디버깅 표시용)
+    aiModel?: string, // 🤖 사용된 OpenAI 모델 (디버깅 표시용)
+    aiReasoningEffort?: string, // 🧠 사용된 reasoning_effort (없으면 undefined)
+    aiVerbosity?: string, // 🗣️ 사용된 verbosity (없으면 undefined)
 }
 
 // export enum AssetsType {
