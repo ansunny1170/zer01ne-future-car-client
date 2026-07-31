@@ -133,6 +133,9 @@ export default function Home() {
               >
                 step info 디버깅
               </button>
+              {stepInfo?.flatAssetsParsed && (
+                <span className="ml-2 text-red-600 font-bold">flat asset 파싱 진행함</span>
+              )}
               {debug && (
                 <pre className="h-[40vh] overflow-y-auto">
                   {JSON.stringify(stepInfo, null, 2)}

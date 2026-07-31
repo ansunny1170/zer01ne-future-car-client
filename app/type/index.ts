@@ -140,6 +140,7 @@ export interface StepInfo {
     question?: string, // ✅ 사용하는 데이터입니다. 선택지의 질문입니다.
     choices?: Choice[], // ✅ 사용하는 데이터입니다. 선택지입니다. choices의 배열길이는 항상 3입니다.
     path_state?: PathState, // ✅ 사용하는 데이터입니다. 경로 상태입니다.
+    flatAssetsParsed?: boolean, // 🔧 GPT가 assets 래퍼를 빼먹은(flat) 항목을 서버가 보정 파싱했을 때 true (디버깅 표시용)
 }
 
 // export enum AssetsType {
