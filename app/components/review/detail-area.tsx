@@ -78,7 +78,7 @@ export default function DetailArea({ selectedItem }: DetailAreaProps) {
             </div>
             {selectedItem ? (
                 <div className="px-[28px] py-[70px]">
-                    <div className="pb-[180px]">
+                    <div className="pb-[30px]">
                         <h2 className="text-[40px] font-semibold pb-[46px] leading-[1.2] break-keep">{selectedItem.event_title}</h2>
                         <div className="text-[18px] flex items-center gap-2">
                             <Icons.user />
