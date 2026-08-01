@@ -16,15 +16,9 @@ export default function Review() {
     const [wsData, setWsData] = useState<Reflection[]>([]);
     const [selectedItem, setSelectedItem] = useState<Reflection | null>(null);
 
+    // 초기 엔딩 데이터는 HTTP GET 으로 받는다 (WS 연결 성공 여부와 무관하게 마운트 시 즉시).
     useEffect(() => {
-        // 웹소켓 연결 시도 (현재 서버에서 즉시 끊어짐)
-        const ws = new WebSocket(`${WS_BASE}/ws/ending-reflection`);
-        wsRef.current = ws;
-
-        ws.onopen = async () => {
-            console.log('WebSocket connected');
-
-            // 초기 데이터 요청
+        (async () => {
             try {
                 const response = await fetch(`${API_BASE}/ending-reflection/`, {
                     method: 'GET',
@@ -35,15 +29,20 @@ export default function Review() {
 
                     // API 응답 형태가 환경마다 다를 수 있어 방어적으로 처리
                     setWsData(Array.isArray(data) ? data : []);
-                    // if (IS_PRD) {
-                    // } else {
-                    //     const extracted = Array.isArray(data) ? data : (Array.isArray(data?.data) ? data.data : []);
-                    //     setWsData(extracted);
-                    // }
                 }
             } catch (error) {
                 console.error('Failed to fetch initial data:', error);
             }
+        })();
+    }, []);
+
+    // WS 는 이후 실시간 갱신(reflection_update)만 담당한다.
+    useEffect(() => {
+        const ws = new WebSocket(`${WS_BASE}/ws/ending-reflection`);
+        wsRef.current = ws;
+
+        ws.onopen = () => {
+            console.log('WebSocket connected');
         };
 
         ws.onmessage = (event) => {
