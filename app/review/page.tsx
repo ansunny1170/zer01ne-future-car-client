@@ -4,24 +4,29 @@ import DetailArea from "@/components/review/detail-area";
 import ListArea from "@/components/review/list-area";
 import { Reflection } from "@/type";
 import { useEffect, useRef, useState } from "react";
-import { IS_PRD } from "@/constants";
+import { BASE_API_LINK } from "@/constants";
+
+// .env(NEXT_PUBLIC_API_URL) 기반으로 REST/WS 주소 생성
+// 예: "https://api.ftcar.org/" → API_BASE="https://api.ftcar.org", WS_BASE="wss://api.ftcar.org"
+const API_BASE = BASE_API_LINK.replace(/\/+$/, "");
+const WS_BASE = API_BASE.replace(/^http/, "ws"); // http→ws, https→wss
 
 export default function Review() {
     const wsRef = useRef<WebSocket | null>(null);
     const [wsData, setWsData] = useState<Reflection[]>([]);
     const [selectedItem, setSelectedItem] = useState<Reflection | null>(null);
-    
+
     useEffect(() => {
         // 웹소켓 연결 시도 (현재 서버에서 즉시 끊어짐)
-        const ws = new WebSocket(IS_PRD ? 'wss://api.ftcar.org/ws/ending-reflection' : 'wss://dev.ftcar.org/ws/ending-reflection');
+        const ws = new WebSocket(`${WS_BASE}/ws/ending-reflection`);
         wsRef.current = ws;
 
         ws.onopen = async () => {
             console.log('WebSocket connected');
-            
+
             // 초기 데이터 요청
             try {
-                const response = await fetch(IS_PRD ? 'https://api.ftcar.org/ending-reflection/' : 'https://dev.ftcar.org/ending-reflection/', {
+                const response = await fetch(`${API_BASE}/ending-reflection/`, {
                     method: 'GET',
                 });
                 if (response.ok) {
