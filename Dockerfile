@@ -31,6 +31,14 @@ COPY --from=deps /app/node_modules ./node_modules
 # 소스코드 전체 복사
 COPY . .
 
+# NEXT_PUBLIC_* 는 런타임이 아니라 빌드 시점에 번들에 박제된다.
+# → docker build --build-arg 로 받아 yarn build 전에 ENV 로 세팅해야 함.
+#   (compose 의 런타임 env 로는 이미 빌드된 번들에 반영되지 않는다.)
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_IS_PRD
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_IS_PRD=$NEXT_PUBLIC_IS_PRD
+
 # Next.js standalone 빌드 (next.config.ts의 output: 'standalone' 활용)
 # 결과: .next/standalone/server.js (최소 서버) + .next/static (정적 자산)
 RUN yarn build
