@@ -6,6 +6,7 @@ import { cn } from "@/utils/cn";
 import UspPopupWrapper from "../ui/usp-popup-wrapper";
 import { motion } from "framer-motion";
 import HyundaiLoading from "../ui/hyundai-loading";
+import { useDevTrigger } from "@/hooks/useDevTrigger";
 
 export default function StepComplete() {
     const { stepInfo, setSfxPath, setOnSfxComplete, reStart } = useScene();
@@ -73,6 +74,17 @@ export default function StepComplete() {
             setEndFlag(true);
         }
     }, [assets_timeline, endFlag]);
+
+    // 🥚 개발자 전용: 마지막 스텝(질문 없음)의 타임라인을 전부 스킵하고 종료 상태로
+    // 트리거: Ctrl/Cmd+Shift+. 또는 우하단 구석 3연속 클릭
+    const skipToEnd = useCallback(() => {
+        if (endFlag) return;
+        setSfxPath(null);
+        if (assets_timeline) setCurrentIdx(assets_timeline.length);
+        setEndFlag(true);
+    }, [assets_timeline, endFlag, setSfxPath]);
+
+    useDevTrigger({ code: "Period", corner: "bottom-right" }, skipToEnd);
 
     // FUNCTION_POPUP 순차 표시 처리 (단일 객체로 수정)
     useEffect(() => {

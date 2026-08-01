@@ -76,6 +76,8 @@ export default function Speech({ onTrigger, isProcessing, defaultComment }: { on
   const keyDownTimeRef = useRef<number>(0) // 키 다운 시간
   const longPressThreshold = 1200 // 1200ms 이상이면 길게 누름
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null) // 길게 누름 타이머
+  // 재시작(초기화) 후 새 세션이 시작되기 전까지, 멈추는 세션의 잔여 onresult를 무시하기 위한 플래그
+  const suppressResultRef = useRef(false)
 
 
   const startRecognition = () => {
@@ -87,9 +89,12 @@ export default function Speech({ onTrigger, isProcessing, defaultComment }: { on
 
   const restartRecording = () => {
     if (recognitionRef.current) {
-      
+
+      // 스크립트 초기화: 멈추는 세션이 잔여 결과를 다시 쏴서 되살리는 것을 막기 위해
+      // 새 세션(onstart)이 시작될 때까지 onresult 를 무시한다.
+      suppressResultRef.current = true
       setFinalText(null)
-      
+
       // 강제로 isListening을 false로 설정하고 새로 시작
       try {
         recognitionRef.current.stop()
@@ -216,6 +221,8 @@ export default function Speech({ onTrigger, isProcessing, defaultComment }: { on
 
     recognition.onstart = () => {
       setIsListening(true)
+      // 새 세션이 시작됐으니 잔여 결과 무시 해제
+      suppressResultRef.current = false
       // BGM 볼륨 낮추기
       const bgmAudio = document.querySelector('audio[loop]') as HTMLAudioElement
       if (bgmAudio) {
@@ -224,6 +231,9 @@ export default function Speech({ onTrigger, isProcessing, defaultComment }: { on
     }
 
     recognition.onresult = (event) => {
+      // 재시작 직후, 멈추는 세션의 잔여 결과는 무시 (초기화된 스크립트가 되살아나는 것 방지)
+      if (suppressResultRef.current) return
+
       const transcript = Array.from(event.results)
         .map((r) => r[0].transcript)
         .join('')
