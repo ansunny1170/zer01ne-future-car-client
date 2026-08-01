@@ -6,16 +6,34 @@ import { useScene } from "@/context/scene-context";
 import { AnimatePresence, motion } from "framer-motion";
 import StepAudioPlayer from "@/components/audio-player/step-audio-player";
 import StepVideoPlayer from "@/components/video-player/step-video-player";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import StepComplete from "@/components/steps/step-complete";
 import BottomLayout from "@/components/fixed-layout/bottom-layout";
 import TopLayout from "@/components/fixed-layout/top-layout";
-import { IS_PRD } from "@/constants";
 import Step1 from "@/components/steps/step1";
+import { useDevTrigger } from "@/hooks/useDevTrigger";
 
 export default function Home() {
   const [debug, setDebug] = useState(false);
+  // 🥚 개발자 전용 디버그 패널 표시 여부 (localStorage 영속)
+  const [devMode, setDevMode] = useState(false);
   const { stepNumber, goPrevStep, stepInfo } = useScene();
+
+  // localStorage에서 devMode 초기값 로드 (SSR 하이드레이션 불일치 방지 위해 effect에서)
+  useEffect(() => {
+    setDevMode(localStorage.getItem("ftcar_dev_mode") === "true");
+  }, []);
+
+  const toggleDevMode = () => {
+    setDevMode((prev) => {
+      const next = !prev;
+      localStorage.setItem("ftcar_dev_mode", String(next));
+      return next;
+    });
+  };
+
+  // 트리거: Ctrl/Cmd+Shift+D 또는 좌상단 구석 3연속 클릭
+  useDevTrigger({ code: "KeyD", corner: "top-left" }, toggleDevMode);
 
   const fadeVariants = {
     initial: { opacity: 0 },
@@ -114,7 +132,7 @@ export default function Home() {
       </AnimatePresence>
 
       {
-        // !IS_PRD && (
+        devMode && (
           <div>
             <button
               className="absolute top-[15%] left-4 bg-white text-black px-4 py-2 rounded-md z-[999]"
@@ -153,7 +171,7 @@ export default function Home() {
               )}
             </div>
           </div>
-        // )
+        )
       }
     </div>
   );
