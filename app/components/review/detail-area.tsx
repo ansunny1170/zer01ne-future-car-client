@@ -11,7 +11,7 @@ export default function DetailArea({ selectedItem }: DetailAreaProps) {
     const [showScrollbar, setShowScrollbar] = useState(false);
     const [isScrollable, setIsScrollable] = useState(false);
     const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-    
+
     // selectedItem이 변경될 때마다 스크롤을 최상단으로 이동
     useEffect(() => {
         if (selectedItem && scrollRef.current) {
@@ -39,14 +39,14 @@ export default function DetailArea({ selectedItem }: DetailAreaProps) {
     // 스크롤 이벤트 처리
     const handleScroll = () => {
         if (!isScrollable) return;
-        
+
         setShowScrollbar(true);
-        
+
         // 기존 타이머 클리어
         if (scrollTimeoutRef.current) {
             clearTimeout(scrollTimeoutRef.current);
         }
-        
+
         // 2초 후 스크롤바 숨김
         scrollTimeoutRef.current = setTimeout(() => {
             setShowScrollbar(false);
@@ -61,10 +61,10 @@ export default function DetailArea({ selectedItem }: DetailAreaProps) {
             }
         };
     }, []);
-    
+
     return (
-        <div 
-            ref={scrollRef} 
+        <div
+            ref={scrollRef}
             onScroll={handleScroll}
             className="w-1/3 h-full bg-[#E9E7E6] shrink-0 overflow-y-auto custom-scrollbar"
             style={{
@@ -79,14 +79,14 @@ export default function DetailArea({ selectedItem }: DetailAreaProps) {
             {selectedItem ? (
                 <div className="px-[28px] py-[70px]">
                     <div className="pb-[30px]">
-                        <h2 className="text-[40px] font-semibold pb-[46px] leading-[1.2] break-keep">{selectedItem.event_title}</h2>
                         <div className="text-[18px] flex items-center gap-2">
                             <Icons.user />
                             {selectedItem.nick_name}
                         </div>
+                        <h2 className="text-[40px] font-semibold pb-[46px] leading-[1.2] break-keep">{selectedItem.event_title}</h2>
                     </div>
 
-                    
+
                     <div className="text-[20px] whitespace-pre-wrap">
                         {selectedItem.reflection_text}
                         {
