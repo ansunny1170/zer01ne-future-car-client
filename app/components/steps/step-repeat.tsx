@@ -6,6 +6,7 @@ import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import UspPopupWrapper from "../ui/usp-popup-wrapper";
 import CloneTalkSplit from "../ui/clone-talk-split";
 import HudLayer from "../ui/popup_ui/hud-layer";
+import { useDevTrigger } from "@/hooks/useDevTrigger";
 
 export default function StepRepeat({ dafultComment }: { dafultComment?: string }) {
     const BASE_URL = BASE_S3_LINK;
@@ -116,6 +117,23 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
             }, delay);
         }
     }, [isTimelineFinished, questionFlag, stepInfo]);
+
+    // 🥚 개발자 전용: 타임라인 전부 스킵 → 질문 UI 바로 표시
+    // 트리거: Ctrl/Cmd+Shift+. 또는 우하단 구석 3연속 클릭
+    const skipToQuestion = useCallback(() => {
+        if (!assets_timeline || isTimelineFinished) return;
+        // 예약된 오디오 타이머 정리 + 재생 중지
+        const timers = audioTimersRef.current;
+        if (timers.playTimer) clearTimeout(timers.playTimer);
+        if (timers.progressTimer) clearTimeout(timers.progressTimer);
+        if (timers.retryTimer) clearTimeout(timers.retryTimer);
+        audioTimersRef.current = {};
+        setSfxPath(null);
+        // 인덱스를 끝으로 보내면 isTimelineFinished → questionFlag 순으로 질문 UI 렌더됨
+        setCurrentIdx(assets_timeline.length);
+    }, [assets_timeline, isTimelineFinished, setSfxPath]);
+
+    useDevTrigger({ code: "Period", corner: "bottom-right" }, skipToQuestion);
 
     // → (오른쪽 화살표): 미디어 로딩 실패로 멈췄을 때 현재 세그먼트를 건너뛰고 다음으로 진행 (임시 수동 스킵)
     useEffect(() => {
