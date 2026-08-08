@@ -12,11 +12,14 @@ import BottomLayout from "@/components/fixed-layout/bottom-layout";
 import TopLayout from "@/components/fixed-layout/top-layout";
 import Step1 from "@/components/steps/step1";
 import { useDevTrigger } from "@/hooks/useDevTrigger";
+import GuideModal from "@/components/ui/guide-modal";
 
 export default function Home() {
   const [debug, setDebug] = useState(false);
   // 🥚 개발자 전용 디버그 패널 표시 여부 (localStorage 영속)
   const [devMode, setDevMode] = useState(false);
+  // 🥚 우상단 3연속 클릭(또는 Ctrl/Cmd+Shift+G)으로 여는 진행 설명서, devMode와 무관하게 독립 동작
+  const [guide, setGuide] = useState(false);
   const { stepNumber, goPrevStep, stepInfo } = useScene();
 
   // localStorage에서 devMode 초기값 로드 (SSR 하이드레이션 불일치 방지 위해 effect에서)
@@ -34,6 +37,9 @@ export default function Home() {
 
   // 트리거: Ctrl/Cmd+Shift+D 또는 좌상단 구석 3연속 클릭
   useDevTrigger({ code: "KeyD", corner: "top-left" }, toggleDevMode);
+
+  // 트리거: Ctrl/Cmd+Shift+G 또는 우상단 구석 3연속 클릭 (devMode와 독립)
+  useDevTrigger({ code: "KeyG", corner: "top-right" }, () => setGuide((prev) => !prev));
 
   const fadeVariants = {
     initial: { opacity: 0 },
@@ -173,6 +179,8 @@ export default function Home() {
           </div>
         )
       }
+
+      <GuideModal open={guide} onClose={() => setGuide(false)} />
     </div>
   );
 }
