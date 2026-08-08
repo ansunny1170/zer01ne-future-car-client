@@ -1,17 +1,17 @@
 import { useEffect, useRef } from "react";
 
-type Corner = "top-left" | "top-right" | "bottom-left" | "bottom-right";
+type Zone = "top-left" | "top-right" | "bottom-left" | "bottom-right" | "center-right";
 
 interface DevTriggerOptions {
     /** 키 조합에 사용할 KeyboardEvent.code (예: "KeyD", "Period") */
     code: string;
-    /** 연속 클릭을 감지할 화면 구석 */
-    corner: Corner;
+    /** 연속 클릭을 감지할 화면 영역 */
+    corner: Zone;
     /** 발동에 필요한 연속 클릭 횟수 (기본 3) */
     clicks?: number;
     /** 연속 클릭으로 인정하는 최대 간격(ms, 기본 600) */
     withinMs?: number;
-    /** 구석으로 인정하는 정사각 영역 크기(px, 기본 80) */
+    /** 영역으로 인정하는 크기(px, 기본 80) */
     cornerSize?: number;
     /** 훅 활성화 여부 (기본 true) */
     enabled?: boolean;
@@ -20,7 +20,7 @@ interface DevTriggerOptions {
 /**
  * 개발자 전용 이스터에그 트리거.
  * - 키보드: Ctrl 또는 Cmd + Shift + <code>
- * - 마우스: 지정한 화면 구석을 짧은 시간 안에 N회 연속 클릭
+ * - 마우스: 지정한 화면 영역을 짧은 시간 안에 N회 연속 클릭
  * 둘 중 하나가 발동하면 onTrigger 를 호출한다. 일반 관람객은 우연히 발동할 수 없다.
  */
 export function useDevTrigger(options: DevTriggerOptions, onTrigger: () => void) {
@@ -61,6 +61,8 @@ export function useDevTrigger(options: DevTriggerOptions, onTrigger: () => void)
                     return x <= cornerSize && y >= h - cornerSize;
                 case "bottom-right":
                     return x >= w - cornerSize && y >= h - cornerSize;
+                case "center-right":
+                    return x >= w - cornerSize && Math.abs(y - h / 2) <= cornerSize;
             }
         };
 

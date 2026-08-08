@@ -17,6 +17,7 @@ import StepAudioPlayer from "@/components/audio-player/step-audio-player";
 import StepVideoPlayer from "@/components/video-player/step-video-player";
 import { useDevTrigger } from "@/hooks/useDevTrigger";
 import GuideModal from "@/components/ui/guide-modal";
+import TabletSimModal from "@/components/ui/tablet-sim-modal";
 
 type Screen = "connecting" | "waiting" | "step" | "done";
 
@@ -43,6 +44,8 @@ export default function AmbientScreen() {
   const [guide, setGuide] = useState(false);
   const [devMode, setDevMode] = useState(false);
   const [debug, setDebug] = useState(false);
+  // 🥚 중앙 우측 3연속 클릭(또는 Ctrl/Cmd+Shift+T)으로 여는 태블릿 시뮬레이터 사용법, devMode와 무관하게 독립 동작
+  const [tabletSim, setTabletSim] = useState(false);
 
   // localStorage에서 devMode 초기값 로드 (SSR 하이드레이션 불일치 방지 위해 effect에서)
   useEffect(() => {
@@ -51,6 +54,9 @@ export default function AmbientScreen() {
 
   // 트리거: Ctrl/Cmd+Shift+G 또는 우상단 구석 3연속 클릭
   useDevTrigger({ code: "KeyG", corner: "top-right" }, () => setGuide((prev) => !prev));
+
+  // 트리거: Ctrl/Cmd+Shift+T 또는 중앙 우측 영역 3연속 클릭 (devMode와 독립)
+  useDevTrigger({ code: "KeyT", corner: "center-right" }, () => setTabletSim((prev) => !prev));
 
   // 쿼리(?sid=) 에서 세션 id 읽기 (클라이언트 전용)
   useEffect(() => {
@@ -219,6 +225,7 @@ export default function AmbientScreen() {
       )}
 
       <GuideModal open={guide} onClose={() => setGuide(false)} />
+      <TabletSimModal open={tabletSim} onClose={() => setTabletSim(false)} />
     </div>
   );
 }
