@@ -432,9 +432,10 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
 
             <UspPopupWrapper data={currentUspPool} />
 
-            {questionFlag && (
-                <QuestionArea 
-                    mainText={question || ""} 
+            {/* ambient 는 question/choices 를 보내지 않으므로 질문 UI를 렌더하지 않는다 (classic 은 항상 question 을 보내므로 동작 변화 없음) */}
+            {questionFlag && question && (
+                <QuestionArea
+                    mainText={question || ""}
                     buttons={(choices || []).reduce((acc, choice) => {
                         acc[choice?.usp || ""] = choice?.description || "";
                         return acc;
