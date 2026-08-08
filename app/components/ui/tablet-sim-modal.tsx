@@ -127,10 +127,10 @@ export default function TabletSimModal({ open, onClose }: TabletSimModalProps) {
           <h2 className="text-lg font-semibold mb-2">6) 꼭 해볼 검증</h2>
           <ul className="list-disc pl-5 space-y-1 text-sm leading-relaxed">
             <li>
-              동일 plan 무시: 작별 화면에서 <code className="bg-neutral-100 text-neutral-800 rounded px-2 py-1">0</code> 을 눌러도 아무 변화가 없어야 한다.
+              동일 plan 무시(진행 중): 여정이 진행 중일 때 <code className="bg-neutral-100 text-neutral-800 rounded px-2 py-1">0</code> 을 눌러 같은 plan 을 다시 보내면 아무 변화가 없어야 한다.
             </li>
             <li>
-              다른 plan 리프레시: <code className="bg-neutral-100 text-neutral-800 rounded px-2 py-1">tools/mqtt_sim/dummy_plan.json</code> 의 place 하나를 바꾼 뒤 시뮬레이터를 재실행하면 대기 화면으로 리프레시되고 새 여정 생성이 시작된다.
+              다른 plan 리프레시(진행 중): <code className="bg-neutral-100 text-neutral-800 rounded px-2 py-1">tools/mqtt_sim/dummy_plan.json</code> 의 place 하나를 바꾼 뒤 시뮬레이터를 재실행하면 대기 화면으로 리프레시되고 새 여정 생성이 시작된다.
             </li>
           </ul>
         </section>
@@ -138,14 +138,14 @@ export default function TabletSimModal({ open, onClose }: TabletSimModalProps) {
         <section className="mb-6">
           <h2 className="text-lg font-semibold mb-2">7) 여정을 끝낸 뒤 다시 테스트하려면</h2>
           <ul className="list-disc pl-5 space-y-1 text-sm leading-relaxed">
-            <li>시뮬레이터만 재실행하는 것으로는 부족하다. 같은 session_id 에 같은 plan 이 다시 오면 무시되기 때문이다.</li>
+            <li>이제는 시뮬레이터를 다시 실행하기만 하면 된다. 여정이 끝난(exit) 세션에는 동일한 plan 이 와도 새 여정으로 리프레시되기 때문이다.</li>
+            <li>화면은 대기 화면으로 돌아가고, 스텝이 다시 생성된다.</li>
+            <li>같은 session_id 로 반복 테스트해도 DB 문제는 없다. chat_history 에는 새 행이 쌓이고 조회는 항상 최신 행을 쓰며, 세션 상태 테이블은 session_id 기준으로 덮어쓴다.</li>
             <li>
-              방법 1(권장): 세션 ID 를 바꾼다 —{" "}
+              여러 여정을 나란히 비교하고 싶다면 세션 ID 를 나눠도 된다:{" "}
               <code className="bg-neutral-100 text-neutral-800 rounded px-2 py-1">SESSION_ID=MANUAL02 ./venv/bin/python tools/mqtt_sim/manual_tablet.py</code>
               {" "}로 실행하고 이 화면도 <code className="bg-neutral-100 text-neutral-800 rounded px-2 py-1">?sid=MANUAL02</code> 로 연다.
             </li>
-            <li>방법 2: dummy_plan.json 내용을 바꾼다.</li>
-            <li>방법 3: 백엔드를 재시작한다(메모리 세션 초기화).</li>
           </ul>
         </section>
 

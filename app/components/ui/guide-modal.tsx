@@ -91,9 +91,10 @@ export default function GuideModal({ open, onClose }: GuideModalProps) {
         <section className="mb-6">
           <h2 className="text-lg font-semibold mb-2">6) 같은 세션에 plan이 다시 오면</h2>
           <ul className="list-disc pl-5 space-y-1 text-sm leading-relaxed">
-            <li>내용이 동일한 plan → 확인 후 무시한다. 재생성하지 않고 진행 상태를 유지한다.</li>
-            <li>내용이 다른 plan → 새 여정으로 덮어쓴다. 서버·클라이언트 세션을 리프레시하고 step을 처음부터 다시 시작한다. 생성 중이던 이전 plan의 작업은 폐기되어 새 여정에 섞이지 않는다.</li>
-            <li>이미 생성·진행된 데이터는 chat_history에 그대로 남는다.</li>
+            <li>여정이 진행 중일 때 내용이 동일한 plan → 확인 후 무시한다. 재생성하지 않고 진행 상태를 유지한다.</li>
+            <li>여정이 진행 중일 때 내용이 다른 plan → 새 여정으로 덮어쓴다. 서버·클라이언트 세션을 리프레시하고 step을 처음부터 다시 시작한다. 생성 중이던 이전 plan의 작업은 폐기되어 새 여정에 섞이지 않는다.</li>
+            <li>여정이 이미 종료(exit)된 뒤라면 동일한 plan이 오더라도 새 여정으로 리프레시한다. 그렇지 않으면 그 session_id 가 영구히 잠기기 때문이다.</li>
+            <li>이미 생성·진행된 데이터는 chat_history에 그대로 남는다. 같은 session_id 로 다시 진행해도 기존 행을 지우지 않고 새 행이 쌓이며, 조회는 항상 가장 최근 행을 사용한다.</li>
           </ul>
         </section>
 
@@ -104,7 +105,7 @@ export default function GuideModal({ open, onClose }: GuideModalProps) {
               exit 이후에는 마지막 인사 화면이 유지되며, tablet의 어떤 버튼도 화면을 바꾸지 않는다(
               <code className="bg-black/5 px-1 rounded">JOURNEY_ENDED</code> 응답).
             </li>
-            <li>새 plan이 도착하면 그때 세션이 리프레시되어 다음 관람객의 여정이 시작된다.</li>
+            <li>새 plan이 도착하면(동일한 plan이어도) 세션이 리프레시되어 다음 관람객의 여정이 시작된다.</li>
           </ul>
         </section>
 
