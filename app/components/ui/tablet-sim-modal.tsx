@@ -91,16 +91,16 @@ export default function TabletSimModal({ open, onClose }: TabletSimModalProps) {
         <section className="mb-6">
           <h2 className="text-lg font-semibold mb-2">4) 버튼</h2>
           <ul className="list-disc pl-5 space-y-1 text-sm leading-relaxed">
-            <li><code className="bg-neutral-100 text-neutral-800 rounded px-2 py-1">1</code> enter — 탑승 → 대기 화면</li>
-            <li><code className="bg-neutral-100 text-neutral-800 rounded px-2 py-1">2</code> start — step1 송출</li>
-            <li><code className="bg-neutral-100 text-neutral-800 rounded px-2 py-1">3</code> advance — 다음 step (2 → 3 → 4)</li>
-            <li><code className="bg-neutral-100 text-neutral-800 rounded px-2 py-1">4</code> context — ambient 에서는 사용하지 않음(no-op)</li>
-            <li><code className="bg-neutral-100 text-neutral-800 rounded px-2 py-1">5</code> exit — 여정 종료 → 작별 화면</li>
             <li>
               <code className="bg-neutral-100 text-neutral-800 rounded px-2 py-1">0</code> plan 재전송 ·{" "}
               <code className="bg-neutral-100 text-neutral-800 rounded px-2 py-1">m</code> 메뉴 ·{" "}
               <code className="bg-neutral-100 text-neutral-800 rounded px-2 py-1">q</code> 종료
             </li>
+            <li><code className="bg-neutral-100 text-neutral-800 rounded px-2 py-1">1</code> enter — 탑승 → 대기 화면</li>
+            <li><code className="bg-neutral-100 text-neutral-800 rounded px-2 py-1">2</code> start — step1 송출</li>
+            <li><code className="bg-neutral-100 text-neutral-800 rounded px-2 py-1">3</code> advance — 다음 step (2 → 3 → 4)</li>
+            <li><code className="bg-neutral-100 text-neutral-800 rounded px-2 py-1">4</code> context — ambient 에서는 사용하지 않음(no-op)</li>
+            <li><code className="bg-neutral-100 text-neutral-800 rounded px-2 py-1">5</code> exit — 여정 종료 → 작별 화면</li>
           </ul>
         </section>
 
