@@ -42,6 +42,7 @@ export default function AmbientScreen() {
   // 🥚 개발자 전용
   const [guide, setGuide] = useState(false);
   const [devMode, setDevMode] = useState(false);
+  const [debug, setDebug] = useState(false);
 
   // localStorage에서 devMode 초기값 로드 (SSR 하이드레이션 불일치 방지 위해 effect에서)
   useEffect(() => {
@@ -183,6 +184,36 @@ export default function AmbientScreen() {
             <div className="text-red-400">
               error {lastError.code}: {lastError.message}
             </div>
+          )}
+        </div>
+      )}
+
+      {devMode && (
+        <div className="absolute top-[15%] left-4 max-h-[90vh] overflow-y-auto bg-white max-w-1/2 text-black px-4 py-2 rounded-md z-[999]">
+          <button
+            onClick={() => {
+              setDebug(!debug);
+            }}
+          >
+            step info 디버깅
+          </button>
+          {stepInfo?.flatAssetsParsed && (
+            <span className="ml-2 text-red-600 font-bold">flat asset 파싱 진행함</span>
+          )}
+          {typeof stepInfo?.aiResponseTime === "number" && (
+            <span className="ml-2 text-blue-600 font-bold">AI 응답시간 {stepInfo.aiResponseTime}초</span>
+          )}
+          {stepInfo?.aiModel && (
+            <span className="ml-2 text-blue-600 font-bold">
+              model {stepInfo.aiModel}
+              {stepInfo.aiReasoningEffort ? ` · reasoning ${stepInfo.aiReasoningEffort}` : ""}
+              {stepInfo.aiVerbosity ? ` · verbosity ${stepInfo.aiVerbosity}` : ""}
+            </span>
+          )}
+          {debug && (
+            <pre className="h-[40vh] overflow-y-auto">
+              {JSON.stringify(stepInfo, null, 2)}
+            </pre>
           )}
         </div>
       )}
