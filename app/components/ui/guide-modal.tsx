@@ -97,7 +97,7 @@ export default function GuideModal({ open, onClose }: GuideModalProps) {
           </ul>
         </section>
 
-        <section>
+        <section className="mb-6">
           <h2 className="text-lg font-semibold mb-2">7) 여정 종료 후</h2>
           <ul className="list-disc pl-5 space-y-1 text-sm leading-relaxed">
             <li>
@@ -105,6 +105,16 @@ export default function GuideModal({ open, onClose }: GuideModalProps) {
               <code className="bg-black/5 px-1 rounded">JOURNEY_ENDED</code> 응답).
             </li>
             <li>새 plan이 도착하면 그때 세션이 리프레시되어 다음 관람객의 여정이 시작된다.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2 className="text-lg font-semibold mb-2">8) MQTT retain 정책</h2>
+          <ul className="list-disc pl-5 space-y-1 text-sm leading-relaxed">
+            <li>retain 은 브로커가 토픽의 마지막 메시지를 저장해 두었다가, 나중에 새로 구독하는 클라이언트에게 즉시 한 번 보내주는 기능이다.</li>
+            <li>state(현재 상태)는 retain=true — 늦게 접속해도 지금 어느 단계인지 바로 알 수 있어야 하기 때문이다.</li>
+            <li>step / reaction / error 는 retain=false — "지금 이걸 재생하라"는 1회성 명령이므로 저장해 두면 안 된다.</li>
+            <li>만약 step 을 retain 했다면, 화면이 잠깐 끊겼다 재접속했을 때 브로커가 지난 스텝을 다시 보내 tablet 이 누르지도 않은 스텝이 재생될 수 있다.</li>
           </ul>
         </section>
       </div>
