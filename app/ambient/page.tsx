@@ -4,8 +4,14 @@
  * /ambient — main-2026(ambient) 전시용 미래차 화면.
  *
  * classic(`/`)과 달리 이 화면은 수신·렌더 전용이다: 음성 입력도, 질문 UI도 없다.
- * 태블릿이 MQTT로 미래차 서버를 조작하고, 서버는 그 결과를 WS(`/ws/futurecar/{sid}`)로
- * 이 화면에 push 한다. session_id 는 ?sid= 쿼리(기본 DEMO01).
+ * 태블릿이 MQTT로 미래차 서버를 조작하고, 서버는 그 결과를 WS로 이 화면에 push 한다.
+ *
+ * session_id 는 두 가지 모드로 정해진다:
+ * - 고정 세션 모드: ?sid= 쿼리가 있으면 `/ws/futurecar/{sid}` 로 접속해 그 세션만 받는다.
+ * - 자동 추종(와일드카드) 모드: ?sid= 가 없으면 `/ws/futurecar` 로 접속해 모든 세션의
+ *   메시지를 받는다(차 1대·화면 1개뿐이라 실제 상영 중인 세션이 하나뿐이라는 전제).
+ *   서버가 각 메시지에 session_id 를 붙여 보내주므로, 새 plan(state.idle)이 오면 그
+ *   세션으로 갈아타고, 그 외에는 지금 따라가는 세션의 메시지만 받는다.
  */
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -29,9 +35,17 @@ const fadeVariants = {
   exit: { opacity: 0 },
 };
 
+// devMode 배지용: 긴 UUID는 앞 8자만 보여준다
+function truncateSid(v: string): string {
+  return v.length > 8 ? `${v.slice(0, 8)}…` : v;
+}
+
 export default function AmbientScreen() {
   const { stepInfo, setStepInfo, reStart } = useScene();
-  const [sid, setSid] = useState<string>("DEMO01");
+  // sid === null → 자동 추종(와일드카드) 모드. ?sid= 쿼리가 있으면 그 값으로 고정된다.
+  const [sid, setSid] = useState<string | null>(null);
+  // 와일드카드 모드에서 지금 화면이 따라가고 있는 session_id
+  const [activeSid, setActiveSid] = useState<string | null>(null);
   const [connected, setConnected] = useState(false);
   const [screen, setScreen] = useState<Screen>("connecting");
   const [lastError, setLastError] = useState<ErrorMsg | null>(null);
@@ -39,6 +53,9 @@ export default function AmbientScreen() {
   // screen 최신값을 이벤트 핸들러에서 참조하기 위한 ref (stale closure 방지)
   const screenRef = useRef<Screen>("connecting");
   screenRef.current = screen;
+  // activeSid 최신값을 이벤트 핸들러에서 참조하기 위한 ref (stale closure 방지, screenRef와 동일 패턴)
+  const activeSidRef = useRef<string | null>(null);
+  activeSidRef.current = activeSid;
 
   // 🥚 개발자 전용
   const [guide, setGuide] = useState(false);
@@ -67,14 +84,35 @@ export default function AmbientScreen() {
   useEffect(() => {
     let closed = false;
     let retry: ReturnType<typeof setTimeout>;
+    // sid 가 있으면 고정 세션 모드(그 세션만 옴), 없으면 와일드카드(모든 세션이 옴)
+    const isWildcard = sid === null;
 
     const connect = () => {
-      const ws = new WebSocket(wsUrl(sid));
+      const ws = new WebSocket(wsUrl(sid ?? undefined));
       wsRef.current = ws;
 
       ws.onopen = () => setConnected(true);
       ws.onmessage = (e) => {
         const msg = JSON.parse(e.data);
+
+        // 와일드카드 모드에서만: 어떤 세션 메시지를 받아들일지 판단(고정 모드는 서버가
+        // 이미 해당 세션만 보내주므로 건너뛴다).
+        if (isWildcard) {
+          const msgSid = msg.session_id as string | undefined;
+          if (msg.type === "state" && msg.phase === "idle") {
+            // 새 plan/여정 시작 → 이 세션으로 갈아탄다 (이후 정상 처리로 이어짐)
+            setActiveSid(msgSid ?? null);
+            activeSidRef.current = msgSid ?? null;
+          } else if (activeSidRef.current === null) {
+            // 페이지 로드 후 처음 받은 메시지 → 일단 이 세션을 채택
+            setActiveSid(msgSid ?? null);
+            activeSidRef.current = msgSid ?? null;
+          } else if (msgSid !== activeSidRef.current) {
+            // 다른 세션의 트래픽은 무시
+            return;
+          }
+        }
+
         switch (msg.type) {
           case "step":
             // 작별 화면 이후에는 새 plan(state.idle)이 오기 전까지 어떤 step도 무시한다
@@ -184,7 +222,12 @@ export default function AmbientScreen() {
 
       {devMode && (
         <div className="fixed bottom-2 left-2 z-[999] rounded-md bg-black/70 px-3 py-2 text-xs text-neutral-200 leading-relaxed">
-          <div>{connected ? "연결됨" : "연결 대기"} · sid={sid}</div>
+          <div>
+            {connected ? "연결됨" : "연결 대기"} ·{" "}
+            {sid
+              ? `모드=고정 · sid=${sid}`
+              : `모드=자동추종 · 세션=${activeSid ? truncateSid(activeSid) : "대기중"}`}
+          </div>
           <div>screen={screen} · step={stepInfo?.step ?? "-"}</div>
           {lastError && (
             <div className="text-red-400">
