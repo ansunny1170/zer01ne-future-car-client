@@ -184,7 +184,9 @@ export default function Home() {
       {
         devMode && (
           <div>
-            <div className="absolute top-[15%] left-4 flex flex-col items-start gap-2 z-[1000]">
+            {/* step info 박스(z-999, left-16)를 가리지 않도록 z-index 를 그 아래로 두고
+                버튼은 세로로 쌓아 좌측 폭만 차지하게 한다 */}
+            <div className="absolute top-[15%] left-4 flex flex-col items-start gap-2 z-[998]">
               <button
                 className="bg-white text-black px-4 py-2 rounded-md"
                 onClick={() => {
@@ -195,16 +197,16 @@ export default function Home() {
               </button>
 
               {/* 🥚 개발자 전용: 키보드 없이 S/Space 조작을 대신하는 버튼 */}
-              <div className="flex gap-1 text-[13px]">
+              <div className="flex flex-col gap-1 text-[12px] w-fit">
                 <button
-                  className="bg-white text-black px-3 py-1 rounded-md whitespace-nowrap"
+                  className="bg-white text-black px-2 py-1 rounded-md whitespace-nowrap w-full"
                   title="S 짧게 누르기 — 첫 번째는 마이크 시작, 이후는 녹음 재시작(스크립트 초기화)"
                   onClick={pressSKeyShort}
                 >
                   S 짧게
                 </button>
                 <button
-                  className="bg-white text-black px-3 py-1 rounded-md whitespace-nowrap disabled:opacity-50"
+                  className="bg-white text-black px-2 py-1 rounded-md whitespace-nowrap w-full disabled:opacity-50"
                   title={`S 길게 누르기(${LONG_PRESS_MS}ms) — 녹음된 텍스트 전송`}
                   onClick={pressSKeyLong}
                   disabled={sKeyLongPressing}
@@ -212,7 +214,7 @@ export default function Home() {
                   {sKeyLongPressing ? "S 길게…" : "S 길게"}
                 </button>
                 <button
-                  className="bg-white text-black px-3 py-1 rounded-md whitespace-nowrap"
+                  className="bg-white text-black px-2 py-1 rounded-md whitespace-nowrap w-full"
                   title="Space — 기본 답변(defaultComment) 즉시 전송"
                   onClick={pressSpaceKey}
                 >
