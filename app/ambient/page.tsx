@@ -259,6 +259,9 @@ export default function AmbientScreen() {
               {stepInfo.aiVerbosity ? ` · verbosity ${stepInfo.aiVerbosity}` : ""}
             </span>
           )}
+          {stepInfo?.aiPromptName && (
+            <span className="ml-2 text-green-700 font-bold">prompt {stepInfo.aiPromptName}</span>
+          )}
           {debug && (
             <pre className="h-[40vh] overflow-y-auto">
               {JSON.stringify(stepInfo, null, 2)}
