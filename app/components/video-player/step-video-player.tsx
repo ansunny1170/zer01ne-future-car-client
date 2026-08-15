@@ -3,9 +3,14 @@ import { useScene } from '@/context/scene-context';
 import { cn } from '@/utils/cn' ;
 import { useEffect, useRef, useState } from 'react';
 
-export default function StepVideoPlayer({ className }:
+// autoStart: ambient(전시) 전용 — 마운트 즉시 재생을 시작한다.
+// classic(`/`)은 관람객이 키를 눌러 진행하므로 그 keydown 을 재생 시작 신호로 쓰지만,
+// /ambient 는 태블릿이 MQTT 로 조작해서 키 입력이 단 한 번도 없다 → 영원히 재생이
+// 시작되지 않았다. 아래 videoMuted 로 항상 음소거라 브라우저 자동재생 정책에도 걸리지 않는다.
+export default function StepVideoPlayer({ className, autoStart = false }:
     {
-        className?: string
+        className?: string,
+        autoStart?: boolean
     }) {
     const { videoPath, stepInfo } = useScene();
     const BASE_URL = BASE_S3_LINK;
@@ -16,7 +21,7 @@ export default function StepVideoPlayer({ className }:
     const [isCurrentReady, setIsCurrentReady] = useState(false);
     const [hasCurrentPlayedOnce, setHasCurrentPlayedOnce] = useState(false);
     const [hasPreviousPlayedOnce, setHasPreviousPlayedOnce] = useState(false);
-    const [isVideoActive, setIsVideoActive] = useState(false);
+    const [isVideoActive, setIsVideoActive] = useState(autoStart);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
     const currentVideoRef = useRef<HTMLVideoElement | null>(null);
     const previousVideoRef = useRef<HTMLVideoElement | null>(null);

@@ -274,7 +274,8 @@ export default function AmbientScreen() {
 
   return (
     <div className="w-full h-full min-h-screen overflow-hidden bg-black text-white">
-      <StepVideoPlayer />
+      {/* autoStart: 이 화면은 키 입력이 없다(태블릿이 MQTT 로 조작) → 마운트 즉시 재생 */}
+      <StepVideoPlayer autoStart />
       <StepAudioPlayer />
 
       <AnimatePresence mode="wait">
