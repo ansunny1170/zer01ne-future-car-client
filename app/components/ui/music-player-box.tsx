@@ -18,11 +18,11 @@ export default function MusicPlayerBox({ className }: MusicPlayerBoxProps) {
   const [imageError, setImageError] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [artistName, setArtistName] = useState(() => getArtistName());
-  const bgmCover = `/assets/bgm_cover/${stepInfo?.bgm?.description}.jpeg`;
+  const bgmCover = `/assets/bgm_cover/${stepInfo?.bgm?.title}.jpeg`;
 
   // 이미지 로딩 시도
   useEffect(() => {
-    if (stepInfo?.bgm?.description) {
+    if (stepInfo?.bgm?.title) {
       setIsTransitioning(true);
       setArtistName(getArtistName());
       
@@ -44,7 +44,7 @@ export default function MusicPlayerBox({ className }: MusicPlayerBoxProps) {
         img.src = bgmCover;
       }, 150);
     }
-  }, [bgmCover, stepInfo?.bgm?.description]);
+  }, [bgmCover, stepInfo?.bgm?.title]);
 
   useEffect(() => {
     if (textRef.current && stepInfo?.bgm?.file_name) {
@@ -93,7 +93,7 @@ export default function MusicPlayerBox({ className }: MusicPlayerBoxProps) {
                 shouldAnimate && "animate-marquee"
               )}
             >
-              {stepInfo?.bgm?.description}
+              {stepInfo?.bgm?.title}
             </p>
             <p className={cn("text-[14px] pt-[4px] font-semibold whitespace-nowrap text-ellipsis overflow-hidden opacity-60")}>
               {artistName}

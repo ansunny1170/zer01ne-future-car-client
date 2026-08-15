@@ -65,7 +65,7 @@ export interface BackgroundVideo {
 }
 export interface BackgroundMusic {
     type: AssetsType.MUSIC,
-    description: string,
+    title: string, // 곡 제목. 뮤직플레이어 표시 + 커버 이미지 파일명으로 쓰인다 (서버가 title 로 내려줌)
     file_name: string,
 }
 export interface CloneTalks {
