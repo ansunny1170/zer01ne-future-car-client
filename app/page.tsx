@@ -15,9 +15,7 @@ import { useDevTrigger } from "@/hooks/useDevTrigger";
 import { useDevLogStream } from "@/hooks/useDevLogStream";
 import DevLogPanel from "@/components/dev/dev-log-panel";
 import { appendClientLog, getDevLogs } from "@/utils/devLog";
-
-// Speech 컴포넌트의 longPressThreshold 와 맞춰야 한다 (app/components/speech/index.tsx)
-const LONG_PRESS_MS = 1200;
+import { SPEECH_SUBMIT_EVENT } from "@/constants";
 
 // step7 도달 후 이 시간 안에 서버의 "일기 생성 시작"이 안 오면 트리거 자체가 안 된 것으로 본다.
 // (서버는 step7 응답 직후 바로 트리거하므로 실제로는 1~2초 안에 온다)
@@ -82,7 +80,6 @@ export default function Home() {
   // Speech 가 window 의 keydown/keyup 을 직접 듣고 있어서, 합성 키 이벤트를 쏘면
   // 실제 키 입력과 똑같은 경로를 탄다. 키 동작 로직을 여기서 복제하지 않으므로
   // Speech 쪽이 바뀌어도 버튼이 자동으로 따라간다.
-  const [sKeyLongPressing, setSKeyLongPressing] = useState(false);
   const sKeyTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const dispatchKey = (type: "keydown" | "keyup", code: string) => {
@@ -99,17 +96,10 @@ export default function Home() {
     }, 60);
   };
 
-  // 길게: Speech 의 전송 타이머가 발동하려면 threshold 를 넘겨서 눌러야 한다
-  const pressSKeyLong = () => {
-    if (sKeyTimerRef.current) return;
-    setSKeyLongPressing(true);
-    dispatchKey("keydown", "KeyS");
-    sKeyTimerRef.current = setTimeout(() => {
-      dispatchKey("keyup", "KeyS");
-      sKeyTimerRef.current = null;
-      setSKeyLongPressing(false);
-    }, LONG_PRESS_MS + 150);
-  };
+  // 전송: 녹음된 STT 를 서버로 보낸다.
+  // S 길게 누르기를 합성하는 방식은 쓰지 않는다 — 전송 뒤 남는 keyup 이
+  // restartRecording 을 불러 마이크가 다시 켜지기 때문(연타처럼 보인다).
+  const pressSendSpeech = () => window.dispatchEvent(new Event(SPEECH_SUBMIT_EVENT));
 
   const pressSpaceKey = () => dispatchKey("keydown", "Space");
 
@@ -256,12 +246,11 @@ export default function Home() {
                   S 짧게
                 </button>
                 <button
-                  className="bg-white text-black px-2 h-[52px] rounded-md whitespace-nowrap w-full disabled:opacity-50"
-                  title={`S 길게 누르기(${LONG_PRESS_MS}ms) — 녹음된 텍스트 전송`}
-                  onClick={pressSKeyLong}
-                  disabled={sKeyLongPressing}
+                  className="bg-white text-black px-2 h-[52px] rounded-md whitespace-nowrap w-full"
+                  title="녹음된 음성(STT)을 서버로 전송 — 인식된 텍스트가 있어야 동작"
+                  onClick={pressSendSpeech}
                 >
-                  {sKeyLongPressing ? "S 길게…" : "S 길게"}
+                  전송
                 </button>
                 <button
                   className="bg-white text-black px-2 h-[52px] rounded-md whitespace-nowrap w-full"

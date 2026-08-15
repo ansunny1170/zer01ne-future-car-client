@@ -6,6 +6,7 @@ import { Icons } from '../ui/icons';
 import { cn } from '@/utils/cn';
 import HyundaiLoading from '../ui/hyundai-loading';
 import { useScene } from '@/context/scene-context';
+import { SPEECH_SUBMIT_EVENT } from '@/constants';
 
 // Web Speech API 타입 정의
 interface SpeechRecognitionEvent extends Event {
@@ -194,6 +195,16 @@ export default function Speech({ onTrigger, isProcessing, defaultComment }: { on
       }
     }
   }, [pressCount, finalText, isProcessing, onTrigger])
+
+  // 키보드 없이 녹음된 STT 를 전송하는 통로 (개발자 패널의 "전송" 버튼).
+  // 키 조합을 흉내 내지 않고 sendTrigger 만 직접 부른다 — 길게 누르기를 합성하면
+  // 전송 뒤 keyup 이 남아 restartRecording 이 돌아 마이크가 다시 켜진다.
+  // finalText 가 바뀔 때마다 리스너를 새로 달아 최신 텍스트를 보내도록 한다.
+  useEffect(() => {
+    const handleSubmit = () => sendTrigger()
+    window.addEventListener(SPEECH_SUBMIT_EVENT, handleSubmit)
+    return () => window.removeEventListener(SPEECH_SUBMIT_EVENT, handleSubmit)
+  }, [finalText, isProcessing, onTrigger])
 
   useEffect(() => {
     const handleSpaceKey = (event: KeyboardEvent) => {
