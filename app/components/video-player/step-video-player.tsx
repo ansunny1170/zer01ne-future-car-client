@@ -22,6 +22,9 @@ export default function StepVideoPlayer({ className }:
     const previousVideoRef = useRef<HTMLVideoElement | null>(null);
     const prevNextVideoPathRef = useRef(nextVideoPath);
     const noLoop = !stepInfo?.step || (stepInfo?.step && stepInfo?.step < 2) ? false : true;
+    // step1 에서 인트로 영상(intro 01.mp4)에 박힌 고정 내레이션이 재생되는 문제 — 잠시 항상 음소거
+    // 원복하려면 아래 videoMuted 를 지우고 muted={noLoop} 로 되돌린다
+    const videoMuted = true;
 
     useEffect(() => {
         const handleKeyDown = () => {
@@ -125,7 +128,8 @@ export default function StepVideoPlayer({ className }:
                 key={`${stepInfo?.step ? BASE_URL : ''}/${currentVideoPath}`}
                 src={`${stepInfo?.step ? BASE_URL : ''}/${currentVideoPath}`}
                 autoPlay={isVideoActive}
-                muted = {noLoop}
+                // muted = {noLoop}
+                muted = {videoMuted}
                 loop = {noLoop}
                 playsInline
                 preload='auto'
@@ -168,7 +172,8 @@ export default function StepVideoPlayer({ className }:
                     key={`${BASE_URL}/${previousVideoPath}`}
                     src={`${BASE_URL}/${previousVideoPath}`}
                     autoPlay={isVideoActive}
-                    muted = {noLoop}
+                    // muted = {noLoop}
+                    muted = {videoMuted}
                     loop
                     playsInline
                     preload='none'
