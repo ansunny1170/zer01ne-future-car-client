@@ -196,17 +196,19 @@ export default function Home() {
                 {stepInfo?.step}
               </button>
 
-              {/* 🥚 개발자 전용: 키보드 없이 S/Space 조작을 대신하는 버튼 */}
-              <div className="flex flex-col gap-1 text-[12px] w-fit">
+              {/* 🥚 개발자 전용: 키보드 없이 S/Space 조작을 대신하는 버튼
+                  폭을 76px 로 고정해 오른쪽 끝이 92px — step info 박스(left-24 = 96px)와
+                  4px 간격이 유지된다 */}
+              <div className="flex flex-col gap-3 text-[12px] w-[76px]">
                 <button
-                  className="bg-white text-black px-2 py-1 rounded-md whitespace-nowrap w-full"
+                  className="bg-white text-black px-2 h-[52px] rounded-md whitespace-nowrap w-full"
                   title="S 짧게 누르기 — 첫 번째는 마이크 시작, 이후는 녹음 재시작(스크립트 초기화)"
                   onClick={pressSKeyShort}
                 >
                   S 짧게
                 </button>
                 <button
-                  className="bg-white text-black px-2 py-1 rounded-md whitespace-nowrap w-full disabled:opacity-50"
+                  className="bg-white text-black px-2 h-[52px] rounded-md whitespace-nowrap w-full disabled:opacity-50"
                   title={`S 길게 누르기(${LONG_PRESS_MS}ms) — 녹음된 텍스트 전송`}
                   onClick={pressSKeyLong}
                   disabled={sKeyLongPressing}
@@ -214,7 +216,7 @@ export default function Home() {
                   {sKeyLongPressing ? "S 길게…" : "S 길게"}
                 </button>
                 <button
-                  className="bg-white text-black px-2 py-1 rounded-md whitespace-nowrap w-full"
+                  className="bg-white text-black px-2 h-[52px] rounded-md whitespace-nowrap w-full"
                   title="Space — 기본 답변(defaultComment) 즉시 전송"
                   onClick={pressSpaceKey}
                 >
@@ -223,7 +225,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="absolute top-[15%] left-16 max-h-[90vh] overflow-y-auto bg-white max-w-1/2 text-black px-4 py-2 rounded-md z-[999]"> 
+            <div className="absolute top-[15%] left-24 max-h-[90vh] overflow-y-auto bg-white max-w-1/2 text-black px-4 py-2 rounded-md z-[999]">
               <button
                 onClick={() => {
                   setDebug(!debug);
