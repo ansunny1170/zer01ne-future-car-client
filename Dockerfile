@@ -36,8 +36,10 @@ COPY . .
 #   (compose 의 런타임 env 로는 이미 빌드된 번들에 반영되지 않는다.)
 ARG NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_IS_PRD
+ARG NEXT_PUBLIC_S3_BASE
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_IS_PRD=$NEXT_PUBLIC_IS_PRD
+ENV NEXT_PUBLIC_S3_BASE=$NEXT_PUBLIC_S3_BASE
 
 # Next.js standalone 빌드 (next.config.ts의 output: 'standalone' 활용)
 # 결과: .next/standalone/server.js (최소 서버) + .next/static (정적 자산)

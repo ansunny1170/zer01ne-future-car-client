@@ -19,6 +19,7 @@ jobs:
           docker build \
             --build-arg NEXT_PUBLIC_API_URL=http://creator-mac-studio.tail69930a.ts.net:8100 \
             --build-arg NEXT_PUBLIC_IS_PRD=false \
+            --build-arg NEXT_PUBLIC_S3_BASE=http://creator-mac-studio.tail69930a.ts.net:9100/future-car-media \
             -t ghcr.io/ansunny1170/future-car-frontend:latest .
           cd ~/Projects/future-car
           docker compose up -d --no-deps --force-recreate future-car-frontend
