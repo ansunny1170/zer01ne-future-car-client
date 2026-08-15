@@ -145,6 +145,7 @@ export interface StepInfo {
     aiModel?: string, // 🤖 사용된 OpenAI 모델 (디버깅 표시용)
     aiReasoningEffort?: string, // 🧠 사용된 reasoning_effort (없으면 undefined)
     aiVerbosity?: string, // 🗣️ 사용된 verbosity (없으면 undefined)
+    aiPromptName?: string, // 📝 이 세션이 사용 중인 시스템 프롬프트 파일명 (디버깅 표시용)
 }
 
 // export enum AssetsType {
