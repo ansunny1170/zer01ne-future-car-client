@@ -24,6 +24,8 @@ import StepVideoPlayer from "@/components/video-player/step-video-player";
 import { useDevTrigger } from "@/hooks/useDevTrigger";
 import GuideModal from "@/components/ui/guide-modal";
 import TabletSimModal from "@/components/ui/tablet-sim-modal";
+import DevLogPanel from "@/components/dev/dev-log-panel";
+import { appendDevLog } from "@/utils/devLog";
 import { BASE_API_LINK } from "@/constants";
 import { cn } from "@/utils/cn";
 
@@ -72,6 +74,8 @@ export default function AmbientScreen() {
   const [debug, setDebug] = useState(false);
   // 🥚 중앙 우측 3연속 클릭(또는 Ctrl/Cmd+Shift+T)으로 여는 태블릿 시뮬레이터 사용법, devMode와 무관하게 독립 동작
   const [tabletSim, setTabletSim] = useState(false);
+  // 🥚 상단 중앙 3연속 클릭(또는 Ctrl/Cmd+Shift+L)으로 여는 dev_log 패널, devMode와 무관하게 독립 동작
+  const [devLogOpen, setDevLogOpen] = useState(false);
   // 개발자 조작 패널: 버튼별 클릭 결과 표시(성공 ✓ / 실패 ✕), 일정 시간 후 idle로 복귀
   const [publishState, setPublishState] = useState<Record<TabletControlType, PublishState>>({
     enter: "idle",
@@ -89,6 +93,9 @@ export default function AmbientScreen() {
 
   // 트리거: Ctrl/Cmd+Shift+T 또는 중앙 우측 영역 3연속 클릭 (devMode와 독립)
   useDevTrigger({ code: "KeyT", corner: "center-right" }, () => setTabletSim((prev) => !prev));
+
+  // 트리거: Ctrl/Cmd+Shift+L 또는 상단 중앙 영역 3연속 클릭 (devMode와 독립)
+  useDevTrigger({ code: "KeyL", corner: "top-center" }, () => setDevLogOpen((prev) => !prev));
 
   // 쿼리(?sid=) 에서 세션 id 읽기 (클라이언트 전용)
   useEffect(() => {
@@ -109,6 +116,24 @@ export default function AmbientScreen() {
       ws.onopen = () => setConnected(true);
       ws.onmessage = (e) => {
         const msg = JSON.parse(e.data);
+
+        // dev_log 는 세션 필터보다 먼저 통과시킨다 — 아래 와일드카드 블록이 세션
+        // 불일치로 return 해버리면 관측 로그가 조용히 사라진다.
+        if (msg.type === "dev_log") {
+          appendDevLog({
+            category: msg.category,
+            stage: msg.stage,
+            level: msg.level,
+            message: msg.message,
+            sessionId: typeof msg.session_id === "string" ? msg.session_id : undefined,
+            at: msg.at ?? undefined,
+            elapsed: typeof msg.elapsed === "number" ? msg.elapsed : undefined,
+            detail: msg.detail ?? null,
+            serverTs: msg.ts,
+            source: "server",
+          });
+          return;
+        }
 
         // 와일드카드 모드에서만: 어떤 세션 메시지를 받아들일지 판단(고정 모드는 서버가
         // 이미 해당 세션만 보내주므로 건너뛴다).
@@ -355,6 +380,7 @@ export default function AmbientScreen() {
 
       <GuideModal open={guide} onClose={() => setGuide(false)} />
       <TabletSimModal open={tabletSim} onClose={() => setTabletSim(false)} />
+      <DevLogPanel open={devLogOpen} onClose={() => setDevLogOpen(false)} />
     </div>
   );
 }
