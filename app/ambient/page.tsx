@@ -32,7 +32,8 @@ type Screen = "connecting" | "waiting" | "step" | "done";
 type ErrorMsg = { type: "error"; step: number; code: string; message: string };
 
 // 개발자 조작 패널이 발행할 수 있는 요청 종류 (manual_tablet.py 가 보내는 것과 동일)
-const TABLET_CONTROL_TYPES = ["enter", "start", "advance", "exit"] as const;
+// 진행은 advance 로 통일했다(서버에서 start 는 advance 별칭). 버튼에서는 start 를 뺀다.
+const TABLET_CONTROL_TYPES = ["enter", "advance", "exit"] as const;
 type TabletControlType = (typeof TABLET_CONTROL_TYPES)[number];
 // 버튼별 클릭 후 잠깐 보여줄 결과 상태
 type PublishState = "idle" | "success" | "error";
@@ -74,7 +75,6 @@ export default function AmbientScreen() {
   // 개발자 조작 패널: 버튼별 클릭 결과 표시(성공 ✓ / 실패 ✕), 일정 시간 후 idle로 복귀
   const [publishState, setPublishState] = useState<Record<TabletControlType, PublishState>>({
     enter: "idle",
-    start: "idle",
     advance: "idle",
     exit: "idle",
   });
