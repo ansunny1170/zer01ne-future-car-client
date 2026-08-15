@@ -113,15 +113,24 @@ export default function AmbientScreen() {
         // 와일드카드 모드에서만: 어떤 세션 메시지를 받아들일지 판단(고정 모드는 서버가
         // 이미 해당 세션만 보내주므로 건너뛴다).
         if (isWildcard) {
-          const msgSid = msg.session_id as string | undefined;
+          // 빈 문자열/undefined/null 은 전부 "세션 없음"으로 본다.
+          const msgSid =
+            typeof msg.session_id === "string" && msg.session_id ? msg.session_id : null;
+          if (msgSid === null) {
+            // 🔴 세션을 특정할 수 없는 메시지는 채택하지 않는다.
+            // null 을 추종 세션으로 채택해 버리면, 이후 실제 세션 메시지가 전부
+            // 아래 불일치 분기에 걸려 버려져 전시 화면이 영구히 멈춘다.
+            console.warn("[ambient] session_id 없는 메시지 무시:", msg.type);
+            return;
+          }
           if (msg.type === "state" && msg.phase === "idle") {
             // 새 plan/여정 시작 → 이 세션으로 갈아탄다 (이후 정상 처리로 이어짐)
-            setActiveSid(msgSid ?? null);
-            activeSidRef.current = msgSid ?? null;
+            setActiveSid(msgSid);
+            activeSidRef.current = msgSid;
           } else if (activeSidRef.current === null) {
             // 페이지 로드 후 처음 받은 메시지 → 일단 이 세션을 채택
-            setActiveSid(msgSid ?? null);
-            activeSidRef.current = msgSid ?? null;
+            setActiveSid(msgSid);
+            activeSidRef.current = msgSid;
           } else if (msgSid !== activeSidRef.current) {
             // 다른 세션의 트래픽은 무시
             return;
