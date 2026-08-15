@@ -113,6 +113,14 @@ export default function Home() {
 
   const pressSpaceKey = () => dispatchKey("keydown", "Space");
 
+  // 타임라인 스킵: step-repeat / step-complete 가 useDevTrigger 로 듣고 있는
+  // Ctrl/Cmd+Shift+Period(= 우하단 3연속 클릭과 같은 트리거)를 그대로 쏜다.
+  const pressSkip = () => {
+    window.dispatchEvent(
+      new KeyboardEvent("keydown", { code: "Period", ctrlKey: true, shiftKey: true, bubbles: true })
+    );
+  };
+
   // 언마운트 시 keyup 을 못 보내면 Speech 의 keyDownTimeRef 가 0 으로 안 돌아가
   // 이후 실제 S 키 입력이 막힌다 — 타이머를 정리하면서 keyup 을 반드시 내보낸다.
   useEffect(() => {
@@ -261,6 +269,13 @@ export default function Home() {
                   onClick={pressSpaceKey}
                 >
                   Space
+                </button>
+                <button
+                  className="bg-white text-black px-2 h-[52px] rounded-md whitespace-nowrap w-full"
+                  title="타임라인 건너뛰기 — 순차 렌더를 모두 넘기고 질문 UI 로 (우하단 3연속 클릭과 동일)"
+                  onClick={pressSkip}
+                >
+                  Skip
                 </button>
               </div>
             </div>
