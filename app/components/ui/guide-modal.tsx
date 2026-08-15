@@ -69,9 +69,35 @@ export default function GuideModal({ open, onClose }: GuideModalProps) {
           <h2 className="text-lg font-semibold mb-2">4) 스텝 진행 (tablet 버튼 → 이 화면)</h2>
           <ul className="list-disc pl-5 space-y-1 text-sm leading-relaxed">
             <li><span className="font-medium">enter</span>: 탑승 → 대기 화면</li>
-            <li><span className="font-medium">start</span>: step1 송출</li>
-            <li><span className="font-medium">advance</span>: 다음 step 송출 (2 → 3 → 4)</li>
+            <li>
+              <span className="font-medium">advance</span>: 다음 step 송출 (1 → 2 → 3 → 4).
+              진행은 advance 하나로 통일했다 — 별도 start 는 없다
+              (구 tablet-fe 호환을 위해 서버가 start 를 advance 의 별칭으로만 받아준다).
+            </li>
             <li><span className="font-medium">exit</span>: 여정 종료 → 마지막 인사 화면</li>
+          </ul>
+        </section>
+
+        <section className="mb-6">
+          <h2 className="text-lg font-semibold mb-2">4-1) 렌더 완료 핸드셰이크 (이 화면 → 서버)</h2>
+          <ul className="list-disc pl-5 space-y-1 text-sm leading-relaxed">
+            <li>
+              이 화면이 해당 step 의 asset(대사·팝업·음성)을 <b>전부 재생하고 나면</b>{" "}
+              <code className="bg-black/5 px-1 rounded">POST /ambient/step-rendered</code> 로 서버에 알린다.
+              태블릿 명령은 MQTT 지만, 이건 명령이 아니라 화면의 사실 보고라서 HTTP 로 직접 보낸다
+              (브로커가 죽어도 도달해야 한다).
+            </li>
+            <li>
+              서버는 이 보고를 받아 phase 를 <code className="bg-black/5 px-1 rounded">arrived</code> 로 올리고,
+              state 를 MQTT response 토픽으로 발행한다 —{" "}
+              <code className="bg-black/5 px-1 rounded">next</code> 에 다음 동작
+              (마지막 step 이면 exit, 아니면 advance)이 실린다. 태블릿은 이때 버튼을 켜면 된다.
+            </li>
+            <li>
+              이미 다음 step 으로 넘어간 뒤 도착한 지각 보고나 같은 step 의 중복 보고는 서버가 무시한다
+              (조기 진행 방지). 결과는 /mqtt 화면에{" "}
+              <code className="bg-black/5 px-1 rounded">step_rendered</code> 로 남는다.
+            </li>
           </ul>
         </section>
 

@@ -8,7 +8,12 @@ import CloneTalkSplit from "../ui/clone-talk-split";
 import HudLayer from "../ui/popup_ui/hud-layer";
 import { useDevTrigger } from "@/hooks/useDevTrigger";
 
-export default function StepRepeat({ dafultComment }: { dafultComment?: string }) {
+// onTimelineComplete: ambient(전시) 전용 — 이 스텝의 asset 을 전부 렌더·재생했음을
+// 상위(→ 서버)에 알린다. 클래식(/) 경로는 이 prop 을 넘기지 않으므로 동작 변화 없음.
+export default function StepRepeat({ dafultComment, onTimelineComplete }: {
+    dafultComment?: string,
+    onTimelineComplete?: (step: number) => void,
+}) {
     const BASE_URL = BASE_S3_LINK;
     const { stepInfo, setSfxPath, setOnSfxComplete, setPreloadedAudio } = useScene();
     const { assets_timeline, question, choices } = stepInfo || {};
@@ -106,6 +111,27 @@ export default function StepRepeat({ dafultComment }: { dafultComment?: string }
         if (!assets_timeline) return true;
         return currentIdx >= assets_timeline.length;
     }, [assets_timeline, currentIdx]);
+
+    // currentIdx 초기화(setCurrentIdx(0))는 effect 에서 일어나므로, stepInfo 가 바뀐
+    // 직후 한 렌더 동안 currentIdx 는 아직 "이전 스텝의 값"이다. 그 렌더의
+    // isTimelineFinished 는 새 타임라인 기준으로는 거짓이므로(이전 idx ≥ 새 길이면
+    // 곧바로 true 가 된다) 렌더 완료 보고에 그대로 쓰면 조기 보고가 나간다.
+    // 렌더 중에 "이번 렌더의 currentIdx 가 이 stepInfo 기준인가"를 판정해 한 렌더 늦춘다.
+    const idxOwnerRef = useRef<object | null>(null);
+    const idxIsFresh = idxOwnerRef.current === stepInfo;
+    if (!idxIsFresh) idxOwnerRef.current = stepInfo ?? null;
+
+    // ambient(전시) 전용: 이 스텝의 asset 을 전부 렌더·재생했음을 상위(→ 서버)에 1회만 알린다.
+    // 중복 방지 키를 스텝 번호가 아니라 stepInfo 객체 동일성으로 잡아서, 새 여정에서
+    // 같은 번호의 스텝이 다시 와도(다른 객체) 정상적으로 다시 보고된다.
+    const renderedNotifiedRef = useRef<object | null>(null);
+    useEffect(() => {
+        if (!onTimelineComplete || !stepInfo?.step) return;
+        if (!idxIsFresh || !isTimelineFinished) return;
+        if (renderedNotifiedRef.current === stepInfo) return;
+        renderedNotifiedRef.current = stepInfo;
+        onTimelineComplete(stepInfo.step);
+    }, [idxIsFresh, isTimelineFinished, stepInfo, onTimelineComplete]);
 
     // 타임라인이 끝났을 때 questionFlag를 true로 설정
     useEffect(() => {

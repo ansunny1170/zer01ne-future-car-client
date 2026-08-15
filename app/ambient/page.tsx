@@ -13,7 +13,7 @@
  *   서버가 각 메시지에 session_id 를 붙여 보내주므로, 새 plan(state.idle)이 오면 그
  *   세션으로 갈아타고, 그 외에는 지금 따라가는 세션의 메시지만 받는다.
  */
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useScene } from "@/context/scene-context";
 import { wsUrl } from "@/utils/wsUrl";
@@ -231,6 +231,47 @@ export default function AmbientScreen() {
       });
   };
 
+  // 이 스텝의 asset 을 전부 렌더·재생했음을 서버에 알린다.
+  // MQTT(태블릿 명령 채널)가 아니라 HTTP 로 보낸다 — 이건 명령이 아니라 화면의
+  // 사실 보고이고, 서버는 이걸 받아야 phase 를 arrived 로 올려 state.next(advance|exit)
+  // 를 켜준다. 즉 "다음으로 넘어가도 된다"를 태블릿이 알 수 있게 되는 지점이다.
+  // 화면은 응답을 기다리지 않는다(fire-and-forget) — 보고가 실패해도 렌더는 이미 끝났고,
+  // 태블릿 조작은 여전히 가능해야 하기 때문.
+  const notifyStepRendered = useCallback(
+    (step: number) => {
+      const sessionId = sid ?? activeSidRef.current;
+      if (!sessionId) {
+        console.warn("[ambient] session_id 없음 — 렌더 완료 보고 생략", step);
+        return;
+      }
+      appendDevLog({
+        category: "ambient",
+        stage: "render_complete",
+        level: "info",
+        message: `step ${step} 렌더 완료 → 서버 보고`,
+        sessionId,
+        source: "client",
+      });
+      const API = BASE_API_LINK.replace(/\/+$/, "");
+      fetch(`${API}/ambient/step-rendered`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ session_id: sessionId, step }),
+      }).catch((err) => {
+        console.error("[ambient] 렌더 완료 보고 실패", step, err);
+        appendDevLog({
+          category: "ambient",
+          stage: "render_complete",
+          level: "error",
+          message: `step ${step} 렌더 완료 보고 실패: ${err}`,
+          sessionId,
+          source: "client",
+        });
+      });
+    },
+    [sid],
+  );
+
   return (
     <div className="w-full h-full min-h-screen overflow-hidden bg-black text-white">
       <StepVideoPlayer />
@@ -276,7 +317,7 @@ export default function AmbientScreen() {
             exit="exit"
             transition={{ duration: 0.3 }}
           >
-            <StepRepeat />
+            <StepRepeat onTimelineComplete={notifyStepRendered} />
           </motion.div>
         )}
 
