@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useRef, useEffect, useMemo } from "react";
+import { usePathname } from "next/navigation";
 import { StepInfo } from "../type";
 import { bgmDict, bgvDict } from "@/utils/constants";
 
@@ -38,6 +39,10 @@ export type SceneContextType = {
 const SceneContext = createContext<SceneContextType | undefined>(undefined);
 
 export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
+  // classic(`/`)의 step1 은 "여행 입력을 받는 화면"이라 브랜드 인트로 영상이 고정이었다.
+  // ambient(`/ambient`)의 step1 은 이미 내용이 있는 정식 스텝이고 배경 영상도 LLM 이
+  // 골라 보내므로, 그 고정 override 를 적용하면 안 된다 — 경로로 갈라 준다.
+  const isAmbient = (usePathname() || "").startsWith("/ambient");
   const [sceneNumber, setSceneNumber] = useState(1);
   const [category, setCategory] = useState("a");
   const [categoryNumber, setCategoryNumber] = useState<number | null>(1);
@@ -75,8 +80,16 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
     setStepInfo(stepInfo);
     setVideoPath(stepInfo?.bgv?.file_name || bgvDict[Math.floor(Math.random() * bgvDict.length)].file_name || null );
     
-    // step이 undefined이거나 1일 때는 동일한 BGM 유지, 그 외에는 새로운 BGM
-    if (stepInfo?.step === undefined || stepInfo?.step === 1) {
+    if (isAmbient) {
+      // ambient 는 bgv 와 같은 이유로 step1 도 생성된 bgm 을 그대로 쓴다.
+      // 랜덤 폴백(bgmDict)도 쓰지 않는다 — bgmDict 의 classic 파일명들은 전시용
+      // MinIO 버킷에 존재하지 않아(404) 폴백이 걸리면 오히려 소리가 사라진다.
+      // stepInfo 가 없는 대기 화면에서는 직전 BGM 을 그대로 유지한다.
+      if (stepInfo) {
+        setBgmPath(stepInfo.bgm?.file_name || null);
+      }
+    } else if (stepInfo?.step === undefined || stepInfo?.step === 1) {
+      // step이 undefined이거나 1일 때는 동일한 BGM 유지, 그 외에는 새로운 BGM
       // 이미 BGM이 설정되어 있다면 유지, 없다면 첫 번째 BGM 사용
       if (!bgmPath) {
         setBgmPath(bgmDict[Math.floor(Math.random() * bgmDict.length)].file_name);
@@ -89,13 +102,15 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
       setVideoPath("assets/video/intro1_1.mp4");
     } 
 
-    if (stepInfo?.step === 1) {
+    // ambient 는 step1 도 생성된 bgv 를 그대로 쓴다(위에서 이미 세팅됨).
+    // classic 만 브랜드 인트로 영상으로 고정.
+    if (stepInfo?.step === 1 && !isAmbient) {
       setVideoPath("intro 01.mp4");
     }
     
     // stepInfo 변경 시 sfxPath 초기화 - null로 설정
     setSfxPath(null);
-  }, [stepInfo]);
+  }, [stepInfo, isAmbient]);
 
   const goPrevStep = () => {
     setStepNumber(stepNumber - 1);
