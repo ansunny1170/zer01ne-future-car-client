@@ -125,6 +125,32 @@ const popupDict: {
         defaultText: "보험사에 정보 업데이트",
         className: "",
     },
+    // ambient 프롬프트 카탈로그에는 있었으나 여기 없어서 기본 알림 아이콘으로 폴백되던 4종.
+    // (CARE 는 기존 CARE_MODE 와 다른 항목이라 아이콘을 heart 로 구분한다)
+    CARE: {
+        icon: <Icons.heart />,
+        type: "cold",
+        defaultText: "미리 챙겨두었습니다",
+        className: "",
+    },
+    GOOD: {
+        icon: <Icons.car />,
+        type: "cold",
+        defaultText: "대신 다녀오겠습니다",
+        className: "",
+    },
+    SELF: {
+        icon: <Icons.car />,
+        type: "cold",
+        defaultText: "혼자 다녀오겠습니다",
+        className: "",
+    },
+    ENTER: {
+        icon: <Icons.MicOn />,
+        type: "cold",
+        defaultText: "엔터테인먼트 모드",
+        className: "",
+    },
 }
 
 export default function CommonPopupUI({keyName, text, description, onComplete}: {keyName: string, text?: string, description?: string, onComplete?: () => void}) {
