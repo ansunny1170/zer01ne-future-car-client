@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-type Corner = "top-left" | "top-right" | "bottom-left" | "bottom-right";
+type Corner = "top-left" | "top-right" | "bottom-left" | "bottom-right" | "top-center";
 
 interface DevTriggerOptions {
     /** 키 조합에 사용할 KeyboardEvent.code (예: "KeyD", "Period") */
@@ -61,6 +61,9 @@ export function useDevTrigger(options: DevTriggerOptions, onTrigger: () => void)
                     return x <= cornerSize && y >= h - cornerSize;
                 case "bottom-right":
                     return x >= w - cornerSize && y >= h - cornerSize;
+                // 구석이 아니라 상단 중앙 — 좌우로 cornerSize 만큼의 폭을 인정한다
+                case "top-center":
+                    return Math.abs(x - w / 2) <= cornerSize && y <= cornerSize;
             }
         };
 

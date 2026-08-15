@@ -12,15 +12,27 @@ import BottomLayout from "@/components/fixed-layout/bottom-layout";
 import TopLayout from "@/components/fixed-layout/top-layout";
 import Step1 from "@/components/steps/step1";
 import { useDevTrigger } from "@/hooks/useDevTrigger";
+import { useDevLogStream } from "@/hooks/useDevLogStream";
+import DevLogPanel from "@/components/dev/dev-log-panel";
+import { appendClientLog, getDevLogs } from "@/utils/devLog";
 
 // Speech 컴포넌트의 longPressThreshold 와 맞춰야 한다 (app/components/speech/index.tsx)
 const LONG_PRESS_MS = 1200;
+
+// step7 도달 후 이 시간 안에 서버의 "일기 생성 시작"이 안 오면 트리거 자체가 안 된 것으로 본다.
+// (서버는 step7 응답 직후 바로 트리거하므로 실제로는 1~2초 안에 온다)
+const REFLECTION_TRIGGER_TIMEOUT_MS = 60_000;
 
 export default function Home() {
   const [debug, setDebug] = useState(false);
   // 🥚 개발자 전용 디버그 패널 표시 여부 (localStorage 영속)
   const [devMode, setDevMode] = useState(false);
-  const { stepNumber, goPrevStep, stepInfo } = useScene();
+  // 🥚 개발자 전용 이벤트 로그 패널 (devMode 와 독립)
+  const [logPanel, setLogPanel] = useState(false);
+  const { stepNumber, goPrevStep, stepInfo, sessionId } = useScene();
+
+  // 서버 진행 로그 수집은 항상 켜둔다 — 패널을 열었을 때만 붙으면 정작 실패 순간을 놓친다.
+  useDevLogStream();
 
   // localStorage에서 devMode 초기값 로드 (SSR 하이드레이션 불일치 방지 위해 effect에서)
   useEffect(() => {
@@ -37,6 +49,34 @@ export default function Home() {
 
   // 트리거: Ctrl/Cmd+Shift+D 또는 좌상단 구석 3연속 클릭
   useDevTrigger({ code: "KeyD", corner: "top-left" }, toggleDevMode);
+
+  // 트리거: Ctrl/Cmd+Shift+L 또는 상단 중앙 3연속 클릭
+  useDevTrigger({ code: "KeyL", corner: "top-center" }, () => setLogPanel((prev) => !prev));
+
+  // step7 에 도달했는데 서버가 일기 생성을 시작하지 않는 경우를 잡는다.
+  // 서버는 step 이 7 일 때만 트리거하므로, 응답 파싱이 실패해 step 이 비면
+  // 서버에는 에러 로그조차 남지 않는다 — 그 공백을 클라이언트가 메운다.
+  useEffect(() => {
+    if (stepInfo?.step !== 7) return;
+    const sid = sessionId ?? undefined;
+    appendClientLog("client", "step7_reached", "마지막 스텝 도달 — 일기 생성 대기", {
+      sessionId: sid,
+    });
+    const timer = setTimeout(() => {
+      const started = getDevLogs().some(
+        (e) => e.category === "reflection" && e.stage === "started" && e.sessionId === sid
+      );
+      if (!started) {
+        appendClientLog(
+          "client",
+          "trigger_timeout",
+          `${REFLECTION_TRIGGER_TIMEOUT_MS / 1000}초 안에 서버의 일기 생성 시작이 오지 않음`,
+          { level: "warn", sessionId: sid }
+        );
+      }
+    }, REFLECTION_TRIGGER_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, [stepInfo?.step, sessionId]);
 
   // 🥚 개발자 전용: 키보드 조작(S/Space)을 버튼으로 대체.
   // Speech 가 window 의 keydown/keyup 을 직접 듣고 있어서, 합성 키 이벤트를 쏘면
@@ -258,6 +298,8 @@ export default function Home() {
           </div>
         )
       }
+
+      <DevLogPanel open={logPanel} onClose={() => setLogPanel(false)} />
     </div>
   );
 }
