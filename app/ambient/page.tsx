@@ -24,10 +24,18 @@ import StepVideoPlayer from "@/components/video-player/step-video-player";
 import { useDevTrigger } from "@/hooks/useDevTrigger";
 import GuideModal from "@/components/ui/guide-modal";
 import TabletSimModal from "@/components/ui/tablet-sim-modal";
+import { BASE_API_LINK } from "@/constants";
+import { cn } from "@/utils/cn";
 
 type Screen = "connecting" | "waiting" | "step" | "done";
 
 type ErrorMsg = { type: "error"; step: number; code: string; message: string };
+
+// 개발자 조작 패널이 발행할 수 있는 요청 종류 (manual_tablet.py 가 보내는 것과 동일)
+const TABLET_CONTROL_TYPES = ["enter", "start", "advance", "exit"] as const;
+type TabletControlType = (typeof TABLET_CONTROL_TYPES)[number];
+// 버튼별 클릭 후 잠깐 보여줄 결과 상태
+type PublishState = "idle" | "success" | "error";
 
 const fadeVariants = {
   initial: { opacity: 0 },
@@ -63,6 +71,13 @@ export default function AmbientScreen() {
   const [debug, setDebug] = useState(false);
   // 🥚 중앙 우측 3연속 클릭(또는 Ctrl/Cmd+Shift+T)으로 여는 태블릿 시뮬레이터 사용법, devMode와 무관하게 독립 동작
   const [tabletSim, setTabletSim] = useState(false);
+  // 개발자 조작 패널: 버튼별 클릭 결과 표시(성공 ✓ / 실패 ✕), 일정 시간 후 idle로 복귀
+  const [publishState, setPublishState] = useState<Record<TabletControlType, PublishState>>({
+    enter: "idle",
+    start: "idle",
+    advance: "idle",
+    exit: "idle",
+  });
 
   // localStorage에서 devMode 초기값 로드 (SSR 하이드레이션 불일치 방지 위해 effect에서)
   useEffect(() => {
@@ -155,6 +170,33 @@ export default function AmbientScreen() {
     };
   }, [sid, setStepInfo, reStart]);
 
+  // 고정 세션 모드면 sid, 와일드카드 모드면 지금 추종 중인 activeSid를 사용
+  const controlSid = sid ?? activeSid;
+
+  // 개발자 조작 버튼: manual_tablet.py 대신 화면에서 직접 MQTT 요청을 발행
+  const publishTabletRequest = (type: TabletControlType) => {
+    if (!controlSid) return;
+    const API = BASE_API_LINK.replace(/\/+$/, "");
+    fetch(`${API}/mqtt/publish`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ session_id: controlSid, type }),
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error(`status ${res.status}`);
+        setPublishState((prev) => ({ ...prev, [type]: "success" }));
+      })
+      .catch((err) => {
+        console.error("[ambient] tablet control publish 실패", type, err);
+        setPublishState((prev) => ({ ...prev, [type]: "error" }));
+      })
+      .finally(() => {
+        setTimeout(() => {
+          setPublishState((prev) => ({ ...prev, [type]: "idle" }));
+        }, 1200);
+      });
+  };
+
   return (
     <div className="w-full h-full min-h-screen overflow-hidden bg-black text-white">
       <StepVideoPlayer />
@@ -238,7 +280,39 @@ export default function AmbientScreen() {
       )}
 
       {devMode && (
-        <div className="absolute top-[15%] left-4 max-h-[90vh] overflow-y-auto bg-white max-w-1/2 text-black px-4 py-2 rounded-md z-[999]">
+        <div className="absolute top-[15%] left-4 w-28 z-[999] flex flex-col gap-1.5 rounded-md border border-neutral-700 bg-neutral-900/90 px-2 py-2 text-white">
+          <div className="text-center">
+            <div className="text-[10px] text-neutral-400">현재 STEP</div>
+            <div className="text-2xl font-bold leading-tight">{stepInfo?.step ?? "-"}</div>
+          </div>
+          <div className="my-0.5 h-px bg-neutral-700" />
+          {TABLET_CONTROL_TYPES.map((type) => {
+            const state = publishState[type];
+            return (
+              <button
+                key={type}
+                type="button"
+                disabled={!controlSid}
+                onClick={() => publishTabletRequest(type)}
+                className={cn(
+                  "rounded px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wide transition-colors",
+                  controlSid
+                    ? "cursor-pointer bg-neutral-700 hover:bg-neutral-600"
+                    : "cursor-not-allowed bg-neutral-800 text-neutral-500",
+                  state === "success" && "bg-green-700",
+                  state === "error" && "bg-red-700"
+                )}
+              >
+                {state === "success" ? "✓" : state === "error" ? "✕" : type}
+              </button>
+            );
+          })}
+          {!controlSid && <div className="text-center text-[10px] text-neutral-500">세션 대기중</div>}
+        </div>
+      )}
+
+      {devMode && (
+        <div className="absolute top-[15%] left-32 max-h-[90vh] overflow-y-auto bg-white max-w-1/2 text-black px-4 py-2 rounded-md z-[999]">
           <button
             onClick={() => {
               setDebug(!debug);
