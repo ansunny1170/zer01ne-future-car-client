@@ -45,8 +45,10 @@ export default function Home() {
     });
   };
 
-  // 트리거: Ctrl/Cmd+Shift+D 또는 좌상단 구석 3연속 클릭
-  useDevTrigger({ code: "KeyD", corner: "top-left" }, toggleDevMode);
+  // 트리거: Ctrl/Cmd+Shift+D 또는 좌상단 구석 3연속 클릭 (켜기·끄기 같은 자리)
+  // 기본 80px 은 전시장 화면에서 조준하기 어려워 200px 로 넓혔다.
+  // 600ms 안에 3연속이라는 조건이 실질적인 오발동 방지책이라 넓혀도 관람객이 우연히 켤 일은 없다.
+  useDevTrigger({ code: "KeyD", corner: "top-left", cornerSize: 200 }, toggleDevMode);
 
   // 트리거: Ctrl/Cmd+Shift+L 또는 상단 중앙 3연속 클릭
   useDevTrigger({ code: "KeyL", corner: "top-center" }, () => setLogPanel((prev) => !prev));
