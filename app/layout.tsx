@@ -5,6 +5,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { SceneProvider } from "./context/scene-context";
 import Providers from "./providers";
+import FullscreenToggle from "./components/ui/fullscreen-toggle";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -97,12 +98,14 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="Review" />
+        <meta name="apple-mobile-web-app-title" content="FutureCar" />
         <meta name="theme-color" content="#000000" />
       </head>
       <body className={`${hyundaiSans.variable} ${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Providers>
           <SceneProvider>
+            {/* 전역 전체화면 트리거(좌하단 3연속 탭 / Ctrl+Cmd+Shift+F). 렌더 결과는 없다. */}
+            <FullscreenToggle />
             {children}
           </SceneProvider>
         </Providers>
