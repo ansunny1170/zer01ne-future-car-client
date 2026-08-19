@@ -83,6 +83,22 @@ export default function RootLayout({
       <head>
         <meta name="robots" content="noindex,nofollow" />
         <meta name="googlebot" content="noindex,nofollow" />
+        {/* 태블릿에서 데스크톱 폭(980px)으로 축소 렌더되지 않게 한다.
+            user-scalable=no: 전시용이라 관람객이 핀치줌으로 레이아웃을 깨지 않도록.
+            viewport-fit=cover: iPad 노치/홈인디케이터 영역까지 화면을 채운다. */}
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+        />
+        {/* 홈 화면에 추가(Add to Home Screen) 시 주소창 없이 뜨게 한다.
+            iPhone Safari 는 Fullscreen API 자체가 없어서 이 경로가 유일한 전체화면 수단이고,
+            iPad 도 이쪽이 더 안정적이다. Android Chrome 은 manifest 의 display 를 따른다. */}
+        <link rel="manifest" href="/manifest.webmanifest" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Review" />
+        <meta name="theme-color" content="#000000" />
       </head>
       <body className={`${hyundaiSans.variable} ${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Providers>
