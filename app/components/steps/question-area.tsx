@@ -73,9 +73,12 @@ export default function QuestionArea({
                             )
                         }
                         {
-                            (mainText) && (
-                                <Speech onTrigger={handleSpeechTrigger} isProcessing={isProcessing} defaultComment={defaultComment}/>
-                            )
+                            // 마이크는 question 유무와 무관하게 항상 띄운다.
+                            // 예전엔 (mainText) 로 감싸져 있었는데, AI 가 question 을 빠뜨린 응답을
+                            // 주면 마이크가 통째로 사라져 관람객이 진행할 수단을 잃었다
+                            // (2026-08-19 step6 사고). question 은 화면에 보여줄 문구일 뿐이고
+                            // 발화 입력 수단과는 별개여야 한다.
+                            <Speech onTrigger={handleSpeechTrigger} isProcessing={isProcessing} defaultComment={defaultComment}/>
                         }
                     </div>
                     </>
