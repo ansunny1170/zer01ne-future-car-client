@@ -5,6 +5,8 @@ import ListArea from "@/components/review/list-area";
 import { Reflection } from "@/type";
 import { useEffect, useRef, useState } from "react";
 import { BASE_API_LINK } from "@/constants";
+import { useFullscreen } from "@/hooks/useFullscreen";
+import { useDevTrigger } from "@/hooks/useDevTrigger";
 
 // .env(NEXT_PUBLIC_API_URL) 기반으로 REST/WS 주소 생성
 // 예: "https://api.ftcar.org/" → API_BASE="https://api.ftcar.org", WS_BASE="wss://api.ftcar.org"
@@ -15,6 +17,11 @@ export default function Review() {
     const wsRef = useRef<WebSocket | null>(null);
     const [wsData, setWsData] = useState<Reflection[]>([]);
     const [selectedItem, setSelectedItem] = useState<Reflection | null>(null);
+    // 태블릿 전시용 전체화면. 버튼 탭 또는 우상단 3연속 탭(Ctrl/Cmd+Shift+F)으로 토글한다.
+    const { isFullscreen, supported, toggle } = useFullscreen();
+    // 버튼이 가려졌거나 없는 상황(전체화면 해제)에서도 쓸 수 있는 숨은 트리거.
+    // 클릭 리스너 안에서 호출되므로 사용자 제스처 요건을 만족한다.
+    useDevTrigger({ code: "KeyF", corner: "top-right" }, toggle);
 
     useEffect(() => {
         // 웹소켓 연결 시도 (현재 서버에서 즉시 끊어짐)
@@ -75,9 +82,25 @@ export default function Review() {
     console.log('Original data length:', wsData.length, 'Limited data length:', limitedWsData.length);
 
     return (
-        <div className="w-full h-screen flex items-stretch">
+        // h-screen(100vh) 은 모바일 브라우저에서 주소창 높이까지 포함해 스크롤이 생긴다.
+        // 100dvh 는 지원 브라우저에서만 적용되고, 미지원 브라우저는 인라인 스타일이
+        // 무시되며 h-screen 으로 폴백된다(tailwind 3.3 이라 h-dvh 클래스가 없다).
+        <div className="w-full h-screen flex items-stretch" style={{ height: "100dvh" }}>
             <DetailArea selectedItem={selectedItem} />
             <ListArea data={limitedWsData} onItemClick={setSelectedItem} selectedItem={selectedItem} />
+
+            {/* 전체화면 진입 버튼. 전체화면이 되면 사라져 전시 화면을 가리지 않는다.
+                Fullscreen API 는 사용자 제스처 안에서만 허용되므로 자동 진입은 불가능하다. */}
+            {supported && !isFullscreen && (
+                <button
+                    type="button"
+                    onClick={toggle}
+                    aria-label="전체화면"
+                    className="fixed bottom-4 right-4 z-50 rounded-full bg-black/40 px-4 py-2 text-xs text-white/70 backdrop-blur transition hover:bg-black/60 hover:text-white"
+                >
+                    전체화면
+                </button>
+            )}
         </div>
     );
 }
