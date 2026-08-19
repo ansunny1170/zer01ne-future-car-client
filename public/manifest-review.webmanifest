@@ -1,0 +1,12 @@
+{
+  "name": "FutureCar Review",
+  "short_name": "Review",
+  "description": "미래차 전시 엔딩 리플렉션 표시 화면",
+  "start_url": "/review",
+  "scope": "/",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "landscape",
+  "background_color": "#000000",
+  "theme_color": "#000000"
+}
