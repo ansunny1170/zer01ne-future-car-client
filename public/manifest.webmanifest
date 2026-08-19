@@ -1,8 +1,8 @@
 {
-  "name": "FutureCar Review",
-  "short_name": "Review",
-  "description": "미래차 전시 엔딩 리플렉션 표시 화면",
-  "start_url": "/review",
+  "name": "FutureCar",
+  "short_name": "FutureCar",
+  "description": "미래차 전시 화면",
+  "start_url": "/",
   "scope": "/",
   "display": "fullscreen",
   "display_override": ["fullscreen", "standalone"],

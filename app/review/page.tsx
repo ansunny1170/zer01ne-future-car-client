@@ -6,7 +6,6 @@ import { Reflection } from "@/type";
 import { useEffect, useRef, useState } from "react";
 import { BASE_API_LINK } from "@/constants";
 import { useFullscreen } from "@/hooks/useFullscreen";
-import { useDevTrigger } from "@/hooks/useDevTrigger";
 
 // .env(NEXT_PUBLIC_API_URL) 기반으로 REST/WS 주소 생성
 // 예: "https://api.ftcar.org/" → API_BASE="https://api.ftcar.org", WS_BASE="wss://api.ftcar.org"
@@ -17,11 +16,9 @@ export default function Review() {
     const wsRef = useRef<WebSocket | null>(null);
     const [wsData, setWsData] = useState<Reflection[]>([]);
     const [selectedItem, setSelectedItem] = useState<Reflection | null>(null);
-    // 태블릿 전시용 전체화면. 버튼 탭 또는 우상단 3연속 탭(Ctrl/Cmd+Shift+F)으로 토글한다.
+    // 태블릿 전시용 전체화면. 이 화면에는 눈에 보이는 버튼을 둔다(운영자가 직접 켠다).
+    // 나머지 화면은 layout 의 FullscreenToggle 이 좌하단 3연속 탭으로 처리한다.
     const { isFullscreen, supported, toggle } = useFullscreen();
-    // 버튼이 가려졌거나 없는 상황(전체화면 해제)에서도 쓸 수 있는 숨은 트리거.
-    // 클릭 리스너 안에서 호출되므로 사용자 제스처 요건을 만족한다.
-    useDevTrigger({ code: "KeyF", corner: "top-right" }, toggle);
 
     // 초기 엔딩 데이터는 HTTP GET 으로 받는다 (WS 연결 성공 여부와 무관하게 마운트 시 즉시).
     useEffect(() => {
