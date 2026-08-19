@@ -1,5 +1,6 @@
 'use client';
 
+import { usePathname } from "next/navigation";
 import { Geist, Geist_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
@@ -79,6 +80,15 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // manifest 는 문서당 하나만 유효하다(브라우저는 head 의 첫 rel=manifest 만 읽는다).
+  // 그래서 라우트별로 파일을 갈아끼운다 — 태블릿에서 /review 를 홈 화면에 추가하면
+  // 그 아이콘이 /review 를 열어야 하기 때문이다(Android Chrome 은 manifest 의
+  // start_url 을 따른다. iOS 는 추가 시점의 현재 URL 을 쓰므로 어느 쪽이든 무관).
+  const pathname = usePathname();
+  const manifestHref = pathname?.startsWith("/review")
+    ? "/manifest-review.webmanifest"
+    : "/manifest.webmanifest";
+
   return (
     <html lang="en" data-arp="">
       <head>
@@ -94,7 +104,7 @@ export default function RootLayout({
         {/* 홈 화면에 추가(Add to Home Screen) 시 주소창 없이 뜨게 한다.
             iPhone Safari 는 Fullscreen API 자체가 없어서 이 경로가 유일한 전체화면 수단이고,
             iPad 도 이쪽이 더 안정적이다. Android Chrome 은 manifest 의 display 를 따른다. */}
-        <link rel="manifest" href="/manifest.webmanifest" />
+        <link rel="manifest" href={manifestHref} />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
