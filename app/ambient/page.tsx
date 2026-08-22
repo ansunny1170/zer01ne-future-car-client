@@ -21,6 +21,8 @@ import { StepInfo } from "@/type";
 import StepRepeat from "@/components/steps/step-repeat";
 import StepAudioPlayer from "@/components/audio-player/step-audio-player";
 import StepVideoPlayer from "@/components/video-player/step-video-player";
+import TopLayout from "@/components/fixed-layout/top-layout";
+import BottomLayout from "@/components/fixed-layout/bottom-layout";
 import { useDevTrigger } from "@/hooks/useDevTrigger";
 import GuideModal from "@/components/ui/guide-modal";
 import TabletSimModal from "@/components/ui/tablet-sim-modal";
@@ -274,9 +276,19 @@ export default function AmbientScreen() {
 
   return (
     <div className="w-full h-full min-h-screen overflow-hidden bg-black text-white">
-      {/* autoStart: 이 화면은 키 입력이 없다(태블릿이 MQTT 로 조작) → 마운트 즉시 재생 */}
-      <StepVideoPlayer autoStart />
+      {/* ambient 모드: 키 입력 없이 즉시 재생, 전 스텝 루프, 두 번째 재생부터 블러 */}
+      <StepVideoPlayer ambient />
       <StepAudioPlayer />
+
+      {/* classic(`/`)과 같은 고정 프레임·HUD. step 연출 중에만 띄운다 — 대기/작별 화면은
+          전용 레이아웃이라 프레임이 겹치면 안 된다. classic 은 stepNumber 로 HUD 를 가리지만
+          ambient 는 step1 부터 정식 연출이라 hud 를 강제로 켠다. */}
+      {screen === "step" && (
+        <>
+          <TopLayout hud totalSteps={4} />
+          <BottomLayout />
+        </>
+      )}
 
       <AnimatePresence mode="wait">
         {screen === "connecting" && (

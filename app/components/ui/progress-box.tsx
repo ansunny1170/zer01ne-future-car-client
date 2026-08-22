@@ -2,10 +2,10 @@
 import { useScene } from "@/context/scene-context";
 import { useState, useEffect } from "react";
 
-export default function ProgressBox() {
+// totalStep: 진행바 분모. 기본 7(classic). ambient 는 4스텝이라 밖에서 넘긴다.
+export default function ProgressBox({ totalStep = 7 }: { totalStep?: number } = {}) {
   const {stepInfo} = useScene();
   const progress = Number(stepInfo?.step);
-  const totalStep = 7;
   const [currentSpeed, setCurrentSpeed] = useState(60);
 
   // 60~70 범위에서 천천히 랜덤 속도 변경

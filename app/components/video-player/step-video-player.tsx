@@ -3,14 +3,17 @@ import { useScene } from '@/context/scene-context';
 import { cn } from '@/utils/cn' ;
 import { useEffect, useRef, useState } from 'react';
 
-// autoStart: ambient(전시) 전용 — 마운트 즉시 재생을 시작한다.
-// classic(`/`)은 관람객이 키를 눌러 진행하므로 그 keydown 을 재생 시작 신호로 쓰지만,
-// /ambient 는 태블릿이 MQTT 로 조작해서 키 입력이 단 한 번도 없다 → 영원히 재생이
-// 시작되지 않았다. 아래 videoMuted 로 항상 음소거라 브라우저 자동재생 정책에도 걸리지 않는다.
-export default function StepVideoPlayer({ className, autoStart = false }:
+// ambient: /ambient 전시 화면 전용 모드. classic(`/`)과 세 가지가 다르다.
+// - 재생 시작: classic 은 관람객의 keydown 이 신호지만 ambient 는 키 입력이 없어 마운트 즉시 시작
+// - 루프: classic 은 step<2(인트로)를 한 번만 틀고 멈추지만, ambient 는 모든 step 이 정식
+//   연출이라 영상이 끝나면 멈추는 게 아니라 계속 돌아야 한다
+// - 블러: classic 의 "두 번째 재생부터 배경을 뿌옇게" 를 ambient 의 모든 step 에 적용한다
+//   (대기 화면은 step 이 없으므로 블러 없음)
+// 아래 videoMuted 로 항상 음소거라 브라우저 자동재생 정책에도 걸리지 않는다.
+export default function StepVideoPlayer({ className, ambient = false }:
     {
         className?: string,
-        autoStart?: boolean
+        ambient?: boolean
     }) {
     const { videoPath, stepInfo } = useScene();
     const BASE_URL = BASE_S3_LINK;
@@ -21,14 +24,18 @@ export default function StepVideoPlayer({ className, autoStart = false }:
     const [isCurrentReady, setIsCurrentReady] = useState(false);
     const [hasCurrentPlayedOnce, setHasCurrentPlayedOnce] = useState(false);
     const [hasPreviousPlayedOnce, setHasPreviousPlayedOnce] = useState(false);
-    const [isVideoActive, setIsVideoActive] = useState(autoStart);
+    const [isVideoActive, setIsVideoActive] = useState(ambient);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
     const currentVideoRef = useRef<HTMLVideoElement | null>(null);
     const previousVideoRef = useRef<HTMLVideoElement | null>(null);
     const prevNextVideoPathRef = useRef(nextVideoPath);
-    const noLoop = !stepInfo?.step || (stepInfo?.step && stepInfo?.step < 2) ? false : true;
+    // classic: step<2(인트로)는 1회 재생 후 정지, 그 뒤부터 루프+블러.
+    const classicLoop = !stepInfo?.step || (stepInfo?.step && stepInfo?.step < 2) ? false : true;
+    // ambient: 항상 루프. 블러는 step 연출 중에만(대기 화면 제외).
+    const loopVideo = ambient ? true : classicLoop;
+    const blurAfterFirst = ambient ? !!stepInfo?.step : classicLoop;
     // step1 에서 인트로 영상(intro 01.mp4)에 박힌 고정 내레이션이 재생되는 문제 — 잠시 항상 음소거
-    // 원복하려면 아래 videoMuted 를 지우고 muted={noLoop} 로 되돌린다
+    // 원복하려면 아래 videoMuted 를 지우고 muted={classicLoop} 로 되돌린다
     const videoMuted = true;
 
     useEffect(() => {
@@ -133,9 +140,9 @@ export default function StepVideoPlayer({ className, autoStart = false }:
                 key={`${stepInfo?.step ? BASE_URL : ''}/${currentVideoPath}`}
                 src={`${stepInfo?.step ? BASE_URL : ''}/${currentVideoPath}`}
                 autoPlay={isVideoActive}
-                // muted = {noLoop}
+                // muted = {classicLoop}
                 muted = {videoMuted}
-                loop = {noLoop}
+                loop = {loopVideo}
                 playsInline
                 preload='auto'
                 onCanPlay={() => {
@@ -167,7 +174,7 @@ export default function StepVideoPlayer({ className, autoStart = false }:
                     }
                 }}
                 className={`w-full h-full object-cover absolute inset-0 z-0 transition-all duration-[2000ms] ${
-                    hasCurrentPlayedOnce && noLoop ? 'blur-lg' : ''
+                    hasCurrentPlayedOnce && blurAfterFirst ? 'blur-lg' : ''
                 }`}
             />
             {/* Previous video (fades out above) */}
@@ -177,7 +184,7 @@ export default function StepVideoPlayer({ className, autoStart = false }:
                     key={`${BASE_URL}/${previousVideoPath}`}
                     src={`${BASE_URL}/${previousVideoPath}`}
                     autoPlay={isVideoActive}
-                    // muted = {noLoop}
+                    // muted = {classicLoop}
                     muted = {videoMuted}
                     loop
                     playsInline
@@ -190,7 +197,7 @@ export default function StepVideoPlayer({ className, autoStart = false }:
                     }}
                     className={`w-full h-full object-cover absolute inset-0 transition-all duration-800 z-10 ${
                         isTransitioning ? 'opacity-0 scale-150' : 'opacity-100 scale-100'
-                    } ${hasPreviousPlayedOnce && noLoop ? 'blur-lg' : ''}`}
+                    } ${hasPreviousPlayedOnce && blurAfterFirst ? 'blur-lg' : ''}`}
                 />
             )}
         </div>

@@ -6,15 +6,20 @@ import { useScene } from "@/context/scene-context";
 import { motion } from "framer-motion";
 
 /* eslint-disable @next/next/no-img-element */
-export default function TopLayout() {
+// hud: HUD(탑뷰·진행바·내비·뮤직플레이어·중간 프레임) 표시 여부를 밖에서 강제한다.
+//   classic(`/`)은 stepNumber 로 판단하지만(step1 = 음성 입력 화면이라 HUD 없음),
+//   /ambient 는 stepNumber 를 쓰지 않고 step1 부터 정식 연출이라 항상 켠다.
+// totalSteps: 진행바 분모. classic 7, ambient 4.
+export default function TopLayout({ hud, totalSteps }: { hud?: boolean; totalSteps?: number } = {}) {
     const {stepInfo,stepNumber} = useScene();
     const passenger_count = stepInfo?.passenger_state?.total || 0;
+    const showHud = hud ?? stepNumber > 1;
 
     return (
         <div className="absolute inset-0 z-[6] perspective-1000">
             {/* 상단 좌측 영역 */}
             {
-                stepNumber > 1 && (
+                showHud && (
                     <div className="fixed left-[40px] top-[66px] z-20">
                         <img src={`/assets/images/img_topview_0${passenger_count}.svg`} alt="fixed-layout" className="w-[68px]" />
                     </div>
@@ -34,10 +39,10 @@ export default function TopLayout() {
 
             {/* 하단 좌측 영역 */}
             {
-                stepNumber > 1 && (
+                showHud && (
                     <div className="fixed right-1/2 bottom-[48px] -translate-x-[10vw] flex gap-[21px]">
                         <div>
-                            <ProgressBox/>
+                            <ProgressBox totalStep={totalSteps}/>
                         </div>
                     </div>
                 )
@@ -47,7 +52,7 @@ export default function TopLayout() {
             <motion.div 
                 className="fixed left-1/2 bottom-[56px] translate-x-[9.2vw] opacity-0"
                 animate={{
-                    opacity: stepNumber > 1 ? 1 : 0,
+                    opacity: showHud ? 1 : 0,
                 }}
                 transition={{
                     duration: 1,
@@ -68,7 +73,7 @@ export default function TopLayout() {
 
             {/* 프레임 블러 영역 */}
             {
-                stepNumber > 1 &&(
+                showHud &&(
                     <div 
                         className="fixed left-0 bottom-[22px] w-full"
                     >

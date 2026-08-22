@@ -4,7 +4,7 @@
 // 상단 중앙 3연속 클릭 또는 Ctrl/Cmd+Shift+L 로 연다 (page.tsx 에서 트리거 등록).
 // 최신 로그가 맨 위(내림차순) — 스크롤을 내리지 않아도 방금 일어난 일이 보인다.
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { clearDevLogs, DevLogEntry, getDevLogs, subscribeDevLog } from "@/utils/devLog";
 import { cn } from "@/utils/cn";
 
@@ -48,8 +48,51 @@ function toPlainText(entries: DevLogEntry[]): string {
         .join("\n");
 }
 
+// 패널 본문 높이. 기본은 화면의 1/3 — 전시 화면을 가리지 않으면서 최근 로그 10여 줄이 보이는 크기.
+// 하단 손잡이를 드래그해 조절하고, 마지막 값을 localStorage 에 남긴다(전시 중 새로고침해도 유지).
+const HEIGHT_KEY = "ftcar_dev_log_height";
+const MIN_HEIGHT = 120;
+
+function loadHeight(): number | null {
+    try {
+        const v = window.localStorage.getItem(HEIGHT_KEY);
+        const n = v ? Number(v) : NaN;
+        return Number.isFinite(n) && n >= MIN_HEIGHT ? n : null;
+    } catch {
+        return null;
+    }
+}
+
 export default function DevLogPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
     const [entries, setEntries] = useState<DevLogEntry[]>([]);
+    // null 이면 저장값 없음 → 기본 33vh 를 CSS 로 쓴다.
+    const [height, setHeight] = useState<number | null>(null);
+    const dragRef = useRef<{ startY: number; startH: number } | null>(null);
+
+    useEffect(() => {
+        setHeight(loadHeight());
+    }, []);
+
+    const onHandlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+        const body = e.currentTarget.previousElementSibling as HTMLElement | null;
+        const startH = height ?? body?.getBoundingClientRect().height ?? window.innerHeight / 3;
+        dragRef.current = { startY: e.clientY, startH };
+        e.currentTarget.setPointerCapture(e.pointerId);
+        e.preventDefault();
+    };
+    const onHandlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+        if (!dragRef.current) return;
+        const maxH = Math.floor(window.innerHeight * 0.9);
+        setHeight(Math.min(maxH, Math.max(MIN_HEIGHT, dragRef.current.startH + (e.clientY - dragRef.current.startY))));
+    };
+    const onHandlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+        if (!dragRef.current) return;
+        dragRef.current = null;
+        e.currentTarget.releasePointerCapture(e.pointerId);
+        if (height !== null) {
+            try { window.localStorage.setItem(HEIGHT_KEY, String(height)); } catch { /* 저장 실패해도 동작은 유지 */ }
+        }
+    };
     const [category, setCategory] = useState<string>("all");
     const [copied, setCopied] = useState(false);
 
@@ -118,7 +161,10 @@ export default function DevLogPanel({ open, onClose }: { open: boolean; onClose:
                 </div>
             </div>
 
-            <div className="max-h-[70vh] overflow-y-auto px-3 py-2 font-mono text-[12px] leading-[1.5]">
+            <div
+                className="overflow-y-auto px-3 py-2 font-mono text-[12px] leading-[1.5]"
+                style={{ height: height !== null ? `${height}px` : "33vh" }}
+            >
                 {visible.length === 0 ? (
                     <div className="py-6 text-center text-neutral-500">기록된 로그가 없습니다</div>
                 ) : (
@@ -145,6 +191,19 @@ export default function DevLogPanel({ open, onClose }: { open: boolean; onClose:
                         </div>
                     ))
                 )}
+            </div>
+            {/* 리사이즈 손잡이 — 드래그로 본문 높이 조절 */}
+            <div
+                role="separator"
+                aria-orientation="horizontal"
+                title="드래그해서 높이 조절"
+                onPointerDown={onHandlePointerDown}
+                onPointerMove={onHandlePointerMove}
+                onPointerUp={onHandlePointerUp}
+                onPointerCancel={onHandlePointerUp}
+                className="flex h-3 cursor-ns-resize items-center justify-center rounded-b-lg border-t border-white/10 bg-white/5 hover:bg-white/10"
+            >
+                <span className="h-[3px] w-10 rounded-full bg-white/30" />
             </div>
         </div>
     );
