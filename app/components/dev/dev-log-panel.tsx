@@ -29,10 +29,10 @@ function formatTime(iso?: string): string {
     return `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}.${p(d.getMilliseconds(), 3)}`;
 }
 
-// session_id 는 ms 타임스탬프 문자열이라 뒤 6자리가 가장 잘 구분된다.
+// session_id 는 UUID v7(앞부분이 시각)이라 뒤 8자리가 가장 잘 구분된다.
 function shortSession(sid?: string): string {
     if (!sid) return "—";
-    return sid.length > 6 ? `…${sid.slice(-6)}` : sid;
+    return sid.length > 8 ? `…${sid.slice(-8)}` : sid;
 }
 
 function toPlainText(entries: DevLogEntry[]): string {
@@ -63,8 +63,15 @@ function loadHeight(): number | null {
     }
 }
 
-export default function DevLogPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
+// activeSessionId: /ambient 가 지금 따라가는 세션. 로그 줄의 세션 칩을 강조해 "이 로그가 지금 화면의
+// 것인가"를 바로 구분하게 한다. 없으면(classic 등) 강조 없음.
+export default function DevLogPanel({ open, onClose, activeSessionId }: {
+    open: boolean; onClose: () => void; activeSessionId?: string | null;
+}) {
     const [entries, setEntries] = useState<DevLogEntry[]>([]);
+    // 세션 필터. "all" 이면 전체. 세션 칩을 누르면 그 세션만 본다.
+    const [sessionFilter, setSessionFilter] = useState<string>("all");
+    const [copiedSid, setCopiedSid] = useState<string | null>(null);
     // null 이면 저장값 없음 → 기본 33vh 를 CSS 로 쓴다.
     const [height, setHeight] = useState<number | null>(null);
     const dragRef = useRef<{ startY: number; startH: number } | null>(null);
@@ -107,11 +114,37 @@ export default function DevLogPanel({ open, onClose }: { open: boolean; onClose:
         return ["all", ...Array.from(set).sort()];
     }, [entries]);
 
+    // 세션 목록 — 최근 로그가 있는 세션이 앞. 건수도 같이.
+    const sessions = useMemo(() => {
+        const count = new Map<string, number>();
+        const last = new Map<string, number>();
+        entries.forEach((e, i) => {
+            if (!e.sessionId) return;
+            count.set(e.sessionId, (count.get(e.sessionId) ?? 0) + 1);
+            last.set(e.sessionId, i);
+        });
+        return Array.from(count.keys())
+            .sort((a, b) => (last.get(b) ?? 0) - (last.get(a) ?? 0))
+            .map((sid) => ({ sid, n: count.get(sid) ?? 0 }));
+    }, [entries]);
+
     // 최신이 맨 위로 오도록 뒤집는다.
     const visible = useMemo(() => {
-        const filtered = category === "all" ? entries : entries.filter((e) => e.category === category);
+        let filtered = category === "all" ? entries : entries.filter((e) => e.category === category);
+        if (sessionFilter !== "all") filtered = filtered.filter((e) => e.sessionId === sessionFilter);
         return filtered.slice().reverse();
-    }, [entries, category]);
+    }, [entries, category, sessionFilter]);
+
+    // 세션 칩 클릭 → 전체 id 복사 (/ambient?sid= 나 /logs?session_id= 에 바로 붙이기 위함)
+    const copySid = async (sid: string) => {
+        try {
+            await navigator.clipboard.writeText(sid);
+            setCopiedSid(sid);
+            setTimeout(() => setCopiedSid((cur) => (cur === sid ? null : cur)), 1200);
+        } catch {
+            // 클립보드 권한이 없으면 조용히 넘어간다
+        }
+    };
 
     const handleCopy = async () => {
         try {
@@ -161,6 +194,36 @@ export default function DevLogPanel({ open, onClose }: { open: boolean; onClose:
                 </div>
             </div>
 
+            {/* 세션 필터 — 어떤 세션의 로그인지 한눈에. ● 표시가 지금 화면이 따라가는 세션 */}
+            {sessions.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1 border-b border-white/10 px-3 py-1 text-[11px]">
+                    <span className="mr-1 text-neutral-500">세션</span>
+                    <button
+                        onClick={() => setSessionFilter("all")}
+                        className={cn("rounded px-2 py-[1px]", sessionFilter === "all" ? "bg-white text-black" : "bg-white/10 text-neutral-300")}
+                    >
+                        전체
+                    </button>
+                    {sessions.map(({ sid, n }) => (
+                        <button
+                            key={sid}
+                            onClick={() => setSessionFilter(sid === sessionFilter ? "all" : sid)}
+                            onDoubleClick={() => copySid(sid)}
+                            title={`${sid}\n클릭: 이 세션만 보기 · 더블클릭: 전체 id 복사`}
+                            className={cn(
+                                "rounded px-2 py-[1px] font-mono",
+                                sessionFilter === sid ? "bg-violet-300 text-black" : "bg-violet-500/20 text-violet-200",
+                                activeSessionId === sid && "ring-1 ring-emerald-400"
+                            )}
+                        >
+                            {activeSessionId === sid && <span className="mr-1 text-emerald-400">●</span>}
+                            {copiedSid === sid ? "복사됨 ✓" : `…${sid.slice(-8)}`}
+                            <span className="ml-1 text-neutral-400">{n}</span>
+                        </button>
+                    ))}
+                </div>
+            )}
+
             <div
                 className="overflow-y-auto px-3 py-2 font-mono text-[12px] leading-[1.5]"
                 style={{ height: height !== null ? `${height}px` : "33vh" }}
@@ -172,7 +235,20 @@ export default function DevLogPanel({ open, onClose }: { open: boolean; onClose:
                         <div key={e.id} className="border-b border-white/5 py-[3px]">
                             <div className="flex gap-2">
                                 <span className="text-neutral-500">{formatTime(e.serverTs ?? e.clientTs)}</span>
-                                <span className="text-neutral-600">{shortSession(e.sessionId)}</span>
+                                {e.sessionId ? (
+                                    <button
+                                        onClick={() => copySid(e.sessionId!)}
+                                        title={`${e.sessionId}\n클릭하면 전체 id 복사`}
+                                        className={cn(
+                                            "shrink-0 rounded px-1 font-mono",
+                                            activeSessionId === e.sessionId ? "bg-emerald-500/20 text-emerald-300" : "bg-violet-500/15 text-violet-300"
+                                        )}
+                                    >
+                                        {copiedSid === e.sessionId ? "복사됨" : shortSession(e.sessionId)}
+                                    </button>
+                                ) : (
+                                    <span className="shrink-0 px-1 text-neutral-600">—</span>
+                                )}
                                 <span className={cn("shrink-0", LEVEL_CLASS[e.level] ?? "text-neutral-300")}>
                                     {LEVEL_MARK[e.level] ?? "·"}
                                 </span>

@@ -434,7 +434,7 @@ export default function AmbientScreen() {
 
       <GuideModal open={guide} onClose={() => setGuide(false)} />
       <TabletSimModal open={tabletSim} onClose={() => setTabletSim(false)} />
-      <DevLogPanel open={devLogOpen} onClose={() => setDevLogOpen(false)} />
+      <DevLogPanel open={devLogOpen} onClose={() => setDevLogOpen(false)} activeSessionId={controlSid} />
     </div>
   );
 }
