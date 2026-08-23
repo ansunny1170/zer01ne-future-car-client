@@ -27,11 +27,14 @@ import { useDevTrigger } from "@/hooks/useDevTrigger";
 import GuideModal from "@/components/ui/guide-modal";
 import TabletSimModal from "@/components/ui/tablet-sim-modal";
 import DevLogPanel from "@/components/dev/dev-log-panel";
+import HyundaiLoading from "@/components/ui/hyundai-loading";
 import { appendDevLog } from "@/utils/devLog";
 import { BASE_API_LINK } from "@/constants";
 import { cn } from "@/utils/cn";
 
-type Screen = "connecting" | "waiting" | "step" | "done";
+// ending: 마지막 step 의 asset 재생이 끝난 뒤(state arrived · next=exit) 보여주는 고정 엔딩.
+//         classic(`/`)의 StepComplete 가 step7 뒤에 띄우는 화면과 같다. exit 가 오면 done 으로.
+type Screen = "connecting" | "waiting" | "step" | "ending" | "done";
 
 type ErrorMsg = { type: "error"; step: number; code: string; message: string };
 
@@ -180,8 +183,12 @@ export default function AmbientScreen() {
               setScreen("waiting");
             } else if (msg.phase === "done") {
               setScreen("done");
+            } else if (msg.phase === "arrived" && msg.next === "exit") {
+              // 마지막 step 재생 완료 — 서버가 next=exit 를 실어 보내는 유일한 지점.
+              // 태블릿이 exit 버튼을 켜는 동안 화면은 고정 엔딩을 보여준다.
+              setScreen("ending");
             }
-            // "driving" / "arrived" 는 화면 전환 없음 (step 메시지가 비주얼을 이끈다)
+            // 그 외 "driving" / "arrived" 는 화면 전환 없음 (step 메시지가 비주얼을 이끈다)
             break;
           case "error":
             console.error("[ambient] server error", msg);
@@ -331,6 +338,22 @@ export default function AmbientScreen() {
             transition={{ duration: 0.3 }}
           >
             <StepRepeat onTimelineComplete={notifyStepRendered} />
+          </motion.div>
+        )}
+
+        {screen === "ending" && (
+          <motion.div
+            key="ending"
+            variants={fadeVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 1 }}
+            className="fixed inset-0 z-[22] flex flex-col items-center justify-center text-center text-white backdrop-blur-lg bg-black/10"
+          >
+            <h1 className="text-[96px] font-bold">체험이 모두 끝났습니다!</h1>
+            <HyundaiLoading />
+            <p className="text-[28px] opacity-60">뒷쪽 출구로 퇴장해 주세요.</p>
           </motion.div>
         )}
 
