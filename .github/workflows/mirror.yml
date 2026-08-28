@@ -28,6 +28,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          # ⚠️ 필수. checkout 이 git config 에 심는 GITHUB_TOKEN Authorization 헤더가 URL 의
+          # 우리 토큰보다 우선해, 조직 레포에 "Repository not found" 가 난다(REST 는 되는데 git 만 404).
+          persist-credentials: false
 
       - name: Push all branches and tags to zero1ne-26/future-car-client
         env:
