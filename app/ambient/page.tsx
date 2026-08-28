@@ -3,8 +3,10 @@
 /**
  * /ambient — main-2026(ambient) 전시용 미래차 화면.
  *
- * classic(`/`)과 달리 이 화면은 수신·렌더 전용이다: 음성 입력도, 질문 UI도 없다.
- * 태블릿이 MQTT로 미래차 서버를 조작하고, 서버는 그 결과를 WS로 이 화면에 push 한다.
+ * classic(`/`)과 달리 질문 UI 가 없다. 태블릿이 MQTT 로 enter/exit 만 보내고, 서버는 그 결과를
+ * WS 로 이 화면에 push 한다. **스텝 진행은 이 화면에 연결된 마이크가 이끈다** — 대기 화면과
+ * 각 스텝 렌더 완료 뒤에 관람객 발화를 STT 해 `POST /ambient/utterance` 로 보내면 서버가
+ * 다음 스텝을 생성한다(useCarListener). 재생 중에는 자기수신을 막기 위해 마이크를 닫는다.
  *
  * session_id 는 두 가지 모드로 정해진다:
  * - 고정 세션 모드: ?sid= 쿼리가 있으면 `/ws/futurecar/{sid}` 로 접속해 그 세션만 받는다.
@@ -31,6 +33,11 @@ import HyundaiLoading from "@/components/ui/hyundai-loading";
 import { appendDevLog } from "@/utils/devLog";
 import { BASE_API_LINK } from "@/constants";
 import { cn } from "@/utils/cn";
+import { useCarListener } from "@/hooks/useCarListener";
+import ListenIndicator from "@/components/ambient/listen-indicator";
+
+// 서버와 같은 고정 스텝 수. 마지막 스텝 뒤에는 질문이 없으므로 마이크도 열지 않는다.
+const TOTAL_STEPS = 4;
 
 // ending: 마지막 step 의 asset 재생이 끝난 뒤(state arrived · next=exit) 보여주는 고정 엔딩.
 //         classic(`/`)의 StepComplete 가 step7 뒤에 띄우는 화면과 같다. exit 가 오면 done 으로.
@@ -65,6 +72,8 @@ export default function AmbientScreen() {
   const [connected, setConnected] = useState(false);
   const [screen, setScreen] = useState<Screen>("connecting");
   const [lastError, setLastError] = useState<ErrorMsg | null>(null);
+  // 관람객 차례(마이크 열림): 대기 화면, 스텝 렌더 완료 뒤 ~ 다음 step 수신 전, 서버 error 뒤.
+  const [visitorTurn, setVisitorTurn] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   // screen 최신값을 이벤트 핸들러에서 참조하기 위한 ref (stale closure 방지)
   const screenRef = useRef<Screen>("connecting");
@@ -173,26 +182,33 @@ export default function AmbientScreen() {
             if (screenRef.current === "done") return;
             setStepInfo(msg.data as StepInfo);
             setScreen("step");
+            setVisitorTurn(false); // 재생 시작 — 우리 소리를 받아 적지 않도록 마이크를 닫는다
             break;
           case "state":
             if (msg.phase === "idle") {
               // 새 plan 도착 → 클라 세션 리프레시
               reStart();
               setScreen("waiting");
+              setVisitorTurn(false); // plan 만 도착 — enter 전이라 서버 수집 창이 닫혀 있다
             } else if (msg.phase === "waiting") {
               setScreen("waiting");
+              setVisitorTurn(true); // enter 됨 — "출발 할까요?" 에 답할 차례
             } else if (msg.phase === "done") {
               setScreen("done");
+              setVisitorTurn(false);
             } else if (msg.phase === "arrived" && msg.next === "exit") {
               // 마지막 step 재생 완료 — 서버가 next=exit 를 실어 보내는 유일한 지점.
               // 태블릿이 exit 버튼을 켜는 동안 화면은 고정 엔딩을 보여준다.
               setScreen("ending");
+              setVisitorTurn(false);
             }
             // 그 외 "driving" / "arrived" 는 화면 전환 없음 (step 메시지가 비주얼을 이끈다)
             break;
           case "error":
             console.error("[ambient] server error", msg);
             setLastError(msg as ErrorMsg);
+            // 생성 실패 등 — 관람객이 다시 말하면 서버가 재시도하므로 마이크를 다시 연다
+            setVisitorTurn(true);
             break;
           default:
             console.warn("[ambient] unknown message type", msg);
@@ -262,6 +278,8 @@ export default function AmbientScreen() {
         source: "client",
       });
       const API = BASE_API_LINK.replace(/\/+$/, "");
+      // 렌더가 끝났으니 관람객 차례 — 마지막 스텝은 질문이 없어 열지 않는다(엔딩으로 넘어감).
+      setVisitorTurn(step < TOTAL_STEPS);
       fetch(`${API}/ambient/step-rendered`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -281,8 +299,51 @@ export default function AmbientScreen() {
     [sid],
   );
 
+  // 차량 마이크 STT 발화 → 서버. 서버가 수집(collected)했으면 이 창에서는 더 듣지 않는다.
+  const sendUtterance = useCallback(
+    async (text: string): Promise<boolean> => {
+      const sessionId = sid ?? activeSidRef.current;
+      if (!sessionId) {
+        console.warn("[ambient] session_id 없음 — 발화 전송 생략:", text);
+        return false;
+      }
+      const API = BASE_API_LINK.replace(/\/+$/, "");
+      try {
+        const res = await fetch(`${API}/ambient/utterance`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ session_id: sessionId, transcript: text, source: "car-stt" }),
+        });
+        const body = (await res.json()) as { ok?: boolean; result?: string };
+        appendDevLog({
+          category: "ambient",
+          stage: "utterance",
+          level: body.ok ? "info" : "warn",
+          message: `발화 "${text}" → ${body.result ?? res.status}`,
+          sessionId,
+          source: "client",
+        });
+        return body.ok === true;
+      } catch (err) {
+        console.error("[ambient] 발화 전송 실패", err);
+        appendDevLog({
+          category: "ambient",
+          stage: "utterance",
+          level: "error",
+          message: `발화 전송 실패: ${err}`,
+          sessionId,
+          source: "client",
+        });
+        return false;
+      }
+    },
+    [sid],
+  );
+  const listener = useCarListener({ active: visitorTurn && !!controlSid, onFinal: sendUtterance });
+
   return (
     <div className="w-full h-full min-h-screen overflow-hidden bg-black text-white">
+      <ListenIndicator state={listener} />
       {/* ambient 모드: 키 입력 없이 즉시 재생, 전 스텝 루프, 두 번째 재생부터 블러 */}
       <StepVideoPlayer ambient />
       <StepAudioPlayer />
@@ -381,7 +442,7 @@ export default function AmbientScreen() {
               ? `모드=고정 · sid=${sid}`
               : `모드=자동추종 · 세션=${activeSid ? truncateSid(activeSid) : "대기중"}`}
           </div>
-          <div>screen={screen} · step={stepInfo?.step ?? "-"}</div>
+          <div>screen={screen} · step={stepInfo?.step ?? "-"} · mic={listener.status}</div>
           {lastError && (
             <div className="text-red-400">
               error {lastError.code}: {lastError.message}
