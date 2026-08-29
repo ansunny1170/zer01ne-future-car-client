@@ -39,9 +39,10 @@ import ListenIndicator from "@/components/ambient/listen-indicator";
 // 서버와 같은 고정 스텝 수. 마지막 스텝 뒤에는 질문이 없으므로 마이크도 열지 않는다.
 const TOTAL_STEPS = 4;
 
-// ending: 마지막 step 의 asset 재생이 끝난 뒤(state arrived · next=exit) 보여주는 고정 엔딩.
-//         classic(`/`)의 StepComplete 가 step7 뒤에 띄우는 화면과 같다. exit 가 오면 done 으로.
-type Screen = "connecting" | "waiting" | "step" | "ending" | "done";
+// standby: exit ~ 다음 enter 사이(그리고 plan 만 온 idle, 세션이 아직 없을 때)의 대기 화면. 글자 없이 조용히.
+// waiting: enter 뒤 ~ step1 전. 마이크가 열려 있고 관람객이 "출발 할까요?" 에 답하는 구간 — 환영 문구 없음.
+// ending:  마지막 step 의 asset 재생이 끝난 뒤(state arrived · next=exit) 보여주는 고정 엔딩. exit 가 오면 standby 로.
+type Screen = "standby" | "waiting" | "step" | "ending";
 
 type ErrorMsg = { type: "error"; step: number; code: string; message: string };
 
@@ -70,13 +71,13 @@ export default function AmbientScreen() {
   // 와일드카드 모드에서 지금 화면이 따라가고 있는 session_id
   const [activeSid, setActiveSid] = useState<string | null>(null);
   const [connected, setConnected] = useState(false);
-  const [screen, setScreen] = useState<Screen>("connecting");
+  const [screen, setScreen] = useState<Screen>("standby");
   const [lastError, setLastError] = useState<ErrorMsg | null>(null);
   // 관람객 차례(마이크 열림): 대기 화면, 스텝 렌더 완료 뒤 ~ 다음 step 수신 전, 서버 error 뒤.
   const [visitorTurn, setVisitorTurn] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   // screen 최신값을 이벤트 핸들러에서 참조하기 위한 ref (stale closure 방지)
-  const screenRef = useRef<Screen>("connecting");
+  const screenRef = useRef<Screen>("standby");
   screenRef.current = screen;
   // activeSid 최신값을 이벤트 핸들러에서 참조하기 위한 ref (stale closure 방지, screenRef와 동일 패턴)
   const activeSidRef = useRef<string | null>(null);
@@ -196,8 +197,6 @@ export default function AmbientScreen() {
 
         switch (msg.type) {
           case "step":
-            // 작별 화면 이후에는 새 plan(state.idle)이 오기 전까지 어떤 step도 무시한다
-            if (screenRef.current === "done") return;
             setStepInfo(msg.data as StepInfo);
             setScreen("step");
             setVisitorTurn(false); // 재생 시작 — 우리 소리를 받아 적지 않도록 마이크를 닫는다
@@ -206,13 +205,13 @@ export default function AmbientScreen() {
             if (msg.phase === "idle") {
               // 새 plan 도착 → 클라 세션 리프레시
               reStart();
-              setScreen("waiting");
-              setVisitorTurn(false); // plan 만 도착 — enter 전이라 서버 수집 창이 닫혀 있다
+              setScreen("standby");   // plan 만 도착 — enter 전. 조용한 대기 화면
+              setVisitorTurn(false);
             } else if (msg.phase === "waiting") {
               setScreen("waiting");
               setVisitorTurn(true); // enter 됨 — "출발 할까요?" 에 답할 차례
             } else if (msg.phase === "done") {
-              setScreen("done");
+              setScreen("standby");   // exit(또는 태블릿 종료) — 다음 탑승까지 대기
               setVisitorTurn(false);
             } else if (msg.phase === "arrived" && msg.next === "exit") {
               // 마지막 step 재생 완료 — 서버가 next=exit 를 실어 보내는 유일한 지점.
@@ -407,21 +406,21 @@ export default function AmbientScreen() {
       )}
 
       <AnimatePresence mode="wait">
-        {screen === "connecting" && (
+        {screen === "standby" && (
           <motion.div
-            key="connecting"
+            key="standby"
             variants={fadeVariants}
             initial="initial"
             animate="animate"
             exit="exit"
-            transition={{ duration: 0.3 }}
-            className="fixed inset-0 flex flex-col items-center justify-center gap-3 bg-neutral-950"
+            transition={{ duration: 0.6 }}
+            className="fixed inset-0 flex flex-col items-center justify-center bg-neutral-950"
           >
-            <div className="text-2xl">연결 중…</div>
-            <div className="text-sm text-neutral-500">session={sid}</div>
+            {/* exit ~ enter 사이 대기. 관람객에게 보이는 글자는 두지 않는다 — 로더만 잔잔하게. */}
+            <HyundaiLoading />
+            {!connected && <div className="mt-6 text-sm text-neutral-600">서버 연결 중…</div>}
           </motion.div>
         )}
-
         {screen === "waiting" && (
           <motion.div
             key="waiting"
@@ -432,11 +431,9 @@ export default function AmbientScreen() {
             transition={{ duration: 0.3 }}
             className="fixed inset-0 flex flex-col items-center justify-center gap-4"
           >
-            <div className="text-4xl font-semibold">탑승을 환영합니다</div>
-            <div className="text-lg text-neutral-300">곧 여정을 시작합니다</div>
+            {/* enter 뒤 ~ step1 전. 환영 문구 없이 비워 둔다 — 마이크 인디케이터가 "듣고 있어요" 를 맡는다. */}
           </motion.div>
         )}
-
         {screen === "step" && (
           <motion.div
             key="step"
@@ -466,20 +463,6 @@ export default function AmbientScreen() {
           </motion.div>
         )}
 
-        {screen === "done" && (
-          <motion.div
-            key="done"
-            variants={fadeVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            transition={{ duration: 0.3 }}
-            className="fixed inset-0 flex flex-col items-center justify-center gap-4"
-          >
-            <div className="text-4xl font-semibold">오늘 여정을 함께해 주셔서 감사합니다</div>
-            <div className="text-lg text-neutral-300">다음에 또 만나요</div>
-          </motion.div>
-        )}
       </AnimatePresence>
 
       {devMode && (
