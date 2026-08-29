@@ -31,7 +31,7 @@ import TabletSimModal from "@/components/ui/tablet-sim-modal";
 import DevLogPanel from "@/components/dev/dev-log-panel";
 import HyundaiLoading from "@/components/ui/hyundai-loading";
 import { appendDevLog } from "@/utils/devLog";
-import { BASE_API_LINK, STANDBY_VIDEO_URL, resolveMediaUrl } from "@/constants";
+import { BASE_API_LINK, STANDBY_VIDEO_URL } from "@/constants";
 import { cn } from "@/utils/cn";
 import { useCarListener } from "@/hooks/useCarListener";
 import ListenIndicator from "@/components/ambient/listen-indicator";
@@ -75,16 +75,6 @@ export default function AmbientScreen() {
   const [lastError, setLastError] = useState<ErrorMsg | null>(null);
   // 관람객 차례(마이크 열림): 대기 화면, 스텝 렌더 완료 뒤 ~ 다음 step 수신 전, 서버 error 뒤.
   const [visitorTurn, setVisitorTurn] = useState(false);
-  // standby 반복 영상 — 부팅 때 /api/ambient-config(런타임 env STANDBY_VIDEO)로 덮어쓴다. 실패하면 빌드 기본값.
-  const [standbyVideoUrl, setStandbyVideoUrl] = useState(STANDBY_VIDEO_URL);
-  useEffect(() => {
-    fetch("/api/ambient-config", { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((cfg: { standbyVideo?: string } | null) => {
-        if (cfg?.standbyVideo) setStandbyVideoUrl(resolveMediaUrl(cfg.standbyVideo));
-      })
-      .catch(() => {});
-  }, []);
   const wsRef = useRef<WebSocket | null>(null);
   // screen 최신값을 이벤트 핸들러에서 참조하기 위한 ref (stale closure 방지)
   const screenRef = useRef<Screen>("standby");
@@ -426,18 +416,18 @@ export default function AmbientScreen() {
             transition={{ duration: 0.6 }}
             className="fixed inset-0 flex flex-col items-center justify-center bg-neutral-950"
           >
-            {/* exit ~ enter 사이 대기. 지정 영상(NEXT_PUBLIC_STANDBY_VIDEO, 기본 en6.mp4)을 무음으로
-                무한 반복한다. 관람객에게 보이는 글자는 두지 않는다. 영상 로드 실패 시 로더만 남는다. */}
+            {/* exit ~ enter 사이 대기. 지정 영상(constants.ts 의 STANDBY_VIDEO)을 무음으로 무한 반복한다.
+                관람객에게 보이는 글자는 두지 않는다. 영상 로드 실패 시 로더만 남는다. */}
             <video
-              key={standbyVideoUrl}
-              src={standbyVideoUrl}
+              key={STANDBY_VIDEO_URL}
+              src={STANDBY_VIDEO_URL}
               autoPlay
               loop
               muted
               playsInline
               preload="auto"
               className="absolute inset-0 h-full w-full object-cover"
-              onError={(e) => console.warn("[ambient] standby 영상 로드 실패", standbyVideoUrl, e)}
+              onError={(e) => console.warn("[ambient] standby 영상 로드 실패", STANDBY_VIDEO_URL, e)}
             />
             <div className="relative opacity-60">
               <HyundaiLoading />
