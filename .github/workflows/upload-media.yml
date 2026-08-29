@@ -1,0 +1,36 @@
+# Mac Studio MinIO 미디어 업로드 — 러너가 Mac Studio 안에 있으므로 SSH 없이 upload.sh 를 돌린다.
+#
+# 쓰는 법: 파일을 Mac Studio 의 /Users/zer01ne/minio-staging/ (upload.sh 와 같은 폴더)에 넣고
+#   Actions → "Upload media to MinIO" → Run workflow   (또는 gh workflow run upload-media.yml)
+# upload.sh 는 mc mirror 로 **새 파일만** future-car-media 버킷에 올린다(.DS_Store·*.sh 제외).
+name: Upload media to MinIO
+
+on:
+  workflow_dispatch:
+    inputs:
+      check:
+        description: "업로드 후 존재 확인할 파일명 (선택, 예: rescene.mp4)"
+        required: false
+        default: ""
+
+jobs:
+  upload:
+    runs-on: [self-hosted, future-car]
+    steps:
+      - name: Run upload.sh on Mac Studio
+        run: |
+          set -euo pipefail
+          STAGING=/Users/zer01ne/minio-staging
+          echo "== staging 폴더 내용"
+          ls -la "$STAGING" | grep -v '^total' || true
+          echo "== upload.sh"
+          bash "$STAGING/upload.sh"
+
+      - name: Verify
+        if: ${{ inputs.check != '' }}
+        run: |
+          set -euo pipefail
+          url="http://localhost:9100/future-car-media/${{ inputs.check }}"
+          code=$(curl -s -o /dev/null -w "%{http_code}" -I "$url")
+          echo "$url → HTTP $code"
+          [ "$code" = "200" ] || { echo "::error::버킷에서 ${{ inputs.check }} 를 못 찾음"; exit 1; }
