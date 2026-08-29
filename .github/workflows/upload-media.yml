@@ -3,13 +3,31 @@
 # 쓰는 법: 파일을 Mac Studio 의 /Users/zer01ne/minio-staging/ (upload.sh 와 같은 폴더)에 넣고
 #   Actions → "Upload media to MinIO" → Run workflow   (또는 gh workflow run upload-media.yml)
 # upload.sh 는 mc mirror 로 **새 파일만** future-car-media 버킷에 올린다(.DS_Store·*.sh 제외).
+#
+# 입력:
+#   find   파일명을 홈 폴더에서 찾아 경로만 출력(업로드 안 함). 어디에 넣었는지 모를 때.
+#   src    staging 밖에 있는 파일(절대 경로)을 staging/<dest> 로 복사한 뒤 업로드.
+#   dest   src 를 복사할 staging 안 상대 경로(기본 videos/). 버킷 키가 된다.
+#   check  업로드 후 존재 확인할 버킷 키(예: videos/rescene.mp4).
 name: Upload media to MinIO
 
 on:
   workflow_dispatch:
     inputs:
+      find:
+        description: "홈 폴더에서 찾을 파일명 (찾기만 함)"
+        required: false
+        default: ""
+      src:
+        description: "staging 으로 복사할 파일의 절대 경로 (선택)"
+        required: false
+        default: ""
+      dest:
+        description: "staging 안 복사 위치 (기본 videos/)"
+        required: false
+        default: "videos/"
       check:
-        description: "업로드 후 존재 확인할 파일명 (선택, 예: rescene.mp4)"
+        description: "업로드 후 존재 확인할 버킷 키 (예: videos/rescene.mp4)"
         required: false
         default: ""
 
@@ -17,17 +35,33 @@ jobs:
   upload:
     runs-on: [self-hosted, future-car]
     steps:
-      - name: Run upload.sh on Mac Studio
+      - name: Find file under home
+        if: ${{ inputs.find != '' }}
+        run: |
+          echo "== '${{ inputs.find }}' 를 홈에서 검색 (깊이 5)"
+          find "$HOME" -maxdepth 5 -name "${{ inputs.find }}" -not -path '*/Library/*' -not -path '*/node_modules/*' 2>/dev/null | head -20 || true
+
+      - name: Copy src into staging
+        if: ${{ inputs.src != '' }}
         run: |
           set -euo pipefail
           STAGING=/Users/zer01ne/minio-staging
-          echo "== staging 폴더 내용"
-          ls -la "$STAGING" | grep -v '^total' || true
+          [ -f "${{ inputs.src }}" ] || { echo "::error::src 없음: ${{ inputs.src }}"; exit 1; }
+          mkdir -p "$STAGING/${{ inputs.dest }}"
+          cp -v "${{ inputs.src }}" "$STAGING/${{ inputs.dest }}"
+
+      - name: Run upload.sh on Mac Studio
+        if: ${{ inputs.find == '' }}
+        run: |
+          set -euo pipefail
+          STAGING=/Users/zer01ne/minio-staging
+          echo "== staging 하위 폴더"
+          find "$STAGING" -maxdepth 1 -type d | sed "s#$STAGING##" | grep -v '^$' || true
           echo "== upload.sh"
           bash "$STAGING/upload.sh"
 
       - name: Verify
-        if: ${{ inputs.check != '' }}
+        if: ${{ inputs.check != '' && inputs.find == '' }}
         run: |
           set -euo pipefail
           url="http://localhost:9100/future-car-media/${{ inputs.check }}"
