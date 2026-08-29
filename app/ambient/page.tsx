@@ -31,7 +31,7 @@ import TabletSimModal from "@/components/ui/tablet-sim-modal";
 import DevLogPanel from "@/components/dev/dev-log-panel";
 import HyundaiLoading from "@/components/ui/hyundai-loading";
 import { appendDevLog } from "@/utils/devLog";
-import { BASE_API_LINK } from "@/constants";
+import { BASE_API_LINK, STANDBY_VIDEO_URL } from "@/constants";
 import { cn } from "@/utils/cn";
 import { useCarListener } from "@/hooks/useCarListener";
 import ListenIndicator from "@/components/ambient/listen-indicator";
@@ -416,9 +416,23 @@ export default function AmbientScreen() {
             transition={{ duration: 0.6 }}
             className="fixed inset-0 flex flex-col items-center justify-center bg-neutral-950"
           >
-            {/* exit ~ enter 사이 대기. 관람객에게 보이는 글자는 두지 않는다 — 로더만 잔잔하게. */}
-            <HyundaiLoading />
-            {!connected && <div className="mt-6 text-sm text-neutral-600">서버 연결 중…</div>}
+            {/* exit ~ enter 사이 대기. 지정 영상(NEXT_PUBLIC_STANDBY_VIDEO, 기본 en6.mp4)을 무음으로
+                무한 반복한다. 관람객에게 보이는 글자는 두지 않는다. 영상 로드 실패 시 로더만 남는다. */}
+            <video
+              key={STANDBY_VIDEO_URL}
+              src={STANDBY_VIDEO_URL}
+              autoPlay
+              loop
+              muted
+              playsInline
+              preload="auto"
+              className="absolute inset-0 h-full w-full object-cover"
+              onError={(e) => console.warn("[ambient] standby 영상 로드 실패", STANDBY_VIDEO_URL, e)}
+            />
+            <div className="relative opacity-60">
+              <HyundaiLoading />
+            </div>
+            {!connected && <div className="relative mt-6 text-sm text-neutral-500">서버 연결 중…</div>}
           </motion.div>
         )}
         {screen === "waiting" && (
