@@ -10,7 +10,12 @@ export const IS_PRD = process.env.NEXT_PUBLIC_IS_PRD === "true"
 
 // ─────────────────────────────────────────────────────────────────────────
 // /ambient 대기(standby) 화면 — exit ~ 다음 enter, plan 만 온 idle, 세션 없음 — 에서 무한 반복할 영상.
-// ★ 바꾸려면 아래 파일명만 고치고 커밋·푸시 (CD 가 배포). 미디어 저장소(MinIO) 의 파일명 또는 절대 URL.
+// 기본값은 여기(코드). 현장에서는 /ambient dev 패널(⌘+Shift+D)의 "대기 영상" 에서 바꾸면 그 브라우저의
+// localStorage(STANDBY_VIDEO_STORAGE_KEY)에 저장돼 즉시 반영되고 재부팅 뒤에도 유지된다. 비우면 기본값.
+// 미디어 저장소(MinIO) 의 파일명 또는 절대 URL.
 // ─────────────────────────────────────────────────────────────────────────
 export const STANDBY_VIDEO = "en6.mp4"
-export const STANDBY_VIDEO_URL = /^https?:\/\//.test(STANDBY_VIDEO) ? STANDBY_VIDEO : `${BASE_S3_LINK}/${STANDBY_VIDEO}`
+export const STANDBY_VIDEO_STORAGE_KEY = "ftcar_standby_video"
+export function resolveMediaUrl(nameOrUrl: string): string {
+    return /^https?:\/\//.test(nameOrUrl) ? nameOrUrl : `${BASE_S3_LINK}/${nameOrUrl}`
+}

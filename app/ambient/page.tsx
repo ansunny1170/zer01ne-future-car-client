@@ -31,7 +31,7 @@ import TabletSimModal from "@/components/ui/tablet-sim-modal";
 import DevLogPanel from "@/components/dev/dev-log-panel";
 import HyundaiLoading from "@/components/ui/hyundai-loading";
 import { appendDevLog } from "@/utils/devLog";
-import { BASE_API_LINK, STANDBY_VIDEO_URL } from "@/constants";
+import { BASE_API_LINK, BASE_S3_LINK, STANDBY_VIDEO, STANDBY_VIDEO_STORAGE_KEY, resolveMediaUrl } from "@/constants";
 import { cn } from "@/utils/cn";
 import { useCarListener } from "@/hooks/useCarListener";
 import ListenIndicator from "@/components/ambient/listen-indicator";
@@ -75,6 +75,40 @@ export default function AmbientScreen() {
   const [lastError, setLastError] = useState<ErrorMsg | null>(null);
   // 관람객 차례(마이크 열림): 대기 화면, 스텝 렌더 완료 뒤 ~ 다음 step 수신 전, 서버 error 뒤.
   const [visitorTurn, setVisitorTurn] = useState(false);
+  // standby 반복 영상 — 코드 기본값(STANDBY_VIDEO) 위에 이 브라우저의 localStorage 값이 덮는다(현장 설정).
+  const [standbyVideo, setStandbyVideo] = useState(STANDBY_VIDEO);
+  const [standbyDraft, setStandbyDraft] = useState("");
+  const [standbyChoices, setStandbyChoices] = useState<string[]>([]);
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STANDBY_VIDEO_STORAGE_KEY)?.trim();
+      if (saved) setStandbyVideo(saved);
+    } catch {
+      /* 접근 불가 환경 — 기본값 유지 */
+    }
+  }, []);
+  const applyStandbyVideo = (name: string) => {
+    const v = name.trim();
+    try {
+      if (v) localStorage.setItem(STANDBY_VIDEO_STORAGE_KEY, v);
+      else localStorage.removeItem(STANDBY_VIDEO_STORAGE_KEY);
+    } catch {
+      /* noop */
+    }
+    setStandbyVideo(v || STANDBY_VIDEO);
+    setStandbyDraft("");
+  };
+  // 부팅 때 미디어 저장소의 mp4 목록을 한 번 받아 자동완성 후보로(실패해도 직접 입력은 된다).
+  useEffect(() => {
+    fetch(`${BASE_S3_LINK}/?list-type=2&max-keys=1000`)
+      .then((r) => (r.ok ? r.text() : ""))
+      .then((xml) => {
+        const keys = Array.from(xml.matchAll(/<Key>([^<]+\.mp4)<\/Key>/g), (m) => m[1]);
+        if (keys.length) setStandbyChoices(keys.sort());
+      })
+      .catch(() => {});
+  }, []);
+  const standbyVideoUrl = resolveMediaUrl(standbyVideo);
   const wsRef = useRef<WebSocket | null>(null);
   // screen 최신값을 이벤트 핸들러에서 참조하기 위한 ref (stale closure 방지)
   const screenRef = useRef<Screen>("standby");
@@ -416,18 +450,18 @@ export default function AmbientScreen() {
             transition={{ duration: 0.6 }}
             className="fixed inset-0 flex flex-col items-center justify-center bg-neutral-950"
           >
-            {/* exit ~ enter 사이 대기. 지정 영상(constants.ts 의 STANDBY_VIDEO)을 무음으로 무한 반복한다.
-                관람객에게 보이는 글자는 두지 않는다. 영상 로드 실패 시 로더만 남는다. */}
+            {/* exit ~ enter 사이 대기. 대기 영상(기본 constants.ts STANDBY_VIDEO, 현장에서는 dev 패널로 변경)을
+                무음으로 무한 반복한다. 관람객에게 보이는 글자는 두지 않는다. 영상 로드 실패 시 로더만 남는다. */}
             <video
-              key={STANDBY_VIDEO_URL}
-              src={STANDBY_VIDEO_URL}
+              key={standbyVideoUrl}
+              src={standbyVideoUrl}
               autoPlay
               loop
               muted
               playsInline
               preload="auto"
               className="absolute inset-0 h-full w-full object-cover"
-              onError={(e) => console.warn("[ambient] standby 영상 로드 실패", STANDBY_VIDEO_URL, e)}
+              onError={(e) => console.warn("[ambient] standby 영상 로드 실패", standbyVideoUrl, e)}
             />
             <div className="relative opacity-60">
               <HyundaiLoading />
@@ -569,6 +603,43 @@ export default function AmbientScreen() {
           >
             step info 디버깅
           </button>
+          {/* 현장 설정: 대기(standby) 영상 — 이 브라우저에 저장, 즉시 반영 */}
+          <div className="mt-2 flex flex-wrap items-center gap-2 rounded border border-neutral-300 bg-neutral-50 px-2 py-1.5 text-[11px]">
+            <span className="font-semibold">대기 영상</span>
+            <span className="font-mono text-sky-700" title={standbyVideoUrl}>{standbyVideo}</span>
+            {standbyVideo !== STANDBY_VIDEO && <span className="text-neutral-500">(기본 {STANDBY_VIDEO})</span>}
+            <input
+              list="standby-video-choices"
+              value={standbyDraft}
+              onChange={(e) => setStandbyDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") applyStandbyVideo(standbyDraft);
+              }}
+              placeholder="파일명 또는 URL"
+              className="w-44 rounded border border-neutral-300 px-1.5 py-0.5 font-mono"
+            />
+            <datalist id="standby-video-choices">
+              {standbyChoices.map((k) => (
+                <option key={k} value={k} />
+              ))}
+            </datalist>
+            <button
+              type="button"
+              onClick={() => applyStandbyVideo(standbyDraft)}
+              disabled={!standbyDraft.trim()}
+              className="rounded bg-sky-700 px-2 py-0.5 font-semibold text-white disabled:bg-neutral-300"
+            >
+              적용
+            </button>
+            <button
+              type="button"
+              onClick={() => applyStandbyVideo("")}
+              disabled={standbyVideo === STANDBY_VIDEO}
+              className="rounded bg-neutral-200 px-2 py-0.5 disabled:opacity-40"
+            >
+              기본값
+            </button>
+          </div>
           {stepInfo?.flatAssetsParsed && (
             <span className="ml-2 text-red-600 font-bold">flat asset 파싱 진행함</span>
           )}
