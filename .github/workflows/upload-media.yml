@@ -39,9 +39,9 @@ jobs:
         if: ${{ inputs.find != '' }}
         run: |
           echo "== '${{ inputs.find }}' 검색 — 홈 바로 아래 폴더 + Desktop/Downloads/Documents/Movies/videos/minio-staging (깊이 4)"
-          for d in "$HOME" "$HOME/Desktop" "$HOME/Downloads" "$HOME/Documents" "$HOME/Movies" "$HOME/videos" "$HOME/Videos" "$HOME/minio-staging"; do
+          for d in "$HOME/Desktop" "$HOME/Downloads" "$HOME/Documents" "$HOME/Movies" "$HOME/videos" "$HOME/Videos" "$HOME/minio-staging"; do
             [ -d "$d" ] || continue
-            find "$d" -maxdepth 4 \( -name Library -o -name node_modules -o -name .git -o -name .Trash \) -prune -o -type f -name "${{ inputs.find }}" -print 2>/dev/null
+            find "$d" -maxdepth 3 \( -name Library -o -name node_modules -o -name .git -o -name .Trash \) -prune -o -type f -name "${{ inputs.find }}" -print 2>/dev/null
           done | sort -u | head -20 || true
           echo "== 홈 바로 아래 폴더 목록(최근 수정순)"
           ls -lt "$HOME" | head -15 || true
