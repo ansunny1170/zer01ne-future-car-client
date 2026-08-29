@@ -96,6 +96,8 @@ export default function AmbientScreen() {
     advance: "idle",
     exit: "idle",
   });
+  // 디버그 재시작 버튼 상태 (idle → 요청 중 → 결과)
+  const [restartState, setRestartState] = useState<PublishState | "busy">("idle");
 
   // localStorage에서 devMode 초기값 로드 (SSR 하이드레이션 불일치 방지 위해 effect에서)
   useEffect(() => {
@@ -270,6 +272,36 @@ export default function AmbientScreen() {
           setPublishState((prev) => ({ ...prev, [type]: "idle" }));
         }, 1200);
       });
+  };
+
+  // 디버그: 가장 최근 세션(추종 중인 세션이 있으면 그 세션)의 plan 으로 여정을 처음부터 다시 시작.
+  // 태블릿에서 새 세션을 만들고 차로 이동 확정을 누르는 과정을 건너뛴다. 서버가 state idle → waiting
+  // 을 발행하므로 와일드카드 모드면 그 세션으로 자동 추종된다.
+  const restartJourney = () => {
+    const API = BASE_API_LINK.replace(/\/+$/, "");
+    setRestartState("busy");
+    fetch(`${API}/ambient/restart`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ session_id: sid ?? activeSidRef.current ?? undefined }),
+    })
+      .then(async (res) => {
+        const body = (await res.json().catch(() => ({}))) as { session_id?: string; detail?: string };
+        appendDevLog({
+          category: "ambient",
+          stage: "restart",
+          level: res.ok ? "info" : "warn",
+          message: res.ok ? `여정 재시작 → ${body.session_id}` : `재시작 실패 ${res.status}: ${body.detail ?? ""}`,
+          sessionId: body.session_id ?? undefined,
+          source: "client",
+        });
+        setRestartState(res.ok ? "success" : "error");
+      })
+      .catch((err) => {
+        console.error("[ambient] 재시작 요청 실패", err);
+        setRestartState("error");
+      })
+      .finally(() => setTimeout(() => setRestartState("idle"), 1500));
   };
 
   // 이 스텝의 asset 을 전부 렌더·재생했음을 서버에 알린다.
@@ -489,6 +521,22 @@ export default function AmbientScreen() {
             <div className="text-[10px] text-neutral-400">현재 STEP</div>
             <div className="text-2xl font-bold leading-tight">{stepInfo?.step ?? "-"}</div>
           </div>
+          <div className="my-0.5 h-px bg-neutral-700" />
+          {/* 디버그 재시작 — 최근 세션 plan 으로 idle→enter 까지 한 번에 */}
+          <button
+            type="button"
+            onClick={restartJourney}
+            disabled={restartState === "busy"}
+            title="최근 세션의 plan 으로 여정을 처음부터 다시 시작 (태블릿 새 세션 불필요)"
+            className={cn(
+              "rounded px-2 py-1.5 text-[11px] font-semibold transition-colors",
+              restartState === "busy" ? "cursor-wait bg-neutral-800 text-neutral-500" : "cursor-pointer bg-sky-800 hover:bg-sky-700",
+              restartState === "success" && "bg-green-700",
+              restartState === "error" && "bg-red-700"
+            )}
+          >
+            {restartState === "success" ? "✓ 재시작" : restartState === "error" ? "✕ 재시작" : restartState === "busy" ? "…" : "여정 재시작"}
+          </button>
           <div className="my-0.5 h-px bg-neutral-700" />
           {TABLET_CONTROL_TYPES.map((type) => {
             const state = publishState[type];
