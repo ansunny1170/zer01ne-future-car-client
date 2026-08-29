@@ -38,8 +38,13 @@ jobs:
       - name: Find file under home
         if: ${{ inputs.find != '' }}
         run: |
-          echo "== '${{ inputs.find }}' 를 홈에서 검색 (깊이 5)"
-          find "$HOME" -maxdepth 5 -name "${{ inputs.find }}" -not -path '*/Library/*' -not -path '*/node_modules/*' 2>/dev/null | head -20 || true
+          echo "== '${{ inputs.find }}' 검색 — 홈 바로 아래 폴더 + Desktop/Downloads/Documents/Movies/videos/minio-staging (깊이 4)"
+          for d in "$HOME" "$HOME/Desktop" "$HOME/Downloads" "$HOME/Documents" "$HOME/Movies" "$HOME/videos" "$HOME/Videos" "$HOME/minio-staging"; do
+            [ -d "$d" ] || continue
+            find "$d" -maxdepth 4 \( -name Library -o -name node_modules -o -name .git -o -name .Trash \) -prune -o -type f -name "${{ inputs.find }}" -print 2>/dev/null
+          done | sort -u | head -20 || true
+          echo "== 홈 바로 아래 폴더 목록(최근 수정순)"
+          ls -lt "$HOME" | head -15 || true
 
       - name: Copy src into staging
         if: ${{ inputs.src != '' }}
