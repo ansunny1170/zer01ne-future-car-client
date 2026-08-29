@@ -102,6 +102,22 @@ export default function AmbientScreen() {
     setDevMode(localStorage.getItem("ftcar_dev_mode") === "true");
   }, []);
 
+  // devMode(좌측 조작 패널 + step info + 좌하단 연결 배지) 토글. classic(`/`)과 같은 키·영역·저장소.
+  const setDevModePersist = useCallback((next: boolean) => {
+    setDevMode(next);
+    localStorage.setItem("ftcar_dev_mode", String(next));
+  }, []);
+  const toggleDevMode = useCallback(() => {
+    setDevMode((prev) => {
+      localStorage.setItem("ftcar_dev_mode", String(!prev));
+      return !prev;
+    });
+  }, []);
+
+  // 트리거: Ctrl/Cmd+Shift+D 또는 좌상단 구석 3연속 클릭. 끄기는 패널의 "디버깅 창 닫기" 버튼으로도 된다.
+  // 기본 80px 은 전시장 화면에서 조준하기 어려워 200px 로 넓혔다(600ms 안 3연속이 실질적 오발동 방지책).
+  useDevTrigger({ code: "KeyD", corner: "top-left", cornerSize: 200 }, toggleDevMode);
+
   // 트리거: Ctrl/Cmd+Shift+G 또는 우상단 구석 3연속 클릭
   useDevTrigger({ code: "KeyG", corner: "top-right" }, () => setGuide((prev) => !prev));
 
@@ -453,6 +469,21 @@ export default function AmbientScreen() {
 
       {devMode && (
         <div className="absolute top-[15%] left-4 w-28 z-[999] flex flex-col gap-1.5 rounded-md border border-neutral-700 bg-neutral-900/90 px-2 py-2 text-white">
+          {/* 명시적 닫기 — 호버하면 다시 켜는 방법(단축키·클릭 영역)이 뜬다 */}
+          <div className="group relative">
+            <button
+              type="button"
+              onClick={() => setDevModePersist(false)}
+              aria-label="디버깅 창 닫기"
+              className="w-full rounded bg-neutral-700 px-2 py-1 text-[11px] font-semibold hover:bg-red-700"
+            >
+              디버깅 창 닫기
+            </button>
+            <div className="pointer-events-none absolute left-full top-0 ml-2 hidden w-max rounded bg-black/90 px-2 py-1.5 text-[10px] leading-snug text-neutral-200 shadow-lg group-hover:block">
+              <div>다시 켜기: <kbd className="rounded bg-neutral-700 px-1">Ctrl/⌘</kbd>+<kbd className="rounded bg-neutral-700 px-1">Shift</kbd>+<kbd className="rounded bg-neutral-700 px-1">D</kbd></div>
+              <div>또는 좌상단 모서리 3연속 클릭</div>
+            </div>
+          </div>
           <div className="text-center">
             <div className="text-[10px] text-neutral-400">현재 STEP</div>
             <div className="text-2xl font-bold leading-tight">{stepInfo?.step ?? "-"}</div>

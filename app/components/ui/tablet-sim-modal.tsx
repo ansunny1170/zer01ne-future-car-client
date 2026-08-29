@@ -152,9 +152,11 @@ export default function TabletSimModal({ open, onClose }: TabletSimModalProps) {
         <section>
           <h2 className="text-lg font-semibold mb-2">8) 화면에서 상태 보기</h2>
           <ul className="list-disc pl-5 space-y-1 text-sm leading-relaxed">
-            <li>좌상단 3연속 클릭 또는 Ctrl/Cmd+Shift+D → devMode 토글 (좌상단 step info 패널 + 좌하단 연결 배지)</li>
+            <li>좌상단 3연속 클릭 또는 Ctrl/Cmd+Shift+D → devMode 토글 (좌측 조작 패널 + step info + 좌하단 연결 배지). 끄기는 패널의 「디버깅 창 닫기」 버튼으로도 가능</li>
+            <li>상단 중앙 3연속 클릭 또는 Ctrl/Cmd+Shift+L → 서버·클라 로그 패널</li>
             <li>우상단 3연속 클릭 또는 Ctrl/Cmd+Shift+G → 진행 설명서</li>
             <li>중앙 우측 3연속 클릭 또는 Ctrl/Cmd+Shift+T → 이 창</li>
+            <li>좌하단 3연속 클릭 또는 Ctrl/Cmd+Shift+F → 전체화면 토글</li>
           </ul>
         </section>
       </div>
