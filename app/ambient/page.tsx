@@ -479,7 +479,8 @@ export default function AmbientScreen() {
             >
               디버깅 창 닫기
             </button>
-            <div className="pointer-events-none absolute left-full top-0 ml-2 hidden w-max rounded bg-black/90 px-2 py-1.5 text-[10px] leading-snug text-neutral-200 shadow-lg group-hover:block">
+            {/* 위쪽으로 띄운다 — 오른쪽은 step info 창(z-999)에 가려진다. z 는 전체 화면 최상단. */}
+            <div className="pointer-events-none absolute bottom-full left-0 mb-2 hidden w-max rounded bg-black/95 px-2 py-1.5 text-[10px] leading-snug text-neutral-200 shadow-lg group-hover:block z-[2147483647]">
               <div>다시 켜기: <kbd className="rounded bg-neutral-700 px-1">Ctrl/⌘</kbd>+<kbd className="rounded bg-neutral-700 px-1">Shift</kbd>+<kbd className="rounded bg-neutral-700 px-1">D</kbd></div>
               <div>또는 좌상단 모서리 3연속 클릭</div>
             </div>
