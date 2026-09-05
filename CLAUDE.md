@@ -136,3 +136,13 @@ Skills (loaded on demand by Claude when relevant):
 - `add-popup-keyname` — registering a new popup keyName
 - `step-debug` — diagnosing timeline / audio / playback bugs
 - `scenario-mock` — driving the UI without the backend
+
+## main-2026 (ambient exhibition) — overrides for this branch
+
+- Exhibition screen is **`/ambient`** (Web-Speech car mic + MQTT-driven steps); `/` is the legacy kiosk.
+- Media comes from Mac Studio **MinIO** via `NEXT_PUBLIC_S3_BASE` (main uses AWS S3). All `NEXT_PUBLIC_*` are baked at build time — runtime env does nothing.
+- `deploy.yml` builds **two containers per push**: `:8101` (exhibition, ts.net addresses) and `:8102` (external, OCI proxy `jscouple.site:8080/car1` + `/minio`). External addresses live in the workflow's top-level `env:`.
+- `wsUrl()` must keep honoring the **path prefix** of `NEXT_PUBLIC_API_URL` (external WS goes through `/car1/ws/futurecar`).
+- Local dev ports: client **4001**, server API **4000** (`NEXT_PUBLIC_API_URL=http://localhost:4000/`).
+- Org repos `zero1ne-26/future-car-*` are read-only mirrors — never commit there.
+- Current status / external-proxy details: server repo `docs/superpowers/2026-09-05-main-2026-windows-handoff.md`.
