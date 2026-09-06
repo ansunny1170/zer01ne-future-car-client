@@ -32,7 +32,8 @@ export default function ListenIndicator({ state }: { state: CarListenerState }) 
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 12 }}
-        className="pointer-events-none fixed top-[40%] left-1/2 z-30 -translate-x-1/2"
+        // -translate-x-1/2 는 framer 가 transform 을 덮어써 무시된다 — 전체 폭 + flex 로 중앙 정렬.
+        className="pointer-events-none fixed top-[40%] inset-x-0 z-30 flex justify-center"
       >
         <div
           className={cn(
