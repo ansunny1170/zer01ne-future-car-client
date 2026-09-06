@@ -792,12 +792,16 @@ export default function AmbientScreen() {
             <span className="font-semibold">LLM</span>
             {llmConfig ? (
               <>
-                <input
+                <select
                   value={llmDraft.model}
                   onChange={(e) => setLlmDraft((d) => ({ ...d, model: e.target.value }))}
-                  placeholder="model"
-                  className="w-40 rounded border border-neutral-300 px-1.5 py-0.5 font-mono"
-                />
+                  className="rounded border border-neutral-300 px-1 py-0.5 font-mono"
+                >
+                  {/* 서버가 목록 밖 모델로 설정돼 있어도 표시가 깨지지 않게 그 값도 후보에 넣는다 */}
+                  {[...new Set(["gpt-5.6-luna", "gpt-5.6-terra", "gpt-5.6-sol", llmDraft.model].filter(Boolean))].map((m) => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
                 <select
                   value={llmDraft.reasoning_effort}
                   onChange={(e) => setLlmDraft((d) => ({ ...d, reasoning_effort: e.target.value }))}
