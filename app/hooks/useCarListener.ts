@@ -53,10 +53,14 @@ export interface CarListenerState {
   status: CarListenerStatus;
   /** 아직 확정되지 않은 중간 인식 텍스트(자막용) */
   interim: string;
+  /** 전송 대기(디바운스) 중인 누적 확정 발화 — 아직 서버로 보내지 않았다 */
+  pending: string;
   /** 마지막으로 서버에 보낸 확정 발화 */
   lastFinal: string | null;
   /** 마지막 브라우저 인식 오류 코드(not-allowed, network, no-speech …) */
   error: string | null;
+  /** 전송 대기 중인 발화를 버리고 처음부터 다시 듣는다(디버그용). 이미 전송된 발화는 못 되돌린다 */
+  reset: () => void;
 }
 
 export interface UseCarListenerOptions {
@@ -70,6 +74,7 @@ export interface UseCarListenerOptions {
 export function useCarListener({ active, onFinal, lang = "ko-KR" }: UseCarListenerOptions): CarListenerState {
   const [status, setStatus] = useState<CarListenerStatus>("off");
   const [interim, setInterim] = useState("");
+  const [pending, setPending] = useState("");
   const [lastFinal, setLastFinal] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -96,6 +101,18 @@ export function useCarListener({ active, onFinal, lang = "ko-KR" }: UseCarListen
     } catch {
       /* 이미 멈춤 */
     }
+  }, []);
+
+  // 전송 대기 중인 발화를 버린다 — 인식은 계속 돌고 있으므로 곧바로 다시 말하면 된다.
+  // 이미 flush 로 서버에 보낸 발화는 되돌릴 수 없다(서버가 수집 즉시 다음 스텝 생성을 시작한다).
+  const reset = useCallback(() => {
+    if (sendTimerRef.current) {
+      clearTimeout(sendTimerRef.current);
+      sendTimerRef.current = null;
+    }
+    bufferRef.current = "";
+    setPending("");
+    setInterim("");
   }, []);
 
   useEffect(() => {
@@ -133,7 +150,9 @@ export function useCarListener({ active, onFinal, lang = "ko-KR" }: UseCarListen
       sendTimerRef.current = null;
       const text = bufferRef.current.trim();
       bufferRef.current = "";
+      setPending("");
       if (!text) return;
+      setLastFinal(text);
       setInterim("");
       // 서버 판정을 기다리는 동안 추가 인식이 겹치지 않도록 먼저 멈춘다. 수집되지 않았으면
       // (창 밖·빈 문자열) 다시 연다.
@@ -166,7 +185,7 @@ export function useCarListener({ active, onFinal, lang = "ko-KR" }: UseCarListen
       const text = finalText.trim();
       if (!text) return;
       bufferRef.current = bufferRef.current ? `${bufferRef.current} ${text}` : text;
-      setLastFinal(bufferRef.current);
+      setPending(bufferRef.current);
       // 발화 종료 후 SEND_DELAY_MS 동안 새 입력이 없으면 그때 모아서 전송한다.
       clearSendTimer();
       sendTimerRef.current = setTimeout(flush, SEND_DELAY_MS);
@@ -205,6 +224,7 @@ export function useCarListener({ active, onFinal, lang = "ko-KR" }: UseCarListen
       // 창이 닫히면(재생 시작·스텝 전환) 보내지 않은 발화는 버린다 — 더는 관람객 차례가 아니다.
       clearSendTimer();
       bufferRef.current = "";
+      setPending("");
       rec.onend = null;
       rec.onresult = null;
       try {
@@ -216,5 +236,5 @@ export function useCarListener({ active, onFinal, lang = "ko-KR" }: UseCarListen
     };
   }, [active, lang, stop]);
 
-  return { status, interim, lastFinal, error };
+  return { status, interim, pending, lastFinal, error, reset };
 }

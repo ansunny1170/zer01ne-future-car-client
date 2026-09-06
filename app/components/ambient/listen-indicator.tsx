@@ -12,17 +12,18 @@ import type { CarListenerState } from "@/hooks/useCarListener";
 import { cn } from "@/utils/cn";
 
 export default function ListenIndicator({ state }: { state: CarListenerState }) {
-  const { status, interim, lastFinal, error } = state;
+  const { status, interim, pending, lastFinal, error } = state;
   if (status === "off" || status === "unsupported") return null;
 
   const isError = status === "error";
+  // 듣는 중: 중간 자막 > 전송 대기(디바운스) 중인 누적 발화 > 안내 문구 순으로 보여 준다.
   const label = isError
     ? `마이크 오류: ${error ?? "알 수 없음"}`
     : status === "paused"
       ? lastFinal
         ? `"${lastFinal}"`
         : "잠시만요…"
-      : interim || "듣고 있어요. 편하게 말씀해 주세요.";
+      : interim || (pending ? `"${pending}"` : "듣고 있어요. 편하게 말씀해 주세요.");
 
   return (
     <AnimatePresence>

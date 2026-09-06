@@ -568,6 +568,22 @@ export default function AmbientScreen() {
           >
             {restartState === "success" ? "✓ 재시작" : restartState === "error" ? "✕ 재시작" : restartState === "busy" ? "…" : "여정 재시작"}
           </button>
+          {/* 전송 대기(2초 디바운스) 중인 발화를 버리고 다시 듣는다. 이미 전송된 발화는
+              서버가 수집 즉시 다음 스텝 생성을 시작하므로 되돌릴 수 없다. */}
+          <button
+            type="button"
+            onClick={listener.reset}
+            disabled={!listener.pending && !listener.interim}
+            title="전송 대기 중인 발화를 버리고 처음부터 다시 듣기 (이미 전송된 발화는 취소 불가)"
+            className={cn(
+              "rounded px-2 py-1.5 text-[11px] font-semibold transition-colors",
+              listener.pending || listener.interim
+                ? "cursor-pointer bg-amber-800 hover:bg-amber-700"
+                : "cursor-not-allowed bg-neutral-800 text-neutral-500"
+            )}
+          >
+            발화 초기화
+          </button>
           <div className="my-0.5 h-px bg-neutral-700" />
           {TABLET_CONTROL_TYPES.map((type) => {
             const state = publishState[type];
