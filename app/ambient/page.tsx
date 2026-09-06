@@ -129,6 +129,8 @@ export default function AmbientScreen() {
   const [llmState, setLlmState] = useState<"idle" | "busy" | "success" | "error">("idle");
   // 디버그 패널의 설정 3종(대기 영상·발화 딜레이·LLM) 접기/펼치기 — 평소엔 접어 화면을 아낀다.
   const [settingsOpen, setSettingsOpen] = useState(false);
+  // 현재 적용 중인 프롬프트 이름(서버 DB 최신 레코드) — 표시 전용. 교체는 MinIO 업로드+레코드 갱신.
+  const [promptNames, setPromptNames] = useState<{ step: string; ending: string } | null>(null);
   const applyLlmConfig = () => {
     const API = BASE_API_LINK.replace(/\/+$/, "");
     setLlmState("busy");
@@ -229,6 +231,12 @@ export default function AmbientScreen() {
         }
       })
       .catch(() => {});
+    // 현재 적용 프롬프트 — DB 최신 레코드의 file_url 에서 파일명만 뽑아 보여준다.
+    const basename = (u?: string) => (u ? decodeURIComponent(u.split("/").pop() || u) : "?");
+    Promise.all([
+      fetch(`${API}/prompt/latest`).then((r) => (r.ok ? r.json() : null)).catch(() => null),
+      fetch(`${API}/ending-reflection-prompt/latest`).then((r) => (r.ok ? r.json() : null)).catch(() => null),
+    ]).then(([p, e]) => setPromptNames({ step: basename(p?.file_url), ending: basename(e?.file_url) }));
   }, [devMode]);
 
   // 트리거: Ctrl/Cmd+Shift+D 또는 좌상단 구석 3연속 클릭. 끄기는 패널의 "디버깅 창 닫기" 버튼으로도 된다.
@@ -851,6 +859,12 @@ export default function AmbientScreen() {
             ) : (
               <span className="text-neutral-500">서버 설정 로드 실패 — 서버(4000/8100) 연결 확인</span>
             )}
+          </div>
+          {/* 현재 적용 프롬프트 — 읽기 전용. 교체는 MinIO prompts/ 업로드 + prompt 레코드 갱신(사용자) */}
+          <div className="mt-2 flex flex-wrap items-center gap-2 rounded border border-neutral-300 bg-neutral-50 px-2 py-1.5 text-[11px]">
+            <span className="font-semibold">프롬프트</span>
+            <span>스텝: <span className="font-mono text-sky-700">{promptNames?.step ?? "로드 중…"}</span></span>
+            <span>엔딩: <span className="font-mono text-sky-700">{promptNames?.ending ?? ""}</span></span>
           </div>
           </>)}
           {stepInfo?.flatAssetsParsed && (
