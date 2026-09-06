@@ -121,6 +121,34 @@ export default function AmbientScreen() {
     setSendDelayMs(valid ? n : undefined);
     setSendDelayDraft("");
   };
+  // LLM 모델·옵션 — 다른 현장 설정과 달리 localStorage 가 아니라 **서버 런타임 값**이다
+  // (GET/PUT /ambient/llm-config). 즉시 반영되고, 서버 컨테이너 재시작 시 env 기본값으로 복귀.
+  type LlmConfig = { model: string; reasoning_effort: string; verbosity: string };
+  const [llmConfig, setLlmConfig] = useState<LlmConfig | null>(null);
+  const [llmDraft, setLlmDraft] = useState<LlmConfig>({ model: "", reasoning_effort: "", verbosity: "" });
+  const [llmState, setLlmState] = useState<"idle" | "busy" | "success" | "error">("idle");
+  const applyLlmConfig = () => {
+    const API = BASE_API_LINK.replace(/\/+$/, "");
+    setLlmState("busy");
+    fetch(`${API}/ambient/llm-config`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...llmDraft, model: llmDraft.model.trim() }),
+    })
+      .then(async (res) => {
+        if (!res.ok) throw new Error(String(res.status));
+        const cfg = (await res.json()) as LlmConfig;
+        setLlmConfig(cfg);
+        setLlmDraft(cfg);
+        setLlmState("success");
+      })
+      .catch((err) => {
+        console.error("[ambient] LLM 설정 변경 실패", err);
+        setLlmState("error");
+      })
+      .finally(() => setTimeout(() => setLlmState("idle"), 1500));
+  };
+
   // 부팅 때 미디어 저장소의 mp4 목록을 한 번 받아 자동완성 후보로(실패해도 직접 입력은 된다).
   useEffect(() => {
     fetch(`${BASE_S3_LINK}/?list-type=2&max-keys=1000`)
@@ -180,7 +208,7 @@ export default function AmbientScreen() {
     });
   }, []);
 
-  // devMode 를 켤 때마다 재시작 후보 세션 목록을 새로 받는다(실패해도 자동 재시작은 된다).
+  // devMode 를 켤 때마다 재시작 후보 세션 목록과 서버 LLM 설정을 새로 받는다(실패해도 나머지는 동작).
   useEffect(() => {
     if (!devMode) return;
     const API = BASE_API_LINK.replace(/\/+$/, "");
@@ -188,6 +216,15 @@ export default function AmbientScreen() {
       .then((r) => (r.ok ? r.json() : { sessions: [] }))
       .then((body: { sessions?: unknown }) => {
         if (Array.isArray(body.sessions)) setSessionChoices(body.sessions);
+      })
+      .catch(() => {});
+    fetch(`${API}/ambient/llm-config`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((cfg) => {
+        if (cfg && typeof cfg.model === "string") {
+          setLlmConfig(cfg);
+          setLlmDraft(cfg);
+        }
       })
       .catch(() => {});
   }, [devMode]);
@@ -748,6 +785,57 @@ export default function AmbientScreen() {
             >
               기본값
             </button>
+          </div>
+          {/* LLM 모델·옵션 — 서버 런타임 값(브라우저 저장 아님). 다음 스텝 생성부터 즉시 반영,
+              서버 컨테이너 재시작 시 env 기본값으로 복귀. */}
+          <div className="mt-2 flex flex-wrap items-center gap-2 rounded border border-neutral-300 bg-neutral-50 px-2 py-1.5 text-[11px]">
+            <span className="font-semibold">LLM</span>
+            {llmConfig ? (
+              <>
+                <input
+                  value={llmDraft.model}
+                  onChange={(e) => setLlmDraft((d) => ({ ...d, model: e.target.value }))}
+                  placeholder="model"
+                  className="w-40 rounded border border-neutral-300 px-1.5 py-0.5 font-mono"
+                />
+                <select
+                  value={llmDraft.reasoning_effort}
+                  onChange={(e) => setLlmDraft((d) => ({ ...d, reasoning_effort: e.target.value }))}
+                  className="rounded border border-neutral-300 px-1 py-0.5"
+                  title="reasoning effort — '없음'은 파라미터를 보내지 않음(미지원 모델용)"
+                >
+                  <option value="">reasoning 없음</option>
+                  {["minimal", "low", "medium", "high"].map((v) => (
+                    <option key={v} value={v}>reasoning {v}</option>
+                  ))}
+                </select>
+                <select
+                  value={llmDraft.verbosity}
+                  onChange={(e) => setLlmDraft((d) => ({ ...d, verbosity: e.target.value }))}
+                  className="rounded border border-neutral-300 px-1 py-0.5"
+                  title="verbosity — '없음'은 파라미터를 보내지 않음(미지원 모델용)"
+                >
+                  <option value="">verbosity 없음</option>
+                  {["low", "medium", "high"].map((v) => (
+                    <option key={v} value={v}>verbosity {v}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={applyLlmConfig}
+                  disabled={llmState === "busy" || !llmDraft.model.trim()}
+                  className={cn(
+                    "rounded px-2 py-0.5 font-semibold text-white",
+                    llmState === "success" ? "bg-green-600" : llmState === "error" ? "bg-red-600" : "bg-sky-700 disabled:bg-neutral-300",
+                  )}
+                >
+                  {llmState === "busy" ? "…" : llmState === "success" ? "✓ 적용" : llmState === "error" ? "✕ 실패" : "적용"}
+                </button>
+                <span className="text-neutral-500">서버 즉시 반영 · 서버 재시작 시 env 복귀</span>
+              </>
+            ) : (
+              <span className="text-neutral-500">서버 설정 로드 실패 — 서버(4000/8100) 연결 확인</span>
+            )}
           </div>
           {stepInfo?.flatAssetsParsed && (
             <span className="ml-2 text-red-600 font-bold">flat asset 파싱 진행함</span>
