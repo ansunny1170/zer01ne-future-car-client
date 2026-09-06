@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * 차량 마이크 청취 표시 — /ambient 하단 중앙의 작은 알약.
+ * 차량 마이크 청취 표시 — /ambient 정중앙보다 살짝 위(top 40%)의 작은 알약.
  *
  * 관람객에게 "지금 말해도 된다"를 알리는 최소 신호다. 듣는 중이면 맥동하는 점과 중간 자막,
  * 서버가 발화를 받아 다음 스텝을 만드는 동안(paused)은 조용한 확인 문구만 보인다.
@@ -32,7 +32,7 @@ export default function ListenIndicator({ state }: { state: CarListenerState }) 
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 12 }}
-        className="pointer-events-none fixed bottom-[6vh] left-1/2 z-30 -translate-x-1/2"
+        className="pointer-events-none fixed top-[40%] left-1/2 z-30 -translate-x-1/2"
       >
         <div
           className={cn(
