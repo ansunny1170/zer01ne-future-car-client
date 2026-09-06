@@ -12,10 +12,12 @@
  * 두면 우리 목소리를 관람객 발화로 받아 적는다(자기수신). 그래서 페이지가 "지금은 관람객 차례"
  * 인 구간(대기 화면, 스텝 렌더 완료 뒤 ~ 다음 스텝 수신 전)에서만 `active` 를 켠다.
  *
- * 최종 인식 결과(isFinal)는 곧바로 보내지 않고 모아 둔다 — 발화 종료 후 SEND_DELAY_MS(2초) 동안
- * 새 입력(중간·최종 결과)이 없을 때 합쳐서 `onFinal` 을 부른다. 문장 사이에 잠깐 쉬어도 한 발화로
- * 전송되게 하기 위함이다. `onFinal` 이 `true`(서버가 수집)를 돌려주면 더 듣지 않는다 — 다음 스텝이
- * 오기 전까지 중복 발화로 생성이 두 번 걸리는 것을 막는다. `active` 가 다시 켜지면(다음 창) 재개한다.
+ * 인식 결과는 곧바로 보내지 않고 모아 둔다 — **마지막 입력(중간·최종 무관) 후 SEND_DELAY_MS(2초)
+ * 동안 조용하면** 확정분과 아직 확정 안 된 중간 인식을 합쳐 `onFinal` 을 부른다. 크롬 continuous
+ * 모드는 침묵해도 isFinal 을 한참 안 주는 일이 잦아, isFinal 을 기다리면 전송이 하염없이 늦는다.
+ * 문장 사이에 잠깐 쉬어도 한 발화로 합쳐진다. `onFinal` 이 `true`(서버가 수집)를 돌려주면 더 듣지
+ * 않는다 — 다음 스텝이 오기 전까지 중복 발화로 생성이 두 번 걸리는 것을 막는다. `active` 가 다시
+ * 켜지면(다음 창) 재개한다.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -98,6 +100,11 @@ export function useCarListener({ active, onFinal, lang = "ko-KR", sendDelayMs }:
   // 모드에서 과거 결과를 통째로 다시 실어 보내는 일이 있어(발화 초기화 뒤 옛 텍스트가
   // 되살아나는 원인), 인덱스로 딱 한 번만 소비한다. 세션이 새로 시작되면(onstart) 리셋.
   const finalSeenRef = useRef(-1);
+  // 최신 중간 인식 텍스트(전송 시 확정분과 합치기 위해 ref 로도 보관)
+  const interimRef = useRef("");
+  // flush 가 stop() 한 직후 크롬이 방금 보낸 말의 확정본을 잔여 결과로 쏠 수 있다 —
+  // 다음 세션(onstart)까지 결과를 무시해 중복 전송을 막는다.
+  const suppressRef = useRef(false);
 
   // 창이 새로 열릴 때(active false→true) "보냈음" 표식을 지운다.
   const prevActive = useRef(false);
@@ -121,6 +128,7 @@ export function useCarListener({ active, onFinal, lang = "ko-KR", sendDelayMs }:
       sendTimerRef.current = null;
     }
     bufferRef.current = "";
+    interimRef.current = "";
     setPending("");
     setInterim("");
   }, []);
@@ -147,6 +155,7 @@ export function useCarListener({ active, onFinal, lang = "ko-KR", sendDelayMs }:
 
     rec.onstart = () => {
       finalSeenRef.current = -1; // 새 인식 세션 — 결과 인덱스가 0 부터 다시 시작한다
+      suppressRef.current = false;
       setStatus("listening");
       setError(null);
     };
@@ -156,13 +165,18 @@ export function useCarListener({ active, onFinal, lang = "ko-KR", sendDelayMs }:
         sendTimerRef.current = null;
       }
     };
-    // 디바운스 만료 — 모아 둔 발화를 서버로 보낸다.
+    // 디바운스 만료 — 모아 둔 발화를 서버로 보낸다. 크롬 continuous 모드는 침묵해도
+    // isFinal 을 한참 안 주는 일이 잦아, 확정분(buffer)에 아직 확정 안 된 중간 인식까지
+    // 합쳐 보낸다 — "마지막 입력 후 N초 무입력이면 전송"이라는 의도 그대로.
     const flush = () => {
       sendTimerRef.current = null;
-      const text = bufferRef.current.trim();
+      const text = `${bufferRef.current} ${interimRef.current}`.replace(/\s+/g, " ").trim();
       bufferRef.current = "";
+      interimRef.current = "";
       setPending("");
       if (!text) return;
+      // stop() 뒤 도착하는 잔여 결과(방금 보낸 말의 확정본)를 다음 세션까지 무시한다.
+      suppressRef.current = true;
       setLastFinal(text);
       setInterim("");
       // 서버 판정을 기다리는 동안 추가 인식이 겹치지 않도록 먼저 멈춘다. 수집되지 않았으면
@@ -183,6 +197,7 @@ export function useCarListener({ active, onFinal, lang = "ko-KR", sendDelayMs }:
       });
     };
     rec.onresult = (e) => {
+      if (suppressRef.current) return; // flush 직후 잔여 결과 — 이미 보낸 말의 중복
       let interimText = "";
       let finalText = "";
       for (let i = e.resultIndex; i < e.results.length; i++) {
@@ -196,15 +211,18 @@ export function useCarListener({ active, onFinal, lang = "ko-KR", sendDelayMs }:
         } else interimText += r[0].transcript;
       }
       setInterim(interimText);
-      // 중간 결과 = 아직 말하는 중 — 전송 대기를 취소하고 다음 확정 결과를 기다린다.
-      if (interimText) clearSendTimer();
+      interimRef.current = interimText;
       const text = finalText.trim();
-      if (!text) return;
-      bufferRef.current = bufferRef.current ? `${bufferRef.current} ${text}` : text;
-      setPending(bufferRef.current);
-      // 발화 종료 후 딜레이(기본 SEND_DELAY_MS) 동안 새 입력이 없으면 그때 모아서 전송한다.
-      clearSendTimer();
-      sendTimerRef.current = setTimeout(flush, delayRef.current);
+      if (text) {
+        bufferRef.current = bufferRef.current ? `${bufferRef.current} ${text}` : text;
+        setPending(bufferRef.current);
+      }
+      // 어떤 입력이든(중간·확정) 들어오면 딜레이를 다시 잰다 — 마지막 입력 후
+      // 딜레이(기본 SEND_DELAY_MS) 동안 조용하면 flush 가 모아서 전송한다.
+      if (text || interimText) {
+        clearSendTimer();
+        sendTimerRef.current = setTimeout(flush, delayRef.current);
+      }
     };
     rec.onerror = (e) => {
       const code = e.error ?? "unknown";
@@ -240,6 +258,8 @@ export function useCarListener({ active, onFinal, lang = "ko-KR", sendDelayMs }:
       // 창이 닫히면(재생 시작·스텝 전환) 보내지 않은 발화는 버린다 — 더는 관람객 차례가 아니다.
       clearSendTimer();
       bufferRef.current = "";
+      interimRef.current = "";
+      suppressRef.current = false;
       setPending("");
       rec.onend = null;
       rec.onresult = null;
