@@ -12,9 +12,10 @@
  * 두면 우리 목소리를 관람객 발화로 받아 적는다(자기수신). 그래서 페이지가 "지금은 관람객 차례"
  * 인 구간(대기 화면, 스텝 렌더 완료 뒤 ~ 다음 스텝 수신 전)에서만 `active` 를 켠다.
  *
- * 최종 인식 결과(isFinal)가 나오면 `onFinal` 을 부른다. 이게 `true`(서버가 수집)를 돌려주면
- * 더 듣지 않는다 — 다음 스텝이 오기 전까지 중복 발화로 생성이 두 번 걸리는 것을 막는다.
- * `active` 가 다시 켜지면(다음 창) 재개한다.
+ * 최종 인식 결과(isFinal)는 곧바로 보내지 않고 모아 둔다 — 발화 종료 후 SEND_DELAY_MS(2초) 동안
+ * 새 입력(중간·최종 결과)이 없을 때 합쳐서 `onFinal` 을 부른다. 문장 사이에 잠깐 쉬어도 한 발화로
+ * 전송되게 하기 위함이다. `onFinal` 이 `true`(서버가 수집)를 돌려주면 더 듣지 않는다 — 다음 스텝이
+ * 오기 전까지 중복 발화로 생성이 두 번 걸리는 것을 막는다. `active` 가 다시 켜지면(다음 창) 재개한다.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -42,6 +43,9 @@ function getCtor(): RecognizerCtor | null {
   const w = window as unknown as { SpeechRecognition?: RecognizerCtor; webkitSpeechRecognition?: RecognizerCtor };
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
+
+// 발화 종료(최종 인식 결과) 후 이 시간 동안 새 입력이 없으면 모아 둔 텍스트를 전송한다.
+const SEND_DELAY_MS = 2000;
 
 export type CarListenerStatus = "unsupported" | "off" | "listening" | "paused" | "error";
 
@@ -74,6 +78,9 @@ export function useCarListener({ active, onFinal, lang = "ko-KR" }: UseCarListen
   const sentRef = useRef(false);
   // 우리가 stop() 을 부른 뒤 도착하는 onend 에서 자동 재시작하지 않기 위한 표식.
   const wantRef = useRef(false);
+  // 전송 대기 중인 확정 발화 누적 버퍼와 디바운스 타이머.
+  const bufferRef = useRef("");
+  const sendTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onFinalRef = useRef(onFinal);
   onFinalRef.current = onFinal;
 
@@ -115,18 +122,18 @@ export function useCarListener({ active, onFinal, lang = "ko-KR" }: UseCarListen
       setStatus("listening");
       setError(null);
     };
-    rec.onresult = (e) => {
-      let interimText = "";
-      let finalText = "";
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        const r = e.results[i];
-        if (r.isFinal) finalText += r[0].transcript;
-        else interimText += r[0].transcript;
+    const clearSendTimer = () => {
+      if (sendTimerRef.current) {
+        clearTimeout(sendTimerRef.current);
+        sendTimerRef.current = null;
       }
-      setInterim(interimText);
-      const text = finalText.trim();
+    };
+    // 디바운스 만료 — 모아 둔 발화를 서버로 보낸다.
+    const flush = () => {
+      sendTimerRef.current = null;
+      const text = bufferRef.current.trim();
+      bufferRef.current = "";
       if (!text) return;
-      setLastFinal(text);
       setInterim("");
       // 서버 판정을 기다리는 동안 추가 인식이 겹치지 않도록 먼저 멈춘다. 수집되지 않았으면
       // (창 밖·빈 문자열) 다시 연다.
@@ -144,6 +151,25 @@ export function useCarListener({ active, onFinal, lang = "ko-KR" }: UseCarListen
           }
         }
       });
+    };
+    rec.onresult = (e) => {
+      let interimText = "";
+      let finalText = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const r = e.results[i];
+        if (r.isFinal) finalText += r[0].transcript;
+        else interimText += r[0].transcript;
+      }
+      setInterim(interimText);
+      // 중간 결과 = 아직 말하는 중 — 전송 대기를 취소하고 다음 확정 결과를 기다린다.
+      if (interimText) clearSendTimer();
+      const text = finalText.trim();
+      if (!text) return;
+      bufferRef.current = bufferRef.current ? `${bufferRef.current} ${text}` : text;
+      setLastFinal(bufferRef.current);
+      // 발화 종료 후 SEND_DELAY_MS 동안 새 입력이 없으면 그때 모아서 전송한다.
+      clearSendTimer();
+      sendTimerRef.current = setTimeout(flush, SEND_DELAY_MS);
     };
     rec.onerror = (e) => {
       const code = e.error ?? "unknown";
@@ -176,6 +202,9 @@ export function useCarListener({ active, onFinal, lang = "ko-KR" }: UseCarListen
 
     return () => {
       wantRef.current = false;
+      // 창이 닫히면(재생 시작·스텝 전환) 보내지 않은 발화는 버린다 — 더는 관람객 차례가 아니다.
+      clearSendTimer();
+      bufferRef.current = "";
       rec.onend = null;
       rec.onresult = null;
       try {
