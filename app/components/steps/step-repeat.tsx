@@ -458,8 +458,11 @@ export default function StepRepeat({ dafultComment, onTimelineComplete }: {
 
             <UspPopupWrapper data={currentUspPool} />
 
-            {/* ambient 는 question/choices 를 보내지 않으므로 질문 UI를 렌더하지 않는다 (classic 은 항상 question 을 보내므로 동작 변화 없음) */}
-            {questionFlag && question && (
+            {/* ambient(onTimelineComplete 있음)에서는 question 이 와도 질문 UI를 렌더하지 않는다 —
+                발화는 차량 마이크(useCarListener→/ambient/utterance)가 정식 경로이고, 이 UI 의
+                Speech 컴포넌트는 별도 마이크 + S키 전역 단축키 + 레거시 /scenario 전송이라
+                ambient 와 충돌한다(중앙 하단 누적 텍스트, S 길게 누름 오전송). classic 은 그대로. */}
+            {questionFlag && question && !onTimelineComplete && (
                 <QuestionArea
                     mainText={question || ""}
                     buttons={(choices || []).reduce((acc, choice) => {

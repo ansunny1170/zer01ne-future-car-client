@@ -94,6 +94,10 @@ export function useCarListener({ active, onFinal, lang = "ko-KR", sendDelayMs }:
   // ref 로 들고 있어 값이 바뀌어도 인식 세션을 재시작하지 않는다(디버그에서 실시간 변경).
   const delayRef = useRef(SEND_DELAY_MS);
   delayRef.current = sendDelayMs && sendDelayMs > 0 ? sendDelayMs : SEND_DELAY_MS;
+  // 이 인식 세션에서 이미 소비한 최종(isFinal) 결과의 마지막 인덱스. Chrome 이 continuous
+  // 모드에서 과거 결과를 통째로 다시 실어 보내는 일이 있어(발화 초기화 뒤 옛 텍스트가
+  // 되살아나는 원인), 인덱스로 딱 한 번만 소비한다. 세션이 새로 시작되면(onstart) 리셋.
+  const finalSeenRef = useRef(-1);
 
   // 창이 새로 열릴 때(active false→true) "보냈음" 표식을 지운다.
   const prevActive = useRef(false);
@@ -142,6 +146,7 @@ export function useCarListener({ active, onFinal, lang = "ko-KR", sendDelayMs }:
     wantRef.current = true;
 
     rec.onstart = () => {
+      finalSeenRef.current = -1; // 새 인식 세션 — 결과 인덱스가 0 부터 다시 시작한다
       setStatus("listening");
       setError(null);
     };
@@ -182,8 +187,13 @@ export function useCarListener({ active, onFinal, lang = "ko-KR", sendDelayMs }:
       let finalText = "";
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const r = e.results[i];
-        if (r.isFinal) finalText += r[0].transcript;
-        else interimText += r[0].transcript;
+        if (r.isFinal) {
+          // 재전송된 과거 결과는 버린다 — 인덱스가 지나온 자리면 이미 소비한 것.
+          if (i > finalSeenRef.current) {
+            finalText += r[0].transcript;
+            finalSeenRef.current = i;
+          }
+        } else interimText += r[0].transcript;
       }
       setInterim(interimText);
       // 중간 결과 = 아직 말하는 중 — 전송 대기를 취소하고 다음 확정 결과를 기다린다.

@@ -21,7 +21,7 @@ export default function ListenIndicator({ state }: { state: CarListenerState }) 
     ? `마이크 오류: ${error ?? "알 수 없음"}`
     : status === "paused"
       ? lastFinal
-        ? `"${lastFinal}"`
+        ? `전송됨 · "${lastFinal}"`
         : "잠시만요…"
       : interim || (pending ? `"${pending}"` : "듣고 있어요. 편하게 말씀해 주세요.");
 
