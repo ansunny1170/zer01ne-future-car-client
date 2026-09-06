@@ -357,8 +357,12 @@ export default function AmbientScreen() {
     fetch(`${API}/ambient/restart`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      // 드롭다운에서 고른 세션이 우선, 없으면 기존처럼 추종 중인 세션 → 서버 자동(최근)
-      body: JSON.stringify({ session_id: restartSid || sid || activeSidRef.current || undefined }),
+      // 드롭다운에서 고른 세션이 우선, 없으면 기존처럼 추종 중인 세션 → 서버 자동(최근).
+      // 명시적으로 고른 세션은 복제(clone) 모드 — 원본 DB 기록을 덮지 않고 '{원본}-tN' 사본으로 시작.
+      body: JSON.stringify({
+        session_id: restartSid || sid || activeSidRef.current || undefined,
+        clone: !!restartSid,
+      }),
     })
       .then(async (res) => {
         const body = (await res.json().catch(() => ({}))) as { session_id?: string; detail?: string };
@@ -623,7 +627,7 @@ export default function AmbientScreen() {
               restartState === "error" && "bg-red-700"
             )}
           >
-            {restartState === "success" ? "✓ 재시작" : restartState === "error" ? "✕ 재시작" : restartState === "busy" ? "…" : "여정 재시작"}
+            {restartState === "success" ? "✓ 재시작" : restartState === "error" ? "✕ 재시작" : restartState === "busy" ? "…" : restartSid ? "복제 재시작" : "여정 재시작"}
           </button>
           {/* 전송 대기(2초 디바운스) 중인 발화를 버리고 다시 듣는다. 이미 전송된 발화는
               서버가 수집 즉시 다음 스텝 생성을 시작하므로 되돌릴 수 없다. */}
