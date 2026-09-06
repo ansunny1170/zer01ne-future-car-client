@@ -16,6 +16,10 @@ export const IS_PRD = process.env.NEXT_PUBLIC_IS_PRD === "true"
 // ─────────────────────────────────────────────────────────────────────────
 export const STANDBY_VIDEO = "en6.mp4"
 export const STANDBY_VIDEO_STORAGE_KEY = "ftcar_standby_video"
+
+// /ambient 발화 전송 딜레이(ms) 현장 설정 — dev 패널에서 바꾸면 이 키로 localStorage 에 저장된다.
+// 값이 없으면 useCarListener 의 기본(SEND_DELAY_MS, 2초)을 쓴다.
+export const SEND_DELAY_STORAGE_KEY = "ftcar_send_delay_ms"
 export function resolveMediaUrl(nameOrUrl: string): string {
     return /^https?:\/\//.test(nameOrUrl) ? nameOrUrl : `${BASE_S3_LINK}/${nameOrUrl}`
 }

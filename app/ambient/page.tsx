@@ -31,9 +31,9 @@ import TabletSimModal from "@/components/ui/tablet-sim-modal";
 import DevLogPanel from "@/components/dev/dev-log-panel";
 import HyundaiLoading from "@/components/ui/hyundai-loading";
 import { appendDevLog } from "@/utils/devLog";
-import { BASE_API_LINK, BASE_S3_LINK, STANDBY_VIDEO, STANDBY_VIDEO_STORAGE_KEY, resolveMediaUrl } from "@/constants";
+import { BASE_API_LINK, BASE_S3_LINK, SEND_DELAY_STORAGE_KEY, STANDBY_VIDEO, STANDBY_VIDEO_STORAGE_KEY, resolveMediaUrl } from "@/constants";
 import { cn } from "@/utils/cn";
-import { useCarListener } from "@/hooks/useCarListener";
+import { SEND_DELAY_MS, useCarListener } from "@/hooks/useCarListener";
 import ListenIndicator from "@/components/ambient/listen-indicator";
 
 // 서버와 같은 고정 스텝 수. 마지막 스텝 뒤에는 질문이 없으므로 마이크도 열지 않는다.
@@ -97,6 +97,29 @@ export default function AmbientScreen() {
     }
     setStandbyVideo(v || STANDBY_VIDEO);
     setStandbyDraft("");
+  };
+  // 발화 전송 딜레이(ms) — 값이 없으면 useCarListener 기본(SEND_DELAY_MS). 이 브라우저의 localStorage 에 저장(현장 설정).
+  const [sendDelayMs, setSendDelayMs] = useState<number | undefined>(undefined);
+  const [sendDelayDraft, setSendDelayDraft] = useState("");
+  useEffect(() => {
+    try {
+      const saved = Number(localStorage.getItem(SEND_DELAY_STORAGE_KEY));
+      if (Number.isFinite(saved) && saved > 0) setSendDelayMs(saved);
+    } catch {
+      /* 접근 불가 환경 — 기본값 유지 */
+    }
+  }, []);
+  const applySendDelay = (raw: string) => {
+    const n = Number(raw.trim());
+    const valid = raw.trim() !== "" && Number.isFinite(n) && n > 0;
+    try {
+      if (valid) localStorage.setItem(SEND_DELAY_STORAGE_KEY, String(n));
+      else localStorage.removeItem(SEND_DELAY_STORAGE_KEY);
+    } catch {
+      /* noop */
+    }
+    setSendDelayMs(valid ? n : undefined);
+    setSendDelayDraft("");
   };
   // 부팅 때 미디어 저장소의 mp4 목록을 한 번 받아 자동완성 후보로(실패해도 직접 입력은 된다).
   useEffect(() => {
@@ -420,7 +443,7 @@ export default function AmbientScreen() {
     },
     [sid],
   );
-  const listener = useCarListener({ active: visitorTurn && !!controlSid, onFinal: sendUtterance });
+  const listener = useCarListener({ active: visitorTurn && !!controlSid, onFinal: sendUtterance, sendDelayMs });
 
   return (
     <div className="w-full h-full min-h-screen overflow-hidden bg-black text-white">
@@ -651,6 +674,38 @@ export default function AmbientScreen() {
               type="button"
               onClick={() => applyStandbyVideo("")}
               disabled={standbyVideo === STANDBY_VIDEO}
+              className="rounded bg-neutral-200 px-2 py-0.5 disabled:opacity-40"
+            >
+              기본값
+            </button>
+          </div>
+          {/* 현장 설정: 발화 전송 딜레이(ms) — 이 브라우저에 저장, 즉시 반영. 비우면 기본 SEND_DELAY_MS */}
+          <div className="mt-2 flex flex-wrap items-center gap-2 rounded border border-neutral-300 bg-neutral-50 px-2 py-1.5 text-[11px]">
+            <span className="font-semibold">발화 딜레이</span>
+            <span className="font-mono text-sky-700">{sendDelayMs ?? SEND_DELAY_MS}ms</span>
+            {sendDelayMs !== undefined && <span className="text-neutral-500">(기본 {SEND_DELAY_MS})</span>}
+            <input
+              value={sendDelayDraft}
+              onChange={(e) => setSendDelayDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") applySendDelay(sendDelayDraft);
+              }}
+              placeholder="ms"
+              inputMode="numeric"
+              className="w-20 rounded border border-neutral-300 px-1.5 py-0.5 font-mono"
+            />
+            <button
+              type="button"
+              onClick={() => applySendDelay(sendDelayDraft)}
+              disabled={!sendDelayDraft.trim()}
+              className="rounded bg-sky-700 px-2 py-0.5 font-semibold text-white disabled:bg-neutral-300"
+            >
+              적용
+            </button>
+            <button
+              type="button"
+              onClick={() => applySendDelay("")}
+              disabled={sendDelayMs === undefined}
               className="rounded bg-neutral-200 px-2 py-0.5 disabled:opacity-40"
             >
               기본값

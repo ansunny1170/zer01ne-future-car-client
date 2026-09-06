@@ -45,7 +45,8 @@ function getCtor(): RecognizerCtor | null {
 }
 
 // 발화 종료(최종 인식 결과) 후 이 시간 동안 새 입력이 없으면 모아 둔 텍스트를 전송한다.
-const SEND_DELAY_MS = 2000;
+// 기본값 — 디버그 패널에서 sendDelayMs 옵션으로 덮어쓸 수 있다.
+export const SEND_DELAY_MS = 2000;
 
 export type CarListenerStatus = "unsupported" | "off" | "listening" | "paused" | "error";
 
@@ -69,9 +70,11 @@ export interface UseCarListenerOptions {
   /** 확정 발화 처리. 서버가 수집했으면 true — 이 창에서는 더 듣지 않는다 */
   onFinal: (text: string) => Promise<boolean>;
   lang?: string;
+  /** 발화 종료 후 전송까지의 대기 시간(ms). 없거나 0 이하면 기본 SEND_DELAY_MS(2초) */
+  sendDelayMs?: number;
 }
 
-export function useCarListener({ active, onFinal, lang = "ko-KR" }: UseCarListenerOptions): CarListenerState {
+export function useCarListener({ active, onFinal, lang = "ko-KR", sendDelayMs }: UseCarListenerOptions): CarListenerState {
   const [status, setStatus] = useState<CarListenerStatus>("off");
   const [interim, setInterim] = useState("");
   const [pending, setPending] = useState("");
@@ -88,6 +91,9 @@ export function useCarListener({ active, onFinal, lang = "ko-KR" }: UseCarListen
   const sendTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onFinalRef = useRef(onFinal);
   onFinalRef.current = onFinal;
+  // ref 로 들고 있어 값이 바뀌어도 인식 세션을 재시작하지 않는다(디버그에서 실시간 변경).
+  const delayRef = useRef(SEND_DELAY_MS);
+  delayRef.current = sendDelayMs && sendDelayMs > 0 ? sendDelayMs : SEND_DELAY_MS;
 
   // 창이 새로 열릴 때(active false→true) "보냈음" 표식을 지운다.
   const prevActive = useRef(false);
@@ -186,9 +192,9 @@ export function useCarListener({ active, onFinal, lang = "ko-KR" }: UseCarListen
       if (!text) return;
       bufferRef.current = bufferRef.current ? `${bufferRef.current} ${text}` : text;
       setPending(bufferRef.current);
-      // 발화 종료 후 SEND_DELAY_MS 동안 새 입력이 없으면 그때 모아서 전송한다.
+      // 발화 종료 후 딜레이(기본 SEND_DELAY_MS) 동안 새 입력이 없으면 그때 모아서 전송한다.
       clearSendTimer();
-      sendTimerRef.current = setTimeout(flush, SEND_DELAY_MS);
+      sendTimerRef.current = setTimeout(flush, delayRef.current);
     };
     rec.onerror = (e) => {
       const code = e.error ?? "unknown";
