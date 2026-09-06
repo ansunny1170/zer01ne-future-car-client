@@ -156,6 +156,12 @@ export default function AmbientScreen() {
   });
   // 디버그 재시작 버튼 상태 (idle → 요청 중 → 결과)
   const [restartState, setRestartState] = useState<PublishState | "busy">("idle");
+  // 디버그 재시작 대상 세션 선택 — 서버 GET /ambient/sessions (plan 보유, 2026-08 이후만) 목록.
+  // 빈 값이면 기존처럼 자동(추종 중인 세션 또는 최근 세션).
+  const [sessionChoices, setSessionChoices] = useState<
+    { session_id: string; updated_at: string | null; step?: number | null; persona_title?: string }[]
+  >([]);
+  const [restartSid, setRestartSid] = useState("");
 
   // localStorage에서 devMode 초기값 로드 (SSR 하이드레이션 불일치 방지 위해 effect에서)
   useEffect(() => {
@@ -173,6 +179,18 @@ export default function AmbientScreen() {
       return !prev;
     });
   }, []);
+
+  // devMode 를 켤 때마다 재시작 후보 세션 목록을 새로 받는다(실패해도 자동 재시작은 된다).
+  useEffect(() => {
+    if (!devMode) return;
+    const API = BASE_API_LINK.replace(/\/+$/, "");
+    fetch(`${API}/ambient/sessions`)
+      .then((r) => (r.ok ? r.json() : { sessions: [] }))
+      .then((body: { sessions?: unknown }) => {
+        if (Array.isArray(body.sessions)) setSessionChoices(body.sessions);
+      })
+      .catch(() => {});
+  }, [devMode]);
 
   // 트리거: Ctrl/Cmd+Shift+D 또는 좌상단 구석 3연속 클릭. 끄기는 패널의 "디버깅 창 닫기" 버튼으로도 된다.
   // 기본 80px 은 전시장 화면에서 조준하기 어려워 200px 로 넓혔다(600ms 안 3연속이 실질적 오발동 방지책).
@@ -339,7 +357,8 @@ export default function AmbientScreen() {
     fetch(`${API}/ambient/restart`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ session_id: sid ?? activeSidRef.current ?? undefined }),
+      // 드롭다운에서 고른 세션이 우선, 없으면 기존처럼 추종 중인 세션 → 서버 자동(최근)
+      body: JSON.stringify({ session_id: restartSid || sid || activeSidRef.current || undefined }),
     })
       .then(async (res) => {
         const body = (await res.json().catch(() => ({}))) as { session_id?: string; detail?: string };
@@ -576,6 +595,21 @@ export default function AmbientScreen() {
             <div className="text-2xl font-bold leading-tight">{stepInfo?.step ?? "-"}</div>
           </div>
           <div className="my-0.5 h-px bg-neutral-700" />
+          {/* 재시작할 세션 선택 — 비우면 자동(추종/최근). 목록은 devMode 켤 때 서버에서 받는다 */}
+          <select
+            value={restartSid}
+            onChange={(e) => setRestartSid(e.target.value)}
+            title="여정 재시작에 쓸 세션 (2026-08 이후, plan 보유). 자동 = 추종 중인 세션 또는 최근 세션"
+            className="w-full rounded border border-neutral-600 bg-neutral-800 px-1 py-1 text-[10px]"
+          >
+            <option value="">세션: 자동(최근)</option>
+            {sessionChoices.map((s) => (
+              <option key={s.session_id} value={s.session_id}>
+                {(s.updated_at ?? "").slice(5, 16).replace("T", " ")} · {s.persona_title || s.session_id.slice(0, 8)}
+                {typeof s.step === "number" ? ` · s${s.step}` : ""}
+              </option>
+            ))}
+          </select>
           {/* 디버그 재시작 — 최근 세션 plan 으로 idle→enter 까지 한 번에 */}
           <button
             type="button"
