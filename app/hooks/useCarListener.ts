@@ -15,9 +15,10 @@
  * 인식 결과는 곧바로 보내지 않고 모아 둔다 — **마지막 입력(중간·최종 무관) 후 SEND_DELAY_MS(2초)
  * 동안 조용하면** 확정분과 아직 확정 안 된 중간 인식을 합쳐 `onFinal` 을 부른다. 크롬 continuous
  * 모드는 침묵해도 isFinal 을 한참 안 주는 일이 잦아, isFinal 을 기다리면 전송이 하염없이 늦는다.
- * 문장 사이에 잠깐 쉬어도 한 발화로 합쳐진다. `onFinal` 이 `true`(서버가 수집)를 돌려주면 더 듣지
- * 않는다 — 다음 스텝이 오기 전까지 중복 발화로 생성이 두 번 걸리는 것을 막는다. `active` 가 다시
- * 켜지면(다음 창) 재개한다.
+ * 문장 사이에 잠깐 쉬어도 한 발화로 합쳐진다. 운영자는 **S 키**로 디바운스를 건너뛰고 즉시 전송할
+ * 수 있다(잡음으로 침묵이 안 만들어질 때의 탈출구). `onFinal` 이 `true`(서버가 수집)를 돌려주면 더
+ * 듣지 않는다 — 다음 스텝이 오기 전까지 중복 발화로 생성이 두 번 걸리는 것을 막는다. `active` 가
+ * 다시 켜지면(다음 창) 재개한다.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -224,6 +225,18 @@ export function useCarListener({ active, onFinal, lang = "ko-KR", sendDelayMs }:
         sendTimerRef.current = setTimeout(flush, delayRef.current);
       }
     };
+    // 운영자 강제 전송: S 키를 누르면 디바운스를 기다리지 않고 지금까지 인식된 발화
+    // (확정+중간)를 즉시 보낸다 — 마이크 잡음 등으로 입력이 끊기지 않아 2초 침묵이
+    // 안 만들어질 때의 탈출구. 디버그 패널 입력칸에 타이핑 중일 때는 무시한다.
+    const onForceSendKey = (ev: KeyboardEvent) => {
+      if (ev.code !== "KeyS" || ev.repeat) return;
+      const t = ev.target as HTMLElement | null;
+      if (t && ["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName)) return;
+      clearSendTimer();
+      flush(); // 보낼 텍스트가 없으면 no-op
+    };
+    window.addEventListener("keydown", onForceSendKey);
+
     rec.onerror = (e) => {
       const code = e.error ?? "unknown";
       // no-speech / aborted 는 정상 종료에 가깝다 — onend 가 재시작한다.
@@ -255,6 +268,7 @@ export function useCarListener({ active, onFinal, lang = "ko-KR", sendDelayMs }:
 
     return () => {
       wantRef.current = false;
+      window.removeEventListener("keydown", onForceSendKey);
       // 창이 닫히면(재생 시작·스텝 전환) 보내지 않은 발화는 버린다 — 더는 관람객 차례가 아니다.
       clearSendTimer();
       bufferRef.current = "";
