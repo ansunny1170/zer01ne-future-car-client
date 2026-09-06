@@ -127,6 +127,8 @@ export default function AmbientScreen() {
   const [llmConfig, setLlmConfig] = useState<LlmConfig | null>(null);
   const [llmDraft, setLlmDraft] = useState<LlmConfig>({ model: "", reasoning_effort: "", verbosity: "" });
   const [llmState, setLlmState] = useState<"idle" | "busy" | "success" | "error">("idle");
+  // 디버그 패널의 설정 3종(대기 영상·발화 딜레이·LLM) 접기/펼치기 — 평소엔 접어 화면을 아낀다.
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const applyLlmConfig = () => {
     const API = BASE_API_LINK.replace(/\/+$/, "");
     setLlmState("busy");
@@ -710,6 +712,14 @@ export default function AmbientScreen() {
 
       {devMode && (
         <div className="absolute top-[15%] left-32 max-h-[90vh] overflow-y-auto bg-white max-w-1/2 text-black px-4 py-2 rounded-md z-[999]">
+          {/* 설정 토글 — 대기 영상·발화 딜레이·LLM 세 줄을 접었다 편다(평소엔 접어 화면을 아낀다) */}
+          <button
+            type="button"
+            onClick={() => setSettingsOpen((prev) => !prev)}
+            className={cn("mr-3 rounded px-2 py-0.5 text-[12px] font-semibold", settingsOpen ? "bg-sky-700 text-white" : "bg-neutral-200")}
+          >
+            설정
+          </button>
           <button
             onClick={() => {
               setDebug(!debug);
@@ -717,6 +727,7 @@ export default function AmbientScreen() {
           >
             step info 디버깅
           </button>
+          {settingsOpen && (<>
           {/* 현장 설정: 대기(standby) 영상 — 이 브라우저에 저장, 즉시 반영 */}
           <div className="mt-2 flex flex-wrap items-center gap-2 rounded border border-neutral-300 bg-neutral-50 px-2 py-1.5 text-[11px]">
             <span className="font-semibold">대기 영상</span>
@@ -841,6 +852,7 @@ export default function AmbientScreen() {
               <span className="text-neutral-500">서버 설정 로드 실패 — 서버(4000/8100) 연결 확인</span>
             )}
           </div>
+          </>)}
           {stepInfo?.flatAssetsParsed && (
             <span className="ml-2 text-red-600 font-bold">flat asset 파싱 진행함</span>
           )}
