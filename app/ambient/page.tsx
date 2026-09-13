@@ -78,6 +78,8 @@ export default function AmbientScreen() {
   const [visitorTurn, setVisitorTurn] = useState(false);
   // 차 화면 환영 대사 — 서버가 경로 픽스 후 waiting state 에 실어 보낸다(태블릿 AI 가 차로 이어지는 연출).
   const [greeting, setGreeting] = useState<string | null>(null);
+  // 엔딩 화면에 보여줄 최종 목적지(한글) — next=exit state 의 next_place 에서 받는다.
+  const [endingPlace, setEndingPlace] = useState<string | null>(null);
   // 스텝 질문 표시 종료 플래그 — 발화가 서버에 "수집됨" 응답을 받은 순간에만 켠다.
   // 마이크 상태 전이에 묶으면 전송 전에 이른 숨김이 생겨서(2026-09-13 관측) 명시 이벤트로 분리.
   const [questionDismissed, setQuestionDismissed] = useState(false);
@@ -380,6 +382,7 @@ export default function AmbientScreen() {
               // 태블릿이 exit 버튼을 켜는 동안 화면은 고정 엔딩을 보여준다.
               setScreen("ending");
               setVisitorTurn(false);
+              setEndingPlace(typeof msg.next_place === "string" && msg.next_place ? msg.next_place : null);
             }
             // 그 외 "driving" / "arrived" 는 화면 전환 없음 (step 메시지가 비주얼을 이끈다)
             break;
@@ -699,9 +702,9 @@ export default function AmbientScreen() {
             transition={{ duration: 1 }}
             className="fixed inset-0 z-[22] flex flex-col items-center justify-center text-center text-white backdrop-blur-lg bg-black/10"
           >
-            <h1 className="text-[96px] font-bold">체험이 모두 끝났습니다!</h1>
+            <h1 className="text-[96px] font-bold">{endingPlace ? `${endingPlace}에 도착했습니다.` : "목적지에 도착했습니다."}</h1>
             <HyundaiLoading />
-            <p className="text-[28px] opacity-60">뒷쪽 출구로 퇴장해 주세요.</p>
+            <p className="text-[28px] opacity-60">다음 장소에서 경험을 이어주세요.</p>
           </motion.div>
         )}
 
