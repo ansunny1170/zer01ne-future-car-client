@@ -137,6 +137,14 @@ export default function AmbientScreen() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   // 현재 적용 중인 프롬프트 이름(서버 DB 최신 레코드) — 표시 전용. 교체는 MinIO 업로드+레코드 갱신.
   const [promptNames, setPromptNames] = useState<{ step: string; ending: string } | null>(null);
+  // 세션 여정 요약(디버그) — /ambient/session/{sid} 스냅샷의 여정 양끝·픽스 경로·차량 태스크 전체.
+  type SessionDebug = {
+    journey_from_place?: string | null;
+    journey_to_place?: string | null;
+    path_plan?: { step1?: string; final?: string };
+    tasks?: { key: string; title: string; kind: string; done: boolean }[];
+  };
+  const [sessionDebug, setSessionDebug] = useState<SessionDebug | null>(null);
   const applyLlmConfig = () => {
     const API = BASE_API_LINK.replace(/\/+$/, "");
     setLlmState("busy");
@@ -381,6 +389,22 @@ export default function AmbientScreen() {
 
   // 고정 세션 모드면 sid, 와일드카드 모드면 지금 추종 중인 activeSid를 사용
   const controlSid = sid ?? activeSid;
+
+  // 디버그 창이 켜져 있는 동안 세션 스냅샷(여정 양끝·픽스 경로·태스크)을 따라간다 —
+  // 스텝/관람객 차례가 바뀔 때마다 새로 읽어 done 표시가 갱신되게 한다.
+  useEffect(() => {
+    if (!devMode || !controlSid) {
+      setSessionDebug(null);
+      return;
+    }
+    const API = BASE_API_LINK.replace(/\/+$/, "");
+    fetch(`${API}/ambient/session/${controlSid}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d && d.exists) setSessionDebug(d as SessionDebug);
+      })
+      .catch(() => {});
+  }, [devMode, controlSid, stepInfo, visitorTurn]);
 
   // 개발자 조작 버튼: manual_tablet.py 대신 화면에서 직접 MQTT 요청을 발행
   const publishTabletRequest = (type: TabletControlType) => {
@@ -890,6 +914,34 @@ export default function AmbientScreen() {
             <span>엔딩: <span className="font-mono text-sky-700">{promptNames?.ending ?? ""}</span></span>
           </div>
           </>)}
+          {/* 세션 지도(항상 표시): 여정 양끝(P0→최종)·픽스 경로·이 세션의 차량 태스크 전체 */}
+          {sessionDebug && (
+            <div className="mt-2 rounded border border-neutral-300 bg-neutral-50 px-2 py-1.5 text-[11px]">
+              <div>
+                <span className="font-semibold">여정</span>{" "}
+                <span className="font-mono text-sky-700">
+                  {sessionDebug.journey_from_place ?? "?"} → {sessionDebug.journey_to_place ?? "?"}
+                </span>
+                {sessionDebug.path_plan?.step1 && (
+                  <span className="ml-2 text-neutral-600">
+                    픽스: {sessionDebug.path_plan.step1} → charging_station → (경유) → {sessionDebug.path_plan.final ?? "?"}
+                  </span>
+                )}
+              </div>
+              <div className="mt-0.5">
+                <span className="font-semibold">태스크</span>{" "}
+                {(sessionDebug.tasks?.length ?? 0) === 0 ? (
+                  <span className="text-neutral-500">없음 (dashboard 미수신)</span>
+                ) : (
+                  sessionDebug.tasks?.map((t) => (
+                    <span key={t.key} className={cn("mr-2", t.done && "text-neutral-400 line-through")}>
+                      {t.key} {t.title}{t.kind === "modal" ? "(모달)" : ""}
+                    </span>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
           {stepInfo?.flatAssetsParsed && (
             <span className="ml-2 text-red-600 font-bold">flat asset 파싱 진행함</span>
           )}
