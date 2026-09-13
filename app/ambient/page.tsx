@@ -526,6 +526,12 @@ export default function AmbientScreen() {
   return (
     <div className="w-full h-full min-h-screen overflow-hidden bg-black text-white">
       <ListenIndicator state={listener} />
+      {/* 스텝 질문을 clone talk 자리에 표시 — 렌더 완료(visitorTurn) 후 관람객 발화가
+          서버에 수집되기 전(paused 전)까지 유지한다. 태블릿 없이 화면만 보고도
+          무엇에 답할지 알 수 있게. 다음 step 이 오면 visitorTurn 이 꺼져 사라진다. */}
+      {screen === "step" && visitorTurn && listener.status !== "paused" && stepInfo?.question && (
+        <CloneTalkSplit key={`q-${stepInfo.step}`} text={stepInfo.question} keepLastLine />
+      )}
       {/* ambient 모드: 키 입력 없이 즉시 재생, 전 스텝 루프, 두 번째 재생부터 블러 */}
       <StepVideoPlayer ambient />
       <StepAudioPlayer />
