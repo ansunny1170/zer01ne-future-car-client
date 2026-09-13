@@ -35,6 +35,7 @@ import { BASE_API_LINK, BASE_S3_LINK, SEND_DELAY_STORAGE_KEY, STANDBY_VIDEO, STA
 import { cn } from "@/utils/cn";
 import { SEND_DELAY_MS, useCarListener } from "@/hooks/useCarListener";
 import ListenIndicator from "@/components/ambient/listen-indicator";
+import CloneTalkSplit from "@/components/ui/clone-talk-split";
 
 // 서버와 같은 고정 스텝 수. 마지막 스텝 뒤에는 질문이 없으므로 마이크도 열지 않는다.
 const TOTAL_STEPS = 3; // 스토리라인(2026-09-13): s1 선픽스 → s2 충전소 무인 → s3 경유지+최종
@@ -579,20 +580,11 @@ export default function AmbientScreen() {
             transition={{ duration: 0.3 }}
             className="fixed inset-0 flex flex-col items-center justify-center gap-4"
           >
-            {/* enter 뒤 ~ step1 전. 서버가 경로 픽스 후 보내는 환영 대사(greeting)를 clone talk 톤으로
-                보여준다 — 태블릿에서 대화하던 AI 가 차로 이어졌다는 연출. 도착 전엔 비워 두고
-                마이크 인디케이터가 "듣고 있어요" 를 맡는다. */}
-            {greeting && (
-              <motion.p
-                key={greeting}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                className="mt-[24vh] max-w-[70vw] text-center text-[30px] leading-relaxed text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]"
-              >
-                {greeting}
-              </motion.p>
-            )}
+            {/* enter 뒤 ~ step1 전. 서버가 경로 픽스 후 보내는 환영 대사(greeting)를 스텝과 동일한
+                clone talk UI(CloneTalkSplit — 타자기 효과·글로우·상단 위치)로 보여준다 —
+                태블릿에서 대화하던 AI 가 차로 이어졌다는 연출. keepLastLine 으로 관람객이
+                답할 때까지 문장을 유지한다. 도착 전엔 마이크 인디케이터가 "듣고 있어요" 를 맡는다. */}
+            {greeting && <CloneTalkSplit key={greeting} text={greeting} keepLastLine />}
           </motion.div>
         )}
         {screen === "step" && (
