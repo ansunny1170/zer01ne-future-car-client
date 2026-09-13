@@ -66,7 +66,7 @@ function truncateSid(v: string): string {
 }
 
 export default function AmbientScreen() {
-  const { stepInfo, setStepInfo, reStart } = useScene();
+  const { stepInfo, setStepInfo, reStart, preloadedAudio } = useScene();
   // sid === null → 자동 추종(와일드카드) 모드. ?sid= 쿼리가 있으면 그 값으로 고정된다.
   const [sid, setSid] = useState<string | null>(null);
   // 와일드카드 모드에서 지금 화면이 따라가고 있는 session_id
@@ -80,6 +80,44 @@ export default function AmbientScreen() {
   const [greeting, setGreeting] = useState<string | null>(null);
   // 엔딩 화면에 보여줄 최종 목적지(한글) — next=exit state 의 next_place 에서 받는다.
   const [endingPlace, setEndingPlace] = useState<string | null>(null);
+  // 소리 뮤트(운영자 토글, localStorage 지속) — 화면의 모든 audio/video 와 프리로드 오디오를 음소거.
+  // 뮤트면 우상단 아이콘이 디버그 여부와 무관하게 항상 보이고, 아니면 아무것도 안 보인다
+  // (투명하지만 같은 자리가 토글 버튼이다). 마이크 입력(STT)에는 영향 없다.
+  const [muted, setMuted] = useState(false);
+  useEffect(() => {
+    try {
+      setMuted(localStorage.getItem("ftcar_muted") === "true");
+    } catch {
+      /* 접근 불가 환경 — 기본 소리 켬 */
+    }
+  }, []);
+  const applyMute = useCallback((m: boolean) => {
+    document.querySelectorAll<HTMLMediaElement>("audio,video").forEach((el) => {
+      el.muted = m;
+    });
+    // COMPANION_VOICE·효과음은 DOM 밖의 프리로드 Audio 로 재생된다 — 맵도 같이 덮는다.
+    preloadedAudio?.forEach((el) => {
+      el.muted = m;
+    });
+  }, [preloadedAudio]);
+  useEffect(() => {
+    applyMute(muted);
+    if (!muted) return;
+    // 스텝 전환마다 미디어 요소가 새로 생기므로, 뮤트 동안엔 주기적으로 다시 덮는다.
+    const timer = setInterval(() => applyMute(true), 800);
+    return () => clearInterval(timer);
+  }, [muted, applyMute, stepInfo, screen]);
+  const toggleMute = () => {
+    setMuted((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem("ftcar_muted", String(next));
+      } catch {
+        /* noop */
+      }
+      return next;
+    });
+  };
   // 스텝 질문 표시 종료 플래그 — 발화가 서버에 "수집됨" 응답을 받은 순간에만 켠다.
   // 마이크 상태 전이에 묶으면 전송 전에 이른 숨김이 생겨서(2026-09-13 관측) 명시 이벤트로 분리.
   const [questionDismissed, setQuestionDismissed] = useState(false);
@@ -590,6 +628,25 @@ export default function AmbientScreen() {
   return (
     <div className="w-full h-full min-h-screen overflow-hidden bg-black text-white">
       <ListenIndicator state={listener} />
+      {/* 소리 뮤트 토글 — 뮤트일 때만 아이콘 표시, 평소엔 투명 버튼만 존재. 우상단 구석의
+          가이드 트리거(3연속 클릭 영역)와 겹치지 않게 구석에서 살짝 왼쪽에 둔다. */}
+      <button
+        type="button"
+        onClick={toggleMute}
+        aria-label={muted ? "음소거 해제" : "음소거"}
+        className={cn(
+          "fixed right-24 top-3 z-[1000] flex h-14 w-14 items-center justify-center rounded-full",
+          muted && "bg-black/60 backdrop-blur-sm",
+        )}
+      >
+        {muted && (
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#ff5a5a" strokeWidth="2.2" strokeLinecap="round">
+            <path d="M11 5 6 9H3v6h3l5 4z" fill="white" stroke="none" />
+            <line x1="16.5" y1="9.5" x2="21.5" y2="14.5" />
+            <line x1="21.5" y1="9.5" x2="16.5" y2="14.5" />
+          </svg>
+        )}
+      </button>
       {/* 스텝 질문을 clone talk 자리에 표시 — 렌더 완료(visitorTurn) 후 관람객 발화가
           서버에 수집되기 전(paused 전)까지 유지한다. 태블릿 없이 화면만 보고도
           무엇에 답할지 알 수 있게. 다음 step 이 오면 visitorTurn 이 꺼져 사라진다. */}
