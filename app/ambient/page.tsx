@@ -81,6 +81,8 @@ export default function AmbientScreen() {
   // 스텝 질문 표시 종료 플래그 — 발화가 서버에 "수집됨" 응답을 받은 순간에만 켠다.
   // 마이크 상태 전이에 묶으면 전송 전에 이른 숨김이 생겨서(2026-09-13 관측) 명시 이벤트로 분리.
   const [questionDismissed, setQuestionDismissed] = useState(false);
+  // 인사(greeting)가 오기 전/안 올 때의 마이크 개방 폴백 타이머 — waiting 화면에서만 발화한다.
+  const greetingWaitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // standby 반복 영상 — 코드 기본값(STANDBY_VIDEO) 위에 이 브라우저의 localStorage 값이 덮는다(현장 설정).
   const [standbyVideo, setStandbyVideo] = useState(STANDBY_VIDEO);
   const [standbyDraft, setStandbyDraft] = useState("");
@@ -346,10 +348,18 @@ export default function AmbientScreen() {
               setGreeting(null);
             } else if (msg.phase === "waiting") {
               setScreen("waiting");
-              setVisitorTurn(true); // enter 됨 — "출발 할까요?" 에 답할 차례
-              // 첫 waiting state 엔 없고, 경로 픽스 후 재발행분에 실려 온다 — 있을 때만 갱신.
+              // 마이크는 바로 열지 않는다 — 시작 인사(clone talk) 타이핑이 끝나고 1초 뒤에 연다
+              // (인사 렌더의 onComplete 경로). 인사가 안 오는 예외(경로판정 실패·구버전)에는
+              // 8초 폴백으로 그냥 연다. 타이머 발화 시 여전히 waiting 인지 확인해 오발동을 막는다.
+              setVisitorTurn(false);
               if (typeof (msg as { greeting?: unknown }).greeting === "string") {
+                if (greetingWaitTimer.current) clearTimeout(greetingWaitTimer.current);
                 setGreeting((msg as { greeting: string }).greeting);
+              } else if (!greetingWaitTimer.current) {
+                greetingWaitTimer.current = setTimeout(() => {
+                  greetingWaitTimer.current = null;
+                  if (screenRef.current === "waiting") setVisitorTurn(true);
+                }, 8000);
               }
             } else if (msg.phase === "done") {
               setScreen("standby");   // exit(또는 태블릿 종료) — 다음 탑승까지 대기
@@ -619,7 +629,19 @@ export default function AmbientScreen() {
                 clone talk UI(CloneTalkSplit — 타자기 효과·글로우·상단 위치)로 보여준다 —
                 태블릿에서 대화하던 AI 가 차로 이어졌다는 연출. keepLastLine 으로 관람객이
                 답할 때까지 문장을 유지한다. 도착 전엔 마이크 인디케이터가 "듣고 있어요" 를 맡는다. */}
-            {greeting && <CloneTalkSplit key={greeting} text={greeting} keepLastLine />}
+            {greeting && (
+              <CloneTalkSplit
+                key={greeting}
+                text={greeting}
+                keepLastLine
+                onComplete={() => {
+                  // 타이핑 완료 + 1초 뒤 마이크 개방 — 인사를 읽을 틈을 주고 나서 듣는다.
+                  setTimeout(() => {
+                    if (screenRef.current === "waiting") setVisitorTurn(true);
+                  }, 1000);
+                }}
+              />
+            )}
           </motion.div>
         )}
         {screen === "step" && (
