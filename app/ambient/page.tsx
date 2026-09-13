@@ -75,6 +75,8 @@ export default function AmbientScreen() {
   const [lastError, setLastError] = useState<ErrorMsg | null>(null);
   // 관람객 차례(마이크 열림): 대기 화면, 스텝 렌더 완료 뒤 ~ 다음 step 수신 전, 서버 error 뒤.
   const [visitorTurn, setVisitorTurn] = useState(false);
+  // 차 화면 환영 대사 — 서버가 경로 픽스 후 waiting state 에 실어 보낸다(태블릿 AI 가 차로 이어지는 연출).
+  const [greeting, setGreeting] = useState<string | null>(null);
   // standby 반복 영상 — 코드 기본값(STANDBY_VIDEO) 위에 이 브라우저의 localStorage 값이 덮는다(현장 설정).
   const [standbyVideo, setStandbyVideo] = useState(STANDBY_VIDEO);
   const [standbyDraft, setStandbyDraft] = useState("");
@@ -329,9 +331,14 @@ export default function AmbientScreen() {
               reStart();
               setScreen("standby");   // plan 만 도착 — enter 전. 조용한 대기 화면
               setVisitorTurn(false);
+              setGreeting(null);
             } else if (msg.phase === "waiting") {
               setScreen("waiting");
               setVisitorTurn(true); // enter 됨 — "출발 할까요?" 에 답할 차례
+              // 첫 waiting state 엔 없고, 경로 픽스 후 재발행분에 실려 온다 — 있을 때만 갱신.
+              if (typeof (msg as { greeting?: unknown }).greeting === "string") {
+                setGreeting((msg as { greeting: string }).greeting);
+              }
             } else if (msg.phase === "done") {
               setScreen("standby");   // exit(또는 태블릿 종료) — 다음 탑승까지 대기
               setVisitorTurn(false);
@@ -572,7 +579,20 @@ export default function AmbientScreen() {
             transition={{ duration: 0.3 }}
             className="fixed inset-0 flex flex-col items-center justify-center gap-4"
           >
-            {/* enter 뒤 ~ step1 전. 환영 문구 없이 비워 둔다 — 마이크 인디케이터가 "듣고 있어요" 를 맡는다. */}
+            {/* enter 뒤 ~ step1 전. 서버가 경로 픽스 후 보내는 환영 대사(greeting)를 clone talk 톤으로
+                보여준다 — 태블릿에서 대화하던 AI 가 차로 이어졌다는 연출. 도착 전엔 비워 두고
+                마이크 인디케이터가 "듣고 있어요" 를 맡는다. */}
+            {greeting && (
+              <motion.p
+                key={greeting}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                className="mt-[24vh] max-w-[70vw] text-center text-[30px] leading-relaxed text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.6)]"
+              >
+                {greeting}
+              </motion.p>
+            )}
           </motion.div>
         )}
         {screen === "step" && (
