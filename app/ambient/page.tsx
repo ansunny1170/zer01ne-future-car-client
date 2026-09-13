@@ -37,7 +37,7 @@ import { SEND_DELAY_MS, useCarListener } from "@/hooks/useCarListener";
 import ListenIndicator from "@/components/ambient/listen-indicator";
 
 // 서버와 같은 고정 스텝 수. 마지막 스텝 뒤에는 질문이 없으므로 마이크도 열지 않는다.
-const TOTAL_STEPS = 4;
+const TOTAL_STEPS = 3; // 스토리라인(2026-09-13): s1 선픽스 → s2 충전소 무인 → s3 경유지+최종
 
 // standby: exit ~ 다음 enter 사이(그리고 plan 만 온 idle, 세션이 아직 없을 때)의 대기 화면. 글자 없이 조용히.
 // waiting: enter 뒤 ~ step1 전. 마이크가 열려 있고 관람객이 "출발 할까요?" 에 답하는 구간 — 환영 문구 없음.
@@ -527,7 +527,7 @@ export default function AmbientScreen() {
           ambient 는 step1 부터 정식 연출이라 hud 를 강제로 켠다. */}
       {screen === "step" && (
         <>
-          <TopLayout hud totalSteps={4} />
+          <TopLayout hud totalSteps={3} />
           <BottomLayout />
         </>
       )}
