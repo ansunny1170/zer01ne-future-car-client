@@ -83,6 +83,12 @@ export default function AmbientScreen() {
   const [questionDismissed, setQuestionDismissed] = useState(false);
   // 인사(greeting)가 오기 전/안 올 때의 마이크 개방 폴백 타이머 — waiting 화면에서만 발화한다.
   const greetingWaitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // 스텝 질문 구간 표식: 렌더 완료 ~ 다음 step 수신 전. 질문 타이핑 완료 +1초 뒤 마이크를 열고,
+  // 질문이 안 뜨는 예외는 8초 폴백으로 연다. ref 는 타이머 콜백의 stale 값 방지.
+  const [stepQuestionActive, setStepQuestionActive] = useState(false);
+  const stepQuestionActiveRef = useRef(false);
+  stepQuestionActiveRef.current = stepQuestionActive;
+  const stepMicFallback = useRef<ReturnType<typeof setTimeout> | null>(null);
   // standby 반복 영상 — 코드 기본값(STANDBY_VIDEO) 위에 이 브라우저의 localStorage 값이 덮는다(현장 설정).
   const [standbyVideo, setStandbyVideo] = useState(STANDBY_VIDEO);
   const [standbyDraft, setStandbyDraft] = useState("");
@@ -338,6 +344,11 @@ export default function AmbientScreen() {
             setStepInfo(msg.data as StepInfo);
             setScreen("step");
             setVisitorTurn(false); // 재생 시작 — 우리 소리를 받아 적지 않도록 마이크를 닫는다
+            setStepQuestionActive(false); // 직전 질문 구간 종료 — 폴백 타이머 오발동 방지
+            if (stepMicFallback.current) {
+              clearTimeout(stepMicFallback.current);
+              stepMicFallback.current = null;
+            }
             break;
           case "state":
             if (msg.phase === "idle") {
@@ -497,9 +508,20 @@ export default function AmbientScreen() {
         source: "client",
       });
       const API = BASE_API_LINK.replace(/\/+$/, "");
-      // 렌더가 끝났으니 관람객 차례 — 마지막 스텝은 질문이 없어 열지 않는다(엔딩으로 넘어감).
-      setVisitorTurn(step < TOTAL_STEPS);
-      setQuestionDismissed(false);   // 새 관람객 차례 — 질문 다시 표시
+      // 렌더 완료 — 질문을 먼저 띄우고, 마이크는 질문 타이핑 완료 +1초 뒤에 연다(아래 onComplete).
+      // 마지막 스텝은 질문이 없어 열지 않는다(엔딩으로 넘어감).
+      setQuestionDismissed(false);
+      setStepQuestionActive(step < TOTAL_STEPS);
+      if (stepMicFallback.current) clearTimeout(stepMicFallback.current);
+      if (step < TOTAL_STEPS) {
+        // 질문이 없거나 렌더되지 못하는 예외 — 8초 뒤에도 질문 구간이면 그냥 연다
+        stepMicFallback.current = setTimeout(() => {
+          stepMicFallback.current = null;
+          if (stepQuestionActiveRef.current) setVisitorTurn(true);
+        }, 8000);
+      } else {
+        setVisitorTurn(false);
+      }
       fetch(`${API}/ambient/step-rendered`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -568,8 +590,18 @@ export default function AmbientScreen() {
       {/* 스텝 질문을 clone talk 자리에 표시 — 렌더 완료(visitorTurn) 후 관람객 발화가
           서버에 수집되기 전(paused 전)까지 유지한다. 태블릿 없이 화면만 보고도
           무엇에 답할지 알 수 있게. 다음 step 이 오면 visitorTurn 이 꺼져 사라진다. */}
-      {screen === "step" && visitorTurn && !questionDismissed && stepInfo?.question && (
-        <CloneTalkSplit key={`q-${stepInfo.step}`} text={stepInfo.question} keepLastLine />
+      {screen === "step" && stepQuestionActive && !questionDismissed && stepInfo?.question && (
+        <CloneTalkSplit
+          key={`q-${stepInfo.step}`}
+          text={stepInfo.question}
+          keepLastLine
+          onComplete={() => {
+            // 질문 타이핑 완료 +1초 뒤 마이크 개방 — 시작 인사와 동일한 리듬.
+            setTimeout(() => {
+              if (stepQuestionActiveRef.current) setVisitorTurn(true);
+            }, 1000);
+          }}
+        />
       )}
       {/* ambient 모드: 키 입력 없이 즉시 재생, 전 스텝 루프, 두 번째 재생부터 블러 */}
       <StepVideoPlayer ambient />
