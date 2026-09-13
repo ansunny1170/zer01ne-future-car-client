@@ -628,25 +628,17 @@ export default function AmbientScreen() {
   return (
     <div className="w-full h-full min-h-screen overflow-hidden bg-black text-white">
       <ListenIndicator state={listener} />
-      {/* 소리 뮤트 토글 — 뮤트일 때만 아이콘 표시, 평소엔 투명 버튼만 존재. 우상단 구석의
-          가이드 트리거(3연속 클릭 영역)와 겹치지 않게 구석에서 살짝 왼쪽에 둔다. */}
-      <button
-        type="button"
-        onClick={toggleMute}
-        aria-label={muted ? "음소거 해제" : "음소거"}
-        className={cn(
-          "fixed right-24 top-3 z-[1000] flex h-14 w-14 items-center justify-center rounded-full",
-          muted && "bg-black/60 backdrop-blur-sm",
-        )}
-      >
-        {muted && (
+      {/* 소리 뮤트 표시(표시 전용) — 뮤트면 디버그 여부와 무관하게 항상 보이고, 아니면 없다.
+          토글은 디버그 설정창의 "소리" 행에서만 한다(화면 오터치 방지). */}
+      {muted && (
+        <div className="pointer-events-none fixed right-24 top-3 z-[1000] flex h-14 w-14 items-center justify-center rounded-full bg-black/60 backdrop-blur-sm">
           <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#ff5a5a" strokeWidth="2.2" strokeLinecap="round">
             <path d="M11 5 6 9H3v6h3l5 4z" fill="white" stroke="none" />
             <line x1="16.5" y1="9.5" x2="21.5" y2="14.5" />
             <line x1="21.5" y1="9.5" x2="16.5" y2="14.5" />
           </svg>
-        )}
-      </button>
+        </div>
+      )}
       {/* 스텝 질문을 clone talk 자리에 표시 — 렌더 완료(visitorTurn) 후 관람객 발화가
           서버에 수집되기 전(paused 전)까지 유지한다. 태블릿 없이 화면만 보고도
           무엇에 답할지 알 수 있게. 다음 step 이 오면 visitorTurn 이 꺼져 사라진다. */}
@@ -964,6 +956,23 @@ export default function AmbientScreen() {
               className="rounded bg-neutral-200 px-2 py-0.5 disabled:opacity-40"
             >
               기본값
+            </button>
+          </div>
+          {/* 현장 설정: 소리 뮤트 — 화면의 모든 출력 음소거. 뮤트면 우상단에 아이콘이 상시 표시된다. */}
+          <div className="mt-2 flex flex-wrap items-center gap-2 rounded border border-neutral-300 bg-neutral-50 px-2 py-1.5 text-[11px]">
+            <span className="font-semibold">소리</span>
+            <span className={cn("font-mono", muted ? "text-red-600" : "text-sky-700")}>
+              {muted ? "음소거 중" : "켜짐"}
+            </span>
+            <button
+              type="button"
+              onClick={toggleMute}
+              className={cn(
+                "rounded px-2 py-0.5 font-semibold text-white",
+                muted ? "bg-neutral-500 hover:bg-neutral-400" : "bg-red-600 hover:bg-red-500",
+              )}
+            >
+              {muted ? "음소거 해제" : "음소거"}
             </button>
           </div>
           {/* LLM 모델·옵션 — 서버 런타임 값(브라우저 저장 아님). 다음 스텝 생성부터 즉시 반영,
