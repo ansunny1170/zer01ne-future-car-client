@@ -989,7 +989,7 @@ export default function AmbientScreen() {
                 ) : (
                   sessionDebug.tasks?.map((t) => (
                     <span key={t.key} className={cn("mr-2", t.done && "text-neutral-400 line-through")}>
-                      {t.key} {t.title}{t.kind === "modal" ? "(모달)" : ""}
+                      {t.key} {t.title}{t.kind !== "auto" ? " (basic 아님)" : ""}
                     </span>
                   ))
                 )}
