@@ -78,6 +78,9 @@ export default function AmbientScreen() {
   const [visitorTurn, setVisitorTurn] = useState(false);
   // 차 화면 환영 대사 — 서버가 경로 픽스 후 waiting state 에 실어 보낸다(태블릿 AI 가 차로 이어지는 연출).
   const [greeting, setGreeting] = useState<string | null>(null);
+  // 스텝 질문 표시 종료 플래그 — 발화가 서버에 "수집됨" 응답을 받은 순간에만 켠다.
+  // 마이크 상태 전이에 묶으면 전송 전에 이른 숨김이 생겨서(2026-09-13 관측) 명시 이벤트로 분리.
+  const [questionDismissed, setQuestionDismissed] = useState(false);
   // standby 반복 영상 — 코드 기본값(STANDBY_VIDEO) 위에 이 브라우저의 localStorage 값이 덮는다(현장 설정).
   const [standbyVideo, setStandbyVideo] = useState(STANDBY_VIDEO);
   const [standbyDraft, setStandbyDraft] = useState("");
@@ -462,6 +465,7 @@ export default function AmbientScreen() {
       const API = BASE_API_LINK.replace(/\/+$/, "");
       // 렌더가 끝났으니 관람객 차례 — 마지막 스텝은 질문이 없어 열지 않는다(엔딩으로 넘어감).
       setVisitorTurn(step < TOTAL_STEPS);
+      setQuestionDismissed(false);   // 새 관람객 차례 — 질문 다시 표시
       fetch(`${API}/ambient/step-rendered`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -505,6 +509,7 @@ export default function AmbientScreen() {
           sessionId,
           source: "client",
         });
+        if (body.ok === true) setQuestionDismissed(true);   // 수집 성공 — 질문 UI 내림
         return body.ok === true;
       } catch (err) {
         console.error("[ambient] 발화 전송 실패", err);
@@ -529,7 +534,7 @@ export default function AmbientScreen() {
       {/* 스텝 질문을 clone talk 자리에 표시 — 렌더 완료(visitorTurn) 후 관람객 발화가
           서버에 수집되기 전(paused 전)까지 유지한다. 태블릿 없이 화면만 보고도
           무엇에 답할지 알 수 있게. 다음 step 이 오면 visitorTurn 이 꺼져 사라진다. */}
-      {screen === "step" && visitorTurn && listener.status !== "paused" && stepInfo?.question && (
+      {screen === "step" && visitorTurn && !questionDismissed && stepInfo?.question && (
         <CloneTalkSplit key={`q-${stepInfo.step}`} text={stepInfo.question} keepLastLine />
       )}
       {/* ambient 모드: 키 입력 없이 즉시 재생, 전 스텝 루프, 두 번째 재생부터 블러 */}
