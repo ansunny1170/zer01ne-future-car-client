@@ -131,7 +131,7 @@ export interface PathState {
 export interface StepInfo {
     step: 1 | 2 | 3 | 4 | 5 | 6 | 7, // ✅ 각 스텝 번호입니다. 필요시 사용하세요.
     name: string, // 각 스텝의 시나리오 이름. ❌믿지마세요! 신뢰도가 낮으니 참고만 해주세요.
-    passenger_state?: PassengerState, // ❌사용하지 않습니다. 참고만 해주세요.
+    passenger_state?: PassengerState | "auto" | "onboard", // main-2026: 서버가 문자열(auto=무인 구간/onboard=탑승)로 보냄 — 좌상단 탑뷰 아이콘이 사용. 레거시(main)는 객체({total: 인원수}).
     bgv?: BackgroundVideo, // ✅ 사용하는 데이터입니다. 배경 영상입니다.
     bgm?: BackgroundMusic, // ✅ 사용하는 데이터입니다. 배경 음악입니다.
     sfx?: VehicleSoundEffect, // ✅ 사용하는 데이터입니다. 효과음입니다.

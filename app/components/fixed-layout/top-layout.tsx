@@ -12,7 +12,10 @@ import { motion } from "framer-motion";
 // totalSteps: 진행바 분모. classic 7, ambient 4.
 export default function TopLayout({ hud, totalSteps }: { hud?: boolean; totalSteps?: number } = {}) {
     const {stepInfo,stepNumber} = useScene();
-    const passenger_count = stepInfo?.passenger_state?.total || 0;
+    // main-2026 은 passenger_state 가 문자열(auto=무인 구간 → 0명 아이콘, onboard=탑승 → 1명),
+    // 레거시(main)는 {total: 인원수} 객체 — 두 형식 모두 지원한다.
+    const ps = stepInfo?.passenger_state;
+    const passenger_count = typeof ps === "string" ? (ps === "auto" ? 0 : 1) : ps?.total || 0;
     const showHud = hud ?? stepNumber > 1;
 
     return (
