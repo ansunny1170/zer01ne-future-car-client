@@ -78,6 +78,10 @@ export function useCarListener({ active, onFinal, lang = "ko-KR" }: UseCarListen
   const [error, setError] = useState<string | null>(null);
   // S 키로 마이크를 열었는가(무장). active 가 참일 때만 의미가 있다.
   const [armed, setArmed] = useState(false);
+  // 재녹음·초기화 시 증가 — 인식 세션 effect 를 재실행해 Recognizer 인스턴스를 통째로 새로
+  // 만든다. stop()/start() 로 세션만 재활용하면 Chrome 이 이전 인식 결과를 새 세션에도
+  // 되실어 보내는 일이 있어(초기화 뒤 발화가 이어붙던 버그), 인스턴스 자체를 버린다.
+  const [micNonce, setMicNonce] = useState(0);
 
   const recRef = useRef<Recognizer | null>(null);
   const sentRef = useRef(false);
@@ -217,19 +221,17 @@ export function useCarListener({ active, onFinal, lang = "ko-KR" }: UseCarListen
     };
     flushRef.current = flush;
 
-    // S 재누름 — 지금까지 모은 발화를 버리고 인식 세션을 새로 시작한다.
+    // S 재누름·초기화 — 지금까지 모은 발화를 버리고 인식 인스턴스를 통째로 새로 만든다
+    // (micNonce 증가 → 이 effect 재실행). stop/start 재활용 시 Chrome 이 이전 결과를 새
+    // 세션에 되실어 보내는 문제를 피한다. 현재 인스턴스는 cleanup 이 abort 로 정리한다.
     const restart = () => {
       bufferRef.current = "";
       interimRef.current = "";
       finalSeenRef.current = -1;
       setPending("");
       setInterim("");
-      suppressRef.current = true; // stop 뒤 잔여 결과를 다음 onstart 까지 무시
-      try {
-        rec.stop(); // onend → wantRef 참이라 자동 재시작
-      } catch {
-        /* noop */
-      }
+      wantRef.current = false; // 이 인스턴스의 onend 자동 재시작을 막는다(새 인스턴스가 대체)
+      setMicNonce((n) => n + 1);
     };
     restartRef.current = restart;
 
@@ -297,7 +299,7 @@ export function useCarListener({ active, onFinal, lang = "ko-KR" }: UseCarListen
       }
       if (recRef.current === rec) recRef.current = null;
     };
-  }, [active, armed, lang, stop]);
+  }, [active, armed, lang, stop, micNonce]);
 
   return { status, interim, pending, lastFinal, error, reset };
 }
