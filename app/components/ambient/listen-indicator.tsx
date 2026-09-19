@@ -27,8 +27,8 @@ export default function ListenIndicator({ state }: { state: CarListenerState }) 
           ? `전송됨 · "${lastFinal}"`
           : "잠시만요…"
         : interim || pending
-          ? `${interim || pending}  —  D 키로 전송`
-          : "듣고 있어요. 편하게 말씀하고, 끝나면 D 키를 누르세요.";
+          ? `${interim || pending}  —  전송: D 또는 S 길게`
+          : "듣고 있어요. 말씀 끝나면 D 키(또는 S 길게)를 누르세요.";
 
   return (
     <AnimatePresence>

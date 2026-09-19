@@ -925,8 +925,8 @@ export default function AmbientScreen() {
             <span className="font-semibold">마이크</span>
             <span className="font-mono text-sky-700">{listener.status}</span>
             <span className="text-neutral-600">
-              <kbd className="rounded bg-neutral-200 px-1">S</kbd> 말하기(열기·재녹음) ·
-              <kbd className="ml-1 rounded bg-neutral-200 px-1">D</kbd> 전송
+              <kbd className="rounded bg-neutral-200 px-1">S</kbd> 짧게=말하기(열기·재녹음) ·
+              <kbd className="ml-1 rounded bg-neutral-200 px-1">S</kbd> 길게 / <kbd className="rounded bg-neutral-200 px-1">D</kbd> = 전송
             </span>
             <span className="text-neutral-400">— 에셋 렌더 완료 후에만 S 반응</span>
           </div>

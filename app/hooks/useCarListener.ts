@@ -130,25 +130,60 @@ export function useCarListener({ active, onFinal, lang = "ko-KR" }: UseCarListen
   }, []);
 
   // ── S/D 키 핸들러 — active 인 동안 항상 붙어 있다(마이크 개방 여부와 무관) ──────────
+  // 조작: S 짧게=열기/재녹음 · S 길게(800ms)=전송 · D=전송. 전송은 D 와 S-long 둘 다 가능.
   useEffect(() => {
     if (!active) return;
-    const onKey = (ev: KeyboardEvent) => {
-      // 물리 키 위치 기준(code) — 한글 자판이어도 같은 자리(ㄴ=S, ㅇ=D)면 동작한다.
-      if (ev.repeat) return;
+    const LONG_PRESS_MS = 800;
+    let longTimer: ReturnType<typeof setTimeout> | null = null;
+    let longFired = false; // 이번 S 누름이 long-press(전송)로 소비됐는가 — keyup 의 짧은 처리 차단용
+
+    const isTyping = (ev: KeyboardEvent) => {
       const t = ev.target as HTMLElement | null;
-      if (t && ["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName)) return;
+      return !!t && ["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName);
+    };
+    const clearLong = () => {
+      if (longTimer) {
+        clearTimeout(longTimer);
+        longTimer = null;
+      }
+    };
+
+    const onKeyDown = (ev: KeyboardEvent) => {
+      if (ev.repeat || isTyping(ev)) return; // 물리 키(code) 기준 — 한글 자판(ㄴ=S·ㅇ=D)도 동일
       if (ev.code === "KeyS") {
         ev.preventDefault();
         if (sentRef.current) return; // 이미 전송한 창 — 다음 스텝까지 대기
-        if (!armedRef.current) setArmed(true); // 첫 S: 마이크 열기(무장)
-        else restartRef.current(); // 듣는 중 S: 재녹음
+        // 마이크가 열려 있을 때만 long-press 전송이 의미 있다. 닫혀 있으면 짧은 누름(열기)만.
+        if (armedRef.current) {
+          longFired = false;
+          clearLong();
+          longTimer = setTimeout(() => {
+            longFired = true;
+            longTimer = null;
+            flushRef.current(); // S 길게: 전송
+          }, LONG_PRESS_MS);
+        }
       } else if (ev.code === "KeyD") {
         ev.preventDefault();
         flushRef.current(); // D: 전송(보낼 게 없으면 no-op)
       }
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+
+    const onKeyUp = (ev: KeyboardEvent) => {
+      if (ev.code !== "KeyS" || isTyping(ev)) return;
+      clearLong();
+      if (sentRef.current || longFired) return; // long-press 로 이미 전송했으면 짧은 처리 안 함
+      if (!armedRef.current) setArmed(true); // 첫 S(짧게): 마이크 열기(무장)
+      else restartRef.current(); // 듣는 중 S(짧게): 재녹음
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    return () => {
+      clearLong();
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+    };
   }, [active]);
 
   // ── 인식 세션 — active && armed && 미전송 일 때만 마이크를 연다 ─────────────────────
