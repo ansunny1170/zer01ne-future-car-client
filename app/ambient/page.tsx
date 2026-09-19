@@ -293,12 +293,16 @@ export default function AmbientScreen() {
         }
       })
       .catch(() => {});
-    // 현재 적용 프롬프트 — DB 최신 레코드의 file_url 에서 파일명만 뽑아 보여준다.
+    // 현재 적용 프롬프트 — 스텝은 본문 첫 H1 제목(title) 우선, 없으면 파일명.
+    // (구 MinIO 레코드 호환으로 file_url 파일명 폴백 유지 — 신규 레코드는 file_url 이 null 이다)
     const basename = (u?: string) => (u ? decodeURIComponent(u.split("/").pop() || u) : "?");
     Promise.all([
       fetch(`${API}/prompt/latest`).then((r) => (r.ok ? r.json() : null)).catch(() => null),
       fetch(`${API}/ending-reflection-prompt/latest`).then((r) => (r.ok ? r.json() : null)).catch(() => null),
-    ]).then(([p, e]) => setPromptNames({ step: basename(p?.file_url), ending: basename(e?.file_url) }));
+    ]).then(([p, e]) => setPromptNames({
+      step: p?.title || p?.filename || basename(p?.file_url),
+      ending: basename(e?.file_url),
+    }));
   }, [devMode]);
 
   // 트리거: Ctrl/Cmd+Shift+D 또는 좌상단 구석 3연속 클릭. 끄기는 패널의 "디버깅 창 닫기" 버튼으로도 된다.
@@ -1030,11 +1034,18 @@ export default function AmbientScreen() {
               <span className="text-neutral-500">서버 설정 로드 실패 — 서버(4000/8100) 연결 확인</span>
             )}
           </div>
-          {/* 현재 적용 프롬프트 — 읽기 전용. 교체는 MinIO prompts/ 업로드 + prompt 레코드 갱신(사용자) */}
+          {/* 현재 적용 프롬프트 — 표시는 제목(H1) 우선. 수정은 /prompt-admin 관리 화면에서 한다 */}
           <div className="mt-2 flex flex-wrap items-center gap-2 rounded border border-neutral-300 bg-neutral-50 px-2 py-1.5 text-[11px]">
             <span className="font-semibold">프롬프트</span>
             <span>스텝: <span className="font-mono text-sky-700">{promptNames?.step ?? "로드 중…"}</span></span>
             <span>엔딩: <span className="font-mono text-sky-700">{promptNames?.ending ?? ""}</span></span>
+            <button
+              type="button"
+              onClick={() => window.open("/prompt-admin", "_blank", "noopener")}
+              className="ml-auto rounded border border-sky-300 bg-white px-2 py-0.5 text-sky-700 hover:bg-sky-50"
+            >
+              수정하러 가기 ↗
+            </button>
           </div>
           </>)}
           {/* 세션 지도(항상 표시): 여정 양끝(P0→최종)·픽스 경로·이 세션의 차량 태스크 전체 */}
