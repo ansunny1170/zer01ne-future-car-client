@@ -114,11 +114,15 @@ export function useCarListener({ active, onFinal, lang = "ko-KR" }: UseCarListen
     }
   }, []);
 
+  // 초기화 — 버퍼를 비우고 **인식 세션도 재시작**한다. 세션만 안 끊으면 Chrome continuous
+  // 모드가 이전 인식 결과를 다음 onresult 에 되살려(finalSeenRef·잔여 결과) 초기화 전 발화가
+  // 이어붙는다. restart(인식 세션 안에서 정의)가 그 처리를 다 하므로 위임한다.
   const reset = useCallback(() => {
     bufferRef.current = "";
     interimRef.current = "";
     setPending("");
     setInterim("");
+    restartRef.current(); // 마이크가 열려 있으면 세션 재시작, 아니면 no-op
   }, []);
 
   // ── S/D 키 핸들러 — active 인 동안 항상 붙어 있다(마이크 개방 여부와 무관) ──────────
