@@ -1,9 +1,10 @@
 "use client";
 
-// 섹션 패널 하나 — CodeMirror 편집(⌘F 패널 범위 검색·md 문법·펜스 코드블럭 언어 하이라이팅)
-// 또는 md 미리보기. 헤더에 글자 수·줄 수 실시간 표시.
+// 섹션 패널 하나 — CodeMirror 편집(⌘F 패널 범위 검색·md 문법·펜스 코드블럭 언어 하이라이팅).
+// "미리보기"를 켜면 화면이 바뀌는 게 아니라 패널 안이 좌(편집)/우(렌더) 분할되고,
+// 좌측 타이핑이 실시간으로 우측에 반영된다(대용량 입력 버벅임 방지로 deferred 렌더).
 
-import { useRef, useState } from "react";
+import { useDeferredValue, useRef, useState } from "react";
 import CodeMirror, { type ReactCodeMirrorRef } from "@uiw/react-codemirror";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { languages } from "@codemirror/language-data";
@@ -29,16 +30,15 @@ interface EditorPaneProps {
 }
 
 export function EditorPane({ label, value, onChange, readOnly = false }: EditorPaneProps) {
-    const [mode, setMode] = useState<"edit" | "preview">("edit");
+    const [preview, setPreview] = useState(false); // true = 좌(편집)/우(미리보기) 분할
     const cmRef = useRef<ReactCodeMirrorRef>(null);
     const { chars, lines } = countOf(value);
+    // 타이핑 키입력을 막지 않도록 미리보기는 한 박자 늦은 값으로 렌더한다(실시간 체감 유지)
+    const previewValue = useDeferredValue(value);
 
     const openSearch = () => {
         const view = cmRef.current?.view;
-        if (view) {
-            setMode("edit"); // 검색은 편집 뷰에서만 동작
-            openSearchPanel(view);
-        }
+        if (view) openSearchPanel(view);
     };
 
     return (
@@ -61,14 +61,15 @@ export function EditorPane({ label, value, onChange, readOnly = false }: EditorP
                     </button>
                     <span className="overflow-hidden rounded-md border border-neutral-700 text-[11px]">
                         <button
-                            onClick={() => setMode("edit")}
-                            className={`px-2 py-0.5 ${mode === "edit" ? "bg-neutral-700 text-white" : "text-neutral-400 hover:bg-neutral-800"}`}
+                            onClick={() => setPreview(false)}
+                            className={`px-2 py-0.5 ${!preview ? "bg-neutral-700 text-white" : "text-neutral-400 hover:bg-neutral-800"}`}
                         >
                             원문
                         </button>
                         <button
-                            onClick={() => setMode("preview")}
-                            className={`px-2 py-0.5 ${mode === "preview" ? "bg-neutral-700 text-white" : "text-neutral-400 hover:bg-neutral-800"}`}
+                            onClick={() => setPreview(true)}
+                            title="좌(편집)/우(미리보기) 분할 — 수정이 실시간 반영"
+                            className={`px-2 py-0.5 ${preview ? "bg-neutral-700 text-white" : "text-neutral-400 hover:bg-neutral-800"}`}
                         >
                             미리보기
                         </button>
@@ -76,7 +77,7 @@ export function EditorPane({ label, value, onChange, readOnly = false }: EditorP
                 </span>
             </div>
 
-            {mode === "edit" ? (
+            <div className={preview ? "grid grid-cols-2" : ""}>
                 <CodeMirror
                     ref={cmRef}
                     value={value}
@@ -87,13 +88,17 @@ export function EditorPane({ label, value, onChange, readOnly = false }: EditorP
                     height="max(26rem, calc(100vh - 21rem))"
                     extensions={extensions}
                     basicSetup={{ foldGutter: false, highlightActiveLine: true }}
-                    className="text-xs"
+                    className="min-w-0 text-xs"
                 />
-            ) : (
-                <div className="overflow-y-auto px-4 py-2" style={{ height: "max(26rem, calc(100vh - 21rem))" }}>
-                    <MdPreview text={value} />
-                </div>
-            )}
+                {preview && (
+                    <div
+                        className="min-w-0 overflow-y-auto border-l border-neutral-800 px-4 py-2"
+                        style={{ height: "max(26rem, calc(100vh - 21rem))" }}
+                    >
+                        <MdPreview text={previewValue} />
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
