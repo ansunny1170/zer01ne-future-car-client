@@ -84,13 +84,13 @@ export function EditorPane({ label, value, onChange, readOnly = false }: EditorP
                     readOnly={readOnly || !onChange}
                     editable={!readOnly && !!onChange}
                     theme="dark"
-                    height="26rem"
+                    height="max(26rem, calc(100vh - 21rem))"
                     extensions={extensions}
                     basicSetup={{ foldGutter: false, highlightActiveLine: true }}
                     className="text-xs"
                 />
             ) : (
-                <div className="h-[26rem] overflow-y-auto px-4 py-2">
+                <div className="overflow-y-auto px-4 py-2" style={{ height: "max(26rem, calc(100vh - 21rem))" }}>
                     <MdPreview text={value} />
                 </div>
             )}
