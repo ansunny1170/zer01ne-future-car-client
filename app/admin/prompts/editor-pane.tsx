@@ -31,6 +31,18 @@ interface EditorPaneProps {
 
 export function EditorPane({ label, value, onChange, readOnly = false }: EditorPaneProps) {
     const [preview, setPreview] = useState(false); // true = 좌(편집)/우(미리보기) 분할
+    const [copied, setCopied] = useState(false);
+
+    // 이 패널(칩)의 전체 내용을 클립보드로 — 잠깐 "복사됨"으로 피드백
+    const copyAll = async () => {
+        try {
+            await navigator.clipboard.writeText(value);
+            setCopied(true);
+            window.setTimeout(() => setCopied(false), 1500);
+        } catch {
+            alert("클립보드 복사에 실패했습니다");
+        }
+    };
     const cmRef = useRef<ReactCodeMirrorRef>(null);
     const { chars, lines } = countOf(value);
     // 타이핑 키입력을 막지 않도록 미리보기는 한 박자 늦은 값으로 렌더한다(실시간 체감 유지)
@@ -52,6 +64,15 @@ export function EditorPane({ label, value, onChange, readOnly = false }: EditorP
                     {chars.toLocaleString()}자 · {lines.toLocaleString()}줄
                 </span>
                 <span className="ml-auto flex items-center gap-1">
+                    <button
+                        onClick={copyAll}
+                        title="이 패널의 전체 내용을 클립보드로 복사"
+                        className={`rounded px-2 py-0.5 text-[11px] ${
+                            copied ? "bg-emerald-100 text-emerald-700" : "text-slate-400 hover:bg-slate-100"
+                        }`}
+                    >
+                        {copied ? "✓ 복사됨" : "📋 복사"}
+                    </button>
                     <button
                         onClick={openSearch}
                         title="이 패널 안에서 검색 (⌘F) — 영어 대소문자 구분 없음"
