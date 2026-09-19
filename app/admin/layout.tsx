@@ -22,6 +22,21 @@ const MENU = [
 export default function AdminLayout({ children }: { children: ReactNode }) {
     const pathname = usePathname();
     const [liveTitle, setLiveTitle] = useState<string>("");
+    // 사이드바 접기 — 이 브라우저의 localStorage 에 유지(운영 태블릿·모니터별 취향)
+    const [collapsed, setCollapsed] = useState(false);
+    useEffect(() => {
+        try {
+            setCollapsed(localStorage.getItem("ftcar_admin_sidebar") === "collapsed");
+        } catch { /* noop */ }
+    }, []);
+    const toggleSidebar = () =>
+        setCollapsed((prev) => {
+            const next = !prev;
+            try {
+                localStorage.setItem("ftcar_admin_sidebar", next ? "collapsed" : "open");
+            } catch { /* noop */ }
+            return next;
+        });
 
     // 헤더에 현재 라이브 프롬프트 제목 상시 표시 — 어떤 화면에서도 "지금 뭐가 적용 중인지" 보이게
     useEffect(() => {
@@ -33,33 +48,58 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
     return (
         <div className="flex h-screen w-full bg-slate-50 font-sans text-slate-800">
-            {/* 사이드바 */}
-            <aside className="flex w-60 shrink-0 flex-col border-r border-slate-200 bg-white">
-                <div className="border-b border-slate-100 px-5 py-5">
-                    <div className="text-lg font-bold tracking-tight text-slate-800">FutureCar</div>
-                    <div className="text-xs text-slate-400">전시 운영 관리</div>
+            {/* 사이드바 — 접으면 아이콘 레일만 남는다 */}
+            <aside
+                className={`flex shrink-0 flex-col border-r border-slate-200 bg-white transition-[width] duration-200 ${
+                    collapsed ? "w-16" : "w-60"
+                }`}
+            >
+                <div className={`relative border-b border-slate-100 py-5 ${collapsed ? "px-2" : "px-5"}`}>
+                    <button
+                        type="button"
+                        onClick={toggleSidebar}
+                        aria-label={collapsed ? "메뉴 펼치기" : "메뉴 접기"}
+                        title={collapsed ? "메뉴 펼치기" : "메뉴 접기"}
+                        className={`rounded-lg border border-slate-200 px-2 py-1 text-xs text-slate-500 hover:bg-slate-50 hover:text-slate-700 ${
+                            collapsed ? "mx-auto block" : "absolute right-3 top-4"
+                        }`}
+                    >
+                        {collapsed ? "»" : "«"}
+                    </button>
+                    {!collapsed && (
+                        <>
+                            <div className="text-lg font-bold tracking-tight text-slate-800">FutureCar</div>
+                            <div className="text-xs text-slate-400">전시 운영 관리</div>
+                        </>
+                    )}
                     <Link
                         href="/ambient"
-                        className="mt-3 flex w-fit items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1 text-xs text-slate-500 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700"
+                        title="전시 화면으로"
+                        className={`mt-3 flex items-center gap-1.5 rounded-lg border border-slate-200 text-xs text-slate-500 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700 ${
+                            collapsed ? "mx-auto w-fit px-2 py-1" : "w-fit px-2.5 py-1"
+                        }`}
                     >
-                        ← 전시 화면으로
+                        {collapsed ? "🖥️" : "← 전시 화면으로"}
                     </Link>
                 </div>
-                <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
+                <nav className={`flex-1 space-y-1 overflow-y-auto py-4 ${collapsed ? "px-2" : "px-3"}`}>
                     {MENU.map((m) => {
                         const active = pathname === m.href || (m.href !== "/admin" && pathname.startsWith(m.href));
                         return (
                             <Link
                                 key={m.href}
                                 href={m.href}
-                                className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-colors ${
+                                title={m.label}
+                                className={`flex items-center rounded-xl text-sm font-medium transition-colors ${
+                                    collapsed ? "justify-center px-0 py-2.5" : "gap-3 px-3.5 py-2.5"
+                                } ${
                                     active
                                         ? "bg-sky-50 text-sky-700"
                                         : "text-slate-600 hover:bg-slate-100 hover:text-slate-800"
                                 }`}
                             >
                                 <span aria-hidden className="text-base">{m.icon}</span>
-                                {m.label}
+                                {!collapsed && m.label}
                             </Link>
                         );
                     })}
