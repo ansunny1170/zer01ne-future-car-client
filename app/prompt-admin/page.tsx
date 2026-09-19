@@ -151,8 +151,9 @@ export default function PromptAdminPage() {
     );
 
     return (
-        // 편집 폭 확보를 위해 브라우저 전체 좌우 폭을 쓴다 (중앙 고정 컨테이너 없음)
-        <div className="min-h-screen w-full bg-neutral-950 px-6 py-8 text-neutral-100">
+        // 편집 폭 확보를 위해 브라우저 전체 좌우 폭을 쓴다 (중앙 고정 컨테이너 없음).
+        // 전역(globals.css)이 키오스크용 overflow:hidden 이라 이 페이지는 자체 세로 스크롤을 가진다.
+        <div className="h-screen w-full overflow-y-auto bg-neutral-950 px-6 py-8 text-neutral-100">
             <header className="mb-6 flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold">시나리오 프롬프트 관리</h1>
