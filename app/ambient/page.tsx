@@ -798,6 +798,14 @@ export default function AmbientScreen() {
               <div>또는 좌상단 모서리 3연속 클릭</div>
             </div>
           </div>
+          {/* 관리자 허브 — 프롬프트·LLM·로그·세션을 넓은 화면에서 관리. 새 탭으로 연다 */}
+          <button
+            type="button"
+            onClick={() => window.open("/admin", "_blank", "noopener")}
+            className="w-full rounded bg-sky-700 px-2 py-1 text-[11px] font-semibold hover:bg-sky-600"
+          >
+            관리자 페이지 ↗
+          </button>
           <div className="text-center">
             <div className="text-[10px] text-neutral-400">현재 STEP</div>
             <div className="text-2xl font-bold leading-tight">{stepInfo?.step ?? "-"}</div>

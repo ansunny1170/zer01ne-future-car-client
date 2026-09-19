@@ -101,50 +101,50 @@ export function PromptEditor({ initial, items, busy, onSave, onClose }: PromptEd
     const chipClass = (on: boolean) =>
         `rounded-full border px-3 py-1 text-xs transition-colors ${
             on
-                ? "border-blue-500 bg-blue-600/30 text-blue-200"
-                : "border-neutral-700 text-neutral-400 hover:border-neutral-500"
+                ? "border-sky-500 bg-sky-50 text-sky-700"
+                : "border-slate-300 text-slate-500 hover:border-slate-400"
         }`;
 
     return (
-        <div className="border-b border-neutral-800 bg-neutral-900/70 px-4 py-4">
+        <div className="border-b border-slate-200 bg-slate-50 px-4 py-4">
             {/* 저장 바 */}
             <div className="mb-3 flex flex-wrap items-center gap-2">
-                <span className="text-sm font-semibold text-neutral-300">
+                <span className="text-sm font-semibold text-slate-600">
                     {initial ? `#${initial.id} ${initial.filename} 기반 새 버전` : "새 프롬프트"}
                 </span>
                 <input
                     value={filename}
                     onChange={(e) => setFilename(e.target.value)}
                     placeholder="ambient_step4_v5.md"
-                    className="w-80 rounded-md border border-neutral-700 bg-neutral-950 px-3 py-1.5 font-mono text-sm outline-none focus:border-neutral-400"
+                    className="w-80 rounded-md border border-slate-300 bg-white px-3 py-1.5 font-mono text-sm outline-none focus:border-sky-400"
                 />
                 <input
                     value={memo}
                     onChange={(e) => setMemo(e.target.value)}
                     placeholder="메모 (이 버전의 특징)"
-                    className="min-w-64 flex-1 rounded-md border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-sm outline-none focus:border-neutral-400"
+                    className="min-w-64 flex-1 rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm outline-none focus:border-sky-400"
                 />
-                <span className="text-[11px] text-neutral-500">
+                <span className="text-[11px] text-slate-400">
                     전체 {total.chars.toLocaleString()}자 · {total.lines.toLocaleString()}줄
                 </span>
                 <button
                     onClick={() => setPreviewOpen(true)}
                     disabled={!assembled.trim()}
-                    className="rounded-lg bg-neutral-800 px-3 py-1.5 text-sm hover:bg-neutral-700 disabled:opacity-40"
+                    className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-40"
                 >
                     전체 미리보기
                 </button>
                 <button
                     onClick={onClose}
                     disabled={busy}
-                    className="rounded-lg px-3 py-1.5 text-sm text-neutral-400 hover:bg-neutral-800"
+                    className="rounded-lg px-3 py-1.5 text-sm text-slate-500 hover:bg-slate-100"
                 >
                     닫기
                 </button>
                 <button
                     onClick={save}
                     disabled={busy}
-                    className="rounded-lg bg-blue-600 px-4 py-1.5 text-sm font-semibold hover:bg-blue-500 disabled:opacity-40"
+                    className="rounded-lg bg-blue-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-blue-500 disabled:opacity-40"
                 >
                     저장하고 적용
                 </button>
@@ -163,13 +163,13 @@ export function PromptEditor({ initial, items, busy, onSave, onClose }: PromptEd
                                 {buffers[key].trim() === "" && <span className="ml-1 opacity-50">·비어있음</span>}
                             </button>
                         ))}
-                        <span className="ml-2 text-[11px] text-neutral-600">
+                        <span className="ml-2 text-[11px] text-slate-400">
                             칩을 여러 개 켜면 옆으로 나란히 보며 동시에 수정할 수 있어요
                         </span>
                     </div>
 
                     {selected.length === 0 ? (
-                        <div className="rounded-lg border border-dashed border-neutral-700 px-4 py-8 text-center text-sm text-neutral-500">
+                        <div className="rounded-lg border border-dashed border-slate-300 px-4 py-8 text-center text-sm text-slate-400">
                             위에서 섹션 칩을 선택하세요
                         </div>
                     ) : (
@@ -197,12 +197,12 @@ export function PromptEditor({ initial, items, busy, onSave, onClose }: PromptEd
             ) : (
                 <>
                     <div className="mb-3 flex items-center gap-2">
-                        <span className="text-xs text-neutral-500">
+                        <span className="text-xs text-slate-400">
                             이 버전은 섹션 분할 전(전문 한 덩어리)입니다.
                         </span>
                         <button
                             onClick={splitToSections}
-                            className="rounded-full border border-amber-600 px-3 py-1 text-xs text-amber-400 hover:bg-amber-950"
+                            className="rounded-full border border-amber-400 px-3 py-1 text-xs text-amber-600 hover:bg-amber-50"
                         >
                             섹션으로 나누기 시작 → 전문이 &lsquo;규칙&rsquo;에 담긴 채 열립니다
                         </button>

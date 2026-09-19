@@ -42,34 +42,34 @@ export function EditorPane({ label, value, onChange, readOnly = false }: EditorP
     };
 
     return (
-        <div className="flex min-w-0 flex-col overflow-hidden rounded-lg border border-neutral-700 bg-neutral-950">
-            <div className="flex items-center gap-2 border-b border-neutral-800 bg-neutral-900 px-3 py-1.5">
-                <span className={`text-xs font-semibold ${readOnly ? "text-emerald-400" : "text-neutral-300"}`}>
+        <div className="flex min-w-0 flex-col overflow-hidden rounded-lg border border-slate-300 bg-white">
+            <div className="flex items-center gap-2 border-b border-slate-200 bg-white px-3 py-1.5">
+                <span className={`text-xs font-semibold ${readOnly ? "text-emerald-600" : "text-slate-600"}`}>
                     {label}
-                    {readOnly && <span className="ml-1 font-normal text-neutral-500">(읽기 전용)</span>}
+                    {readOnly && <span className="ml-1 font-normal text-slate-400">(읽기 전용)</span>}
                 </span>
-                <span className="text-[11px] text-neutral-500">
+                <span className="text-[11px] text-slate-400">
                     {chars.toLocaleString()}자 · {lines.toLocaleString()}줄
                 </span>
                 <span className="ml-auto flex items-center gap-1">
                     <button
                         onClick={openSearch}
                         title="이 패널 안에서 검색 (⌘F) — 영어 대소문자 구분 없음"
-                        className="rounded px-2 py-0.5 text-[11px] text-neutral-400 hover:bg-neutral-800"
+                        className="rounded px-2 py-0.5 text-[11px] text-slate-500 hover:bg-slate-100"
                     >
                         🔍 검색
                     </button>
-                    <span className="overflow-hidden rounded-md border border-neutral-700 text-[11px]">
+                    <span className="overflow-hidden rounded-md border border-slate-300 text-[11px]">
                         <button
                             onClick={() => setPreview(false)}
-                            className={`px-2 py-0.5 ${!preview ? "bg-neutral-700 text-white" : "text-neutral-400 hover:bg-neutral-800"}`}
+                            className={`px-2 py-0.5 ${!preview ? "bg-slate-600 text-white" : "text-slate-500 hover:bg-slate-100"}`}
                         >
                             원문
                         </button>
                         <button
                             onClick={() => setPreview(true)}
                             title="좌(편집)/우(미리보기) 분할 — 수정이 실시간 반영"
-                            className={`px-2 py-0.5 ${preview ? "bg-neutral-700 text-white" : "text-neutral-400 hover:bg-neutral-800"}`}
+                            className={`px-2 py-0.5 ${preview ? "bg-slate-600 text-white" : "text-slate-500 hover:bg-slate-100"}`}
                         >
                             미리보기
                         </button>
@@ -92,7 +92,7 @@ export function EditorPane({ label, value, onChange, readOnly = false }: EditorP
                 />
                 {preview && (
                     <div
-                        className="min-w-0 overflow-y-auto border-l border-neutral-800 px-4 py-2"
+                        className="min-w-0 overflow-y-auto border-l border-slate-200 px-4 py-2"
                         style={{ height: "max(26rem, calc(100vh - 21rem))" }}
                     >
                         <MdPreview text={previewValue} />
