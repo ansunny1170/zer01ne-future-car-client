@@ -293,15 +293,18 @@ export default function AmbientScreen() {
         }
       })
       .catch(() => {});
-    // 현재 적용 프롬프트 — 스텝은 본문 첫 H1 제목(title) 우선, 없으면 파일명.
-    // (구 MinIO 레코드 호환으로 file_url 파일명 폴백 유지 — 신규 레코드는 file_url 이 null 이다)
+    // 현재 적용 프롬프트 — 제목(H1) 우선, 없으면 파일명. 엔딩(일기)도 신시스템(kind=ending)
+    // 우선이고, 아직 레코드가 없으면 구 ending-reflection-prompt 테이블 파일명으로 폴백한다.
     const basename = (u?: string) => (u ? decodeURIComponent(u.split("/").pop() || u) : "?");
+    const nameOf = (p: { title?: string; filename?: string; file_url?: string } | null) =>
+      p?.title || p?.filename || basename(p?.file_url);
     Promise.all([
       fetch(`${API}/prompt/latest`).then((r) => (r.ok ? r.json() : null)).catch(() => null),
+      fetch(`${API}/prompt/latest?kind=ending`).then((r) => (r.ok ? r.json() : null)).catch(() => null),
       fetch(`${API}/ending-reflection-prompt/latest`).then((r) => (r.ok ? r.json() : null)).catch(() => null),
-    ]).then(([p, e]) => setPromptNames({
-      step: p?.title || p?.filename || basename(p?.file_url),
-      ending: basename(e?.file_url),
+    ]).then(([p, en, legacy]) => setPromptNames({
+      step: nameOf(p),
+      ending: en ? nameOf(en) : basename(legacy?.file_url),
     }));
   }, [devMode]);
 

@@ -27,6 +27,8 @@ type ChipKey = typeof FULL_KEY | SectionKey;
 interface PromptEditorProps {
     /** 기반 버전의 본문 — null 이면 빈 새 프롬프트 */
     initial: PromptContent | null;
+    /** true = 섹션 분할 없이 규칙 단일 패널만 (일기·엔딩 프롬프트) */
+    plainOnly?: boolean;
     items: PromptMeta[]; // 파일명 vN+1 계산·중복 검사용
     busy: boolean;
     onSave: (payload: {
@@ -38,10 +40,10 @@ interface PromptEditorProps {
     onClose: () => void;
 }
 
-export function PromptEditor({ initial, items, busy, onSave, onClose }: PromptEditorProps) {
-    const hasSections = (initial?.sections.length ?? 0) > 0;
+export function PromptEditor({ initial, items, busy, onSave, onClose, plainOnly = false }: PromptEditorProps) {
+    const hasSections = !plainOnly && (initial?.sections.length ?? 0) > 0;
 
-    // sectioned = 섹션 분할 편집 / plain = 전문 한 덩어리 (구 레코드·새 프롬프트 초기 상태)
+    // sectioned = 섹션 분할 편집 / plain = 전문 한 덩어리 (구 레코드·새 프롬프트·plainOnly)
     const [sectioned, setSectioned] = useState(hasSections);
     const [buffers, setBuffers] = useState<SectionBuffers>(() => {
         const b = emptyBuffers();
@@ -196,18 +198,20 @@ export function PromptEditor({ initial, items, busy, onSave, onClose }: PromptEd
                 </>
             ) : (
                 <>
-                    <div className="mb-3 flex items-center gap-2">
-                        <span className="text-xs text-slate-400">
-                            이 버전은 섹션 분할 전(전문 한 덩어리)입니다.
-                        </span>
-                        <button
-                            onClick={splitToSections}
-                            className="rounded-full border border-amber-400 px-3 py-1 text-xs text-amber-600 hover:bg-amber-50"
-                        >
-                            섹션으로 나누기 시작 → 전문이 &lsquo;규칙&rsquo;에 담긴 채 열립니다
-                        </button>
-                    </div>
-                    <EditorPane label="전문" value={plainText} onChange={setPlainText} />
+                    {!plainOnly && (
+                        <div className="mb-3 flex items-center gap-2">
+                            <span className="text-xs text-slate-400">
+                                이 버전은 섹션 분할 전(전문 한 덩어리)입니다.
+                            </span>
+                            <button
+                                onClick={splitToSections}
+                                className="rounded-full border border-amber-400 px-3 py-1 text-xs text-amber-600 hover:bg-amber-50"
+                            >
+                                섹션으로 나누기 시작 → 전문이 &lsquo;규칙&rsquo;에 담긴 채 열립니다
+                            </button>
+                        </div>
+                    )}
+                    <EditorPane label={plainOnly ? "규칙" : "전문"} value={plainText} onChange={setPlainText} />
                 </>
             )}
 

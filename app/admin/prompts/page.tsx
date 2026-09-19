@@ -10,7 +10,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { BASE_API_LINK } from "@/constants";
 
 import { PromptEditor } from "./prompt-editor";
-import { fmtDate, type PromptContent, type PromptMeta } from "./sections";
+import { KIND_LABELS, fmtDate, type PromptContent, type PromptKind, type PromptMeta } from "./sections";
 
 const API = BASE_API_LINK.replace(/\/+$/, "");
 
@@ -24,12 +24,14 @@ export default function PromptAdminPage() {
     const [busy, setBusy] = useState(false);
     const [editor, setEditor] = useState<EditorSlot | null>(null);
     const [memoDrafts, setMemoDrafts] = useState<Record<number, string>>({});
+    // 프롬프트 용도 탭 — scenario(스텝 생성) / ending(일기·엔딩 리플렉션, 규칙 단일 패널)
+    const [kind, setKind] = useState<PromptKind>("scenario");
 
     const active = useMemo(() => items.find((i) => i.active) ?? null, [items]);
 
     const refresh = useCallback(async () => {
         try {
-            const r = await fetch(`${API}/prompt`, { cache: "no-store" });
+            const r = await fetch(`${API}/prompt?kind=${kind}`, { cache: "no-store" });
             if (!r.ok) throw new Error(`목록 조회 실패 (${r.status})`);
             setItems(await r.json());
             setError("");
@@ -38,9 +40,11 @@ export default function PromptAdminPage() {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [kind]);
 
     useEffect(() => {
+        setEditor(null); // 탭 전환 시 열려 있던 편집기는 닫는다(다른 kind 기반이므로)
+        setLoading(true);
         refresh();
     }, [refresh]);
 
@@ -85,7 +89,7 @@ export default function PromptAdminPage() {
             const r = await fetch(`${API}/prompt/text`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
+                body: JSON.stringify({ ...payload, kind }),
             });
             if (!r.ok) {
                 const detail = (await r.json().catch(() => null))?.detail;
@@ -141,7 +145,8 @@ export default function PromptAdminPage() {
 
     const editorNode = editor && (
         <PromptEditor
-            key={editor.anchorId ?? "new"}
+            key={`${kind}-${editor.anchorId ?? "new"}`}
+            plainOnly={kind === "ending"}
             initial={editor.initial}
             items={items}
             busy={busy}
@@ -155,7 +160,7 @@ export default function PromptAdminPage() {
         <div className="w-full">
             <header className="mb-6 flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold">시나리오 프롬프트 관리</h1>
+                    <h1 className="text-2xl font-bold">프롬프트 관리</h1>
                     <p className="mt-1 text-sm text-slate-500">
                         저장·재적용은 다음 여정(세션)부터 반영됩니다. 진행 중 여정은 영향 없음.
                     </p>
@@ -168,6 +173,21 @@ export default function PromptAdminPage() {
                     ＋ 새 프롬프트
                 </button>
             </header>
+
+            {/* 용도 탭 — 시나리오 / 일기(엔딩) */}
+            <div className="mb-5 flex w-fit overflow-hidden rounded-xl border border-slate-200 bg-white p-1">
+                {(Object.keys(KIND_LABELS) as PromptKind[]).map((k) => (
+                    <button
+                        key={k}
+                        onClick={() => setKind(k)}
+                        className={`rounded-lg px-4 py-1.5 text-sm font-medium transition-colors ${
+                            kind === k ? "bg-sky-600 text-white" : "text-slate-500 hover:bg-slate-100"
+                        }`}
+                    >
+                        {KIND_LABELS[k]}
+                    </button>
+                ))}
+            </div>
 
             {error && (
                 <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
