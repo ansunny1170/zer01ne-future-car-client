@@ -38,6 +38,12 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                 <div className="border-b border-slate-100 px-5 py-5">
                     <div className="text-lg font-bold tracking-tight text-slate-800">FutureCar</div>
                     <div className="text-xs text-slate-400">전시 운영 관리</div>
+                    <Link
+                        href="/ambient"
+                        className="mt-3 flex w-fit items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1 text-xs text-slate-500 hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700"
+                    >
+                        ← 전시 화면으로
+                    </Link>
                 </div>
                 <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
                     {MENU.map((m) => {
@@ -58,9 +64,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                         );
                     })}
                 </nav>
-                <div className="border-t border-slate-100 px-5 py-4 text-xs text-slate-400">
-                    <Link href="/ambient" className="hover:text-slate-600">← 전시 화면으로</Link>
-                </div>
             </aside>
 
             {/* 본문 */}
