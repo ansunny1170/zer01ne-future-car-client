@@ -16,14 +16,19 @@ export default function ListenIndicator({ state }: { state: CarListenerState }) 
   if (status === "off" || status === "unsupported") return null;
 
   const isError = status === "error";
-  // 듣는 중: 중간 자막 > 전송 대기(디바운스) 중인 누적 발화 > 안내 문구 순으로 보여 준다.
+  // armed-off: 관람객 차례지만 아직 S 를 안 눌렀다 — "S 눌러 말하기" 안내.
+  // 듣는 중: 중간 자막 > 누적 발화(+D 전송 힌트) > 안내 문구 순으로 보여 준다.
   const label = isError
     ? `마이크 오류: ${error ?? "알 수 없음"}`
-    : status === "paused"
-      ? lastFinal
-        ? `전송됨 · "${lastFinal}"`
-        : "잠시만요…"
-      : interim || (pending ? `"${pending}"` : "듣고 있어요. 편하게 말씀해 주세요.");
+    : status === "armed-off"
+      ? "S 키를 눌러 말씀해 주세요."
+      : status === "paused"
+        ? lastFinal
+          ? `전송됨 · "${lastFinal}"`
+          : "잠시만요…"
+        : interim || pending
+          ? `${interim || pending}  —  D 키로 전송`
+          : "듣고 있어요. 편하게 말씀하고, 끝나면 D 키를 누르세요.";
 
   return (
     <AnimatePresence>
@@ -45,6 +50,7 @@ export default function ListenIndicator({ state }: { state: CarListenerState }) 
             className={cn(
               "inline-block h-3 w-3 shrink-0 rounded-full",
               status === "listening" && "animate-pulse bg-[#9DE6FF]",
+              status === "armed-off" && "bg-[#9DE6FF]/60",
               status === "paused" && "bg-[#9DE6FF]/40",
               isError && "bg-red-400",
             )}

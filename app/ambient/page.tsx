@@ -5,8 +5,9 @@
  *
  * classic(`/`)과 달리 질문 UI 가 없다. 태블릿이 MQTT 로 enter/exit 만 보내고, 서버는 그 결과를
  * WS 로 이 화면에 push 한다. **스텝 진행은 이 화면에 연결된 마이크가 이끈다** — 대기 화면과
- * 각 스텝 렌더 완료 뒤에 관람객 발화를 STT 해 `POST /ambient/utterance` 로 보내면 서버가
- * 다음 스텝을 생성한다(useCarListener). 재생 중에는 자기수신을 막기 위해 마이크를 닫는다.
+ * 각 스텝 렌더 완료 뒤(관람객 차례)에 운영자가 **S 키로 마이크를 열어** 관람객 발화를 STT 하고
+ * **D 키로 전송**하면(`POST /ambient/utterance`) 서버가 다음 스텝을 생성한다(useCarListener).
+ * 렌더 중에는 S 를 눌러도 마이크가 열리지 않는다(자기수신 방지).
  *
  * session_id 는 두 가지 모드로 정해진다:
  * - 고정 세션 모드: ?sid= 쿼리가 있으면 `/ws/futurecar/{sid}` 로 접속해 그 세션만 받는다.
@@ -31,9 +32,9 @@ import TabletSimModal from "@/components/ui/tablet-sim-modal";
 import DevLogPanel from "@/components/dev/dev-log-panel";
 import HyundaiLoading from "@/components/ui/hyundai-loading";
 import { appendDevLog } from "@/utils/devLog";
-import { BASE_API_LINK, BASE_S3_LINK, SEND_DELAY_STORAGE_KEY, STANDBY_VIDEO, STANDBY_VIDEO_STORAGE_KEY, resolveMediaUrl } from "@/constants";
+import { BASE_API_LINK, BASE_S3_LINK, STANDBY_VIDEO, STANDBY_VIDEO_STORAGE_KEY, resolveMediaUrl } from "@/constants";
 import { cn } from "@/utils/cn";
-import { SEND_DELAY_MS, useCarListener } from "@/hooks/useCarListener";
+import { useCarListener } from "@/hooks/useCarListener";
 import ListenIndicator from "@/components/ambient/listen-indicator";
 import CloneTalkSplit from "@/components/ui/clone-talk-split";
 
@@ -41,7 +42,7 @@ import CloneTalkSplit from "@/components/ui/clone-talk-split";
 const TOTAL_STEPS = 3; // 스토리라인(2026-09-13): s1 선픽스 → s2 충전소 무인 → s3 경유지+최종
 
 // standby: exit ~ 다음 enter 사이(그리고 plan 만 온 idle, 세션이 아직 없을 때)의 대기 화면. 글자 없이 조용히.
-// waiting: enter 뒤 ~ step1 전. 마이크가 열려 있고 관람객이 "출발 할까요?" 에 답하는 구간 — 환영 문구 없음.
+// waiting: enter 뒤 ~ step1 전. 관람객 차례(S 키로 마이크 열림) 구간 — 환영 문구 없음.
 // ending:  마지막 step 의 asset 재생이 끝난 뒤(state arrived · next=exit) 보여주는 고정 엔딩. exit 가 오면 standby 로.
 type Screen = "standby" | "waiting" | "step" | "ending";
 
@@ -152,29 +153,7 @@ export default function AmbientScreen() {
     setStandbyVideo(v || STANDBY_VIDEO);
     setStandbyDraft("");
   };
-  // 발화 전송 딜레이(ms) — 값이 없으면 useCarListener 기본(SEND_DELAY_MS). 이 브라우저의 localStorage 에 저장(현장 설정).
-  const [sendDelayMs, setSendDelayMs] = useState<number | undefined>(undefined);
-  const [sendDelayDraft, setSendDelayDraft] = useState("");
-  useEffect(() => {
-    try {
-      const saved = Number(localStorage.getItem(SEND_DELAY_STORAGE_KEY));
-      if (Number.isFinite(saved) && saved > 0) setSendDelayMs(saved);
-    } catch {
-      /* 접근 불가 환경 — 기본값 유지 */
-    }
-  }, []);
-  const applySendDelay = (raw: string) => {
-    const n = Number(raw.trim());
-    const valid = raw.trim() !== "" && Number.isFinite(n) && n > 0;
-    try {
-      if (valid) localStorage.setItem(SEND_DELAY_STORAGE_KEY, String(n));
-      else localStorage.removeItem(SEND_DELAY_STORAGE_KEY);
-    } catch {
-      /* noop */
-    }
-    setSendDelayMs(valid ? n : undefined);
-    setSendDelayDraft("");
-  };
+  // (2026-09-19) 발화 전송이 침묵 디바운스 → S/D 수동 조작으로 바뀌어 '발화 딜레이' 설정은 제거됐다.
   // LLM 모델·옵션 — 다른 현장 설정과 달리 localStorage 가 아니라 **서버 런타임 값**이다
   // (GET/PUT /ambient/llm-config). 즉시 반영되고, 서버 컨테이너 재시작 시 env 기본값으로 복귀.
   type LlmConfig = { model: string; reasoning_effort: string; verbosity: string };
@@ -630,7 +609,7 @@ export default function AmbientScreen() {
     },
     [sid],
   );
-  const listener = useCarListener({ active: visitorTurn && !!controlSid, onFinal: sendUtterance, sendDelayMs });
+  const listener = useCarListener({ active: visitorTurn && !!controlSid, onFinal: sendUtterance });
 
   return (
     <div className="w-full h-full min-h-screen overflow-hidden bg-black text-white">
@@ -941,37 +920,15 @@ export default function AmbientScreen() {
               기본값
             </button>
           </div>
-          {/* 현장 설정: 발화 전송 딜레이(ms) — 이 브라우저에 저장, 즉시 반영. 비우면 기본 SEND_DELAY_MS */}
+          {/* 마이크 조작 안내(2026-09-19: 자동 마이크 → S/D 수동 전환). 렌더 완료 후에만 S 가 먹는다. */}
           <div className="mt-2 flex flex-wrap items-center gap-2 rounded border border-neutral-300 bg-neutral-50 px-2 py-1.5 text-[11px]">
-            <span className="font-semibold">발화 딜레이</span>
-            <span className="font-mono text-sky-700">{sendDelayMs ?? SEND_DELAY_MS}ms</span>
-            {sendDelayMs !== undefined && <span className="text-neutral-500">(기본 {SEND_DELAY_MS})</span>}
-            <input
-              value={sendDelayDraft}
-              onChange={(e) => setSendDelayDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") applySendDelay(sendDelayDraft);
-              }}
-              placeholder="ms"
-              inputMode="numeric"
-              className="w-20 rounded border border-neutral-300 px-1.5 py-0.5 font-mono"
-            />
-            <button
-              type="button"
-              onClick={() => applySendDelay(sendDelayDraft)}
-              disabled={!sendDelayDraft.trim()}
-              className="rounded bg-sky-700 px-2 py-0.5 font-semibold text-white disabled:bg-neutral-300"
-            >
-              적용
-            </button>
-            <button
-              type="button"
-              onClick={() => applySendDelay("")}
-              disabled={sendDelayMs === undefined}
-              className="rounded bg-neutral-200 px-2 py-0.5 disabled:opacity-40"
-            >
-              기본값
-            </button>
+            <span className="font-semibold">마이크</span>
+            <span className="font-mono text-sky-700">{listener.status}</span>
+            <span className="text-neutral-600">
+              <kbd className="rounded bg-neutral-200 px-1">S</kbd> 말하기(열기·재녹음) ·
+              <kbd className="ml-1 rounded bg-neutral-200 px-1">D</kbd> 전송
+            </span>
+            <span className="text-neutral-400">— 에셋 렌더 완료 후에만 S 반응</span>
           </div>
           {/* 현장 설정: 소리 뮤트 — 화면의 모든 출력 음소거. 뮤트면 우상단에 아이콘이 상시 표시된다. */}
           <div className="mt-2 flex flex-wrap items-center gap-2 rounded border border-neutral-300 bg-neutral-50 px-2 py-1.5 text-[11px]">
