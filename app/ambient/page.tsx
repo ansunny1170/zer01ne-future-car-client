@@ -36,6 +36,7 @@ import { BASE_API_LINK, BASE_S3_LINK, STANDBY_VIDEO, STANDBY_VIDEO_STORAGE_KEY, 
 import { cn } from "@/utils/cn";
 import { useCarListener } from "@/hooks/useCarListener";
 import ListenIndicator from "@/components/ambient/listen-indicator";
+import NoticePopup, { type NoticeMsg } from "@/components/ambient/notice-popup";
 import CloneTalkSplit from "@/components/ui/clone-talk-split";
 
 // 서버와 같은 고정 스텝 수. 마지막 스텝 뒤에는 질문이 없으므로 마이크도 열지 않는다.
@@ -75,6 +76,8 @@ export default function AmbientScreen() {
   const [connected, setConnected] = useState(false);
   const [screen, setScreen] = useState<Screen>("standby");
   const [lastError, setLastError] = useState<ErrorMsg | null>(null);
+  // 서버 단발 알림(수소충전 게이트 등) — 받을 때마다 NoticePopup 이 3초 띄우고 스스로 닫는다.
+  const [notice, setNotice] = useState<NoticeMsg | null>(null);
   // 관람객 차례(마이크 열림): 대기 화면, 스텝 렌더 완료 뒤 ~ 다음 step 수신 전, 서버 error 뒤.
   const [visitorTurn, setVisitorTurn] = useState(false);
   // 차 화면 환영 대사 — 서버가 경로 픽스 후 waiting state 에 실어 보낸다(태블릿 AI 가 차로 이어지는 연출).
@@ -416,6 +419,10 @@ export default function AmbientScreen() {
             // 생성 실패 등 — 관람객이 다시 말하면 서버가 재시도하므로 마이크를 다시 연다
             setVisitorTurn(true);
             break;
+          case "notice":
+            // 단발 알림(수소충전 게이트 등) — 매번 새 객체로 넣어 NoticePopup 이 재트리거된다
+            setNotice({ ...(msg as unknown as NoticeMsg) });
+            break;
           default:
             console.warn("[ambient] unknown message type", msg);
         }
@@ -614,6 +621,7 @@ export default function AmbientScreen() {
   return (
     <div className="w-full h-full min-h-screen overflow-hidden bg-black text-white">
       <ListenIndicator state={listener} />
+      <NoticePopup notice={notice} />
       {/* 소리 뮤트 표시(표시 전용) — 뮤트면 디버그 여부와 무관하게 항상 보이고, 아니면 없다.
           토글은 디버그 설정창의 "소리" 행에서만 한다(화면 오터치 방지). */}
       {muted && (
