@@ -32,7 +32,7 @@ import TabletSimModal from "@/components/ui/tablet-sim-modal";
 import DevLogPanel from "@/components/dev/dev-log-panel";
 import HyundaiLoading from "@/components/ui/hyundai-loading";
 import { appendDevLog } from "@/utils/devLog";
-import { BASE_API_LINK, BASE_S3_LINK, STANDBY_VIDEO, STANDBY_VIDEO_STORAGE_KEY, resolveMediaUrl } from "@/constants";
+import { BASE_API_LINK, BASE_S3_LINK, STANDBY_VIDEO, STANDBY_VIDEO_STORAGE_KEY, BG_VIDEO_MUTE_STORAGE_KEY, resolveMediaUrl } from "@/constants";
 import { cn } from "@/utils/cn";
 import { useCarListener } from "@/hooks/useCarListener";
 import ListenIndicator from "@/components/ambient/listen-indicator";
@@ -78,8 +78,22 @@ export default function AmbientScreen() {
   const [lastError, setLastError] = useState<ErrorMsg | null>(null);
   // 서버 단발 알림(수소충전 게이트 등) — 받을 때마다 NoticePopup 이 3초 띄우고 스스로 닫는다.
   const [notice, setNotice] = useState<NoticeMsg | null>(null);
+  // 수소충전 게이트 래치 — 게이트 진입(sticky 팝업 등장)부터 **다음 step(step2) 도착 전까지** true.
+  // 게이트 중에는 발화 유도(마이크·질문 UI)를 전면 차단한다: step1 의 질문을 화면에 띄우지 않고,
+  // S 를 눌러도 마이크가 열리지 않으며, "S 눌러 말하기" 안내도 감춘다.
+  // 주의: 팝업이 clear 되는 순간(완료 대행 직후)이 아니라, 실제로 step2 가 도착할 때 풀어야 한다.
+  // clear 시점에 풀면 step2 생성 전 짧은 틈에 step1 질문·마이크 UI 가 튀어나온다(관측된 버그).
+  const [gateLatched, setGateLatched] = useState(false);
+  // sticky 팝업이 뜨면 래치를 건다. clear(active=false)로는 풀지 않는다 — step 수신에서만 푼다.
+  const handleStickyChange = useCallback((active: boolean) => {
+    if (active) setGateLatched(true);
+  }, []);
   // 관람객 차례(마이크 열림): 대기 화면, 스텝 렌더 완료 뒤 ~ 다음 step 수신 전, 서버 error 뒤.
   const [visitorTurn, setVisitorTurn] = useState(false);
+  // 게이트가 걸리면 이미 열려 있던 관람객 차례(마이크)를 즉시 닫는다.
+  useEffect(() => {
+    if (gateLatched) setVisitorTurn(false);
+  }, [gateLatched]);
   // 차 화면 환영 대사 — 서버가 경로 픽스 후 waiting state 에 실어 보낸다(태블릿 AI 가 차로 이어지는 연출).
   const [greeting, setGreeting] = useState<string | null>(null);
   // 엔딩 화면에 보여줄 최종 목적지(한글) — next=exit state 의 next_place 에서 받는다.
@@ -156,6 +170,39 @@ export default function AmbientScreen() {
     setStandbyVideo(v || STANDBY_VIDEO);
     setStandbyDraft("");
   };
+  // ── 배경 영상 음소거 (2026-09-20) ─────────────────────────────────────────────
+  // 배경 영상들(대기 en6.mp4, 인트로 intro1_1.mp4, 스텝 배경)에 박힌 미래차 설명 내레이션이
+  // 새로고침·복제 재시작마다 흘러나오는 문제. 기본 무음(true)이며, 디버깅 설정 패널 버튼으로
+  // 켜고 끈다. 이 브라우저 localStorage 에 저장(현장 설정).
+  // ⚠️ React 의 <video muted> prop 은 DOM 의 muted 프로퍼티에 실제로 안 먹는 알려진 버그가 있어
+  // (JSX muted 만으로는 소리가 남), 대기 영상은 ref 로, 배경 영상은 StepVideoPlayer 내부 ref 로
+  // muted 를 직접 박는다.
+  const [bgVideoMuted, setBgVideoMuted] = useState(true);
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(BG_VIDEO_MUTE_STORAGE_KEY);
+      if (saved !== null) setBgVideoMuted(saved === "true");
+    } catch {
+      /* 접근 불가 — 기본 무음 유지 */
+    }
+  }, []);
+  const toggleBgVideoMuted = () => {
+    setBgVideoMuted((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(BG_VIDEO_MUTE_STORAGE_KEY, String(next));
+      } catch {
+        /* noop */
+      }
+      return next;
+    });
+  };
+  // 대기 영상도 같은 설정을 따른다 — ref 로 muted 강제(JSX prop 버그 회피).
+  const standbyVideoRef = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    const el = standbyVideoRef.current;
+    if (el) el.muted = bgVideoMuted;
+  }, [standbyVideo, screen, bgVideoMuted]);
   // (2026-09-19) 발화 전송이 침묵 디바운스 → S/D 수동 조작으로 바뀌어 '발화 딜레이' 설정은 제거됐다.
   // LLM 모델·옵션 — 다른 현장 설정과 달리 localStorage 가 아니라 **서버 런타임 값**이다
   // (GET/PUT /ambient/llm-config). 즉시 반영되고, 서버 컨테이너 재시작 시 env 기본값으로 복귀.
@@ -232,6 +279,8 @@ export default function AmbientScreen() {
   });
   // 디버그 재시작 버튼 상태 (idle → 요청 중 → 결과)
   const [restartState, setRestartState] = useState<PublishState | "busy">("idle");
+  // 수소충전 완료 대행 버튼 상태 (태블릿 없이 게이트 해제)
+  const [hydrogenState, setHydrogenState] = useState<PublishState | "busy">("idle");
   // 디버그 재시작 대상 세션 선택 — 서버 GET /ambient/sessions (plan 보유, 2026-08 이후만) 목록.
   // 빈 값이면 기존처럼 자동(추종 중인 세션 또는 최근 세션).
   const [sessionChoices, setSessionChoices] = useState<
@@ -387,6 +436,7 @@ export default function AmbientScreen() {
             setScreen("step");
             setVisitorTurn(false); // 재생 시작 — 우리 소리를 받아 적지 않도록 마이크를 닫는다
             setStepQuestionActive(false); // 직전 질문 구간 종료 — 폴백 타이머 오발동 방지
+            setGateLatched(false); // 다음 step(step2) 도착 — 수소충전 게이트 해제
             if (stepMicFallback.current) {
               clearTimeout(stepMicFallback.current);
               stepMicFallback.current = null;
@@ -398,6 +448,7 @@ export default function AmbientScreen() {
               reStart();
               setScreen("standby");   // plan 만 도착 — enter 전. 조용한 대기 화면
               setVisitorTurn(false);
+              setGateLatched(false);  // 새 여정 — 게이트 래치 초기화
               setGreeting(null);
             } else if (msg.phase === "waiting") {
               setScreen("waiting");
@@ -417,6 +468,7 @@ export default function AmbientScreen() {
             } else if (msg.phase === "done") {
               setScreen("standby");   // exit(또는 태블릿 종료) — 다음 탑승까지 대기
               setVisitorTurn(false);
+              setGateLatched(false);
             } else if (msg.phase === "arrived" && msg.next === "exit") {
               // 마지막 step 재생 완료 — 서버가 next=exit 를 실어 보내는 유일한 지점.
               // 태블릿이 exit 버튼을 켜는 동안 화면은 고정 엔딩을 보여준다.
@@ -495,6 +547,31 @@ export default function AmbientScreen() {
         setTimeout(() => {
           setPublishState((prev) => ({ ...prev, [type]: "idle" }));
         }, 1200);
+      });
+  };
+
+  // 디버그: 태블릿 대행으로 수소충전(modal) 태스크를 완료 처리 → 서버가 게이트를 풀고 step2 를 생성한다.
+  // 실제 태블릿 완료와 동일 경로(POST /mqtt/complete-task)이며 공용 브로커 발행은 하지 않는다.
+  const completeHydrogen = () => {
+    if (!controlSid || hydrogenState === "busy") return;
+    const API = BASE_API_LINK.replace(/\/+$/, "");
+    setHydrogenState("busy");
+    fetch(`${API}/mqtt/complete-task`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ session_id: controlSid, type: "hydrogen_charging" }),
+    })
+      .then((res) => res.json())
+      .then((body: { ok?: boolean; error?: string }) => {
+        if (!body.ok) throw new Error(body.error ?? "실패");
+        setHydrogenState("success");
+      })
+      .catch((err) => {
+        console.error("[ambient] 수소충전 완료 대행 실패", err);
+        setHydrogenState("error");
+      })
+      .finally(() => {
+        setTimeout(() => setHydrogenState("idle"), 1600);
       });
   };
 
@@ -629,12 +706,13 @@ export default function AmbientScreen() {
     },
     [sid],
   );
-  const listener = useCarListener({ active: visitorTurn && !!controlSid, onFinal: sendUtterance });
+  // 게이트(수소충전 sticky 알림) 중에는 마이크·발화 UI 를 열지 않는다.
+  const listener = useCarListener({ active: visitorTurn && !!controlSid && !gateLatched, onFinal: sendUtterance });
 
   return (
     <div className="w-full h-full min-h-screen overflow-hidden bg-black text-white">
       <ListenIndicator state={listener} />
-      <NoticePopup notice={notice} />
+      <NoticePopup notice={notice} onStickyChange={handleStickyChange} />
       {/* 소리 뮤트 표시(표시 전용) — 뮤트면 디버그 여부와 무관하게 항상 보이고, 아니면 없다.
           토글은 M 키 또는 디버그창 상단 음소거 버튼으로만 한다(화면 오터치 방지). */}
       {muted && (
@@ -649,7 +727,7 @@ export default function AmbientScreen() {
       {/* 스텝 질문을 clone talk 자리에 표시 — 렌더 완료(visitorTurn) 후 관람객 발화가
           서버에 수집되기 전(paused 전)까지 유지한다. 태블릿 없이 화면만 보고도
           무엇에 답할지 알 수 있게. 다음 step 이 오면 visitorTurn 이 꺼져 사라진다. */}
-      {screen === "step" && stepQuestionActive && !questionDismissed && stepInfo?.question && (
+      {screen === "step" && stepQuestionActive && !questionDismissed && !gateLatched && stepInfo?.question && (
         <CloneTalkSplit
           key={`q-${stepInfo.step}`}
           text={stepInfo.question}
@@ -663,7 +741,7 @@ export default function AmbientScreen() {
         />
       )}
       {/* ambient 모드: 키 입력 없이 즉시 재생, 전 스텝 루프, 두 번째 재생부터 블러 */}
-      <StepVideoPlayer ambient />
+      <StepVideoPlayer ambient bgMuted={bgVideoMuted} />
       <StepAudioPlayer />
 
       {/* classic(`/`)과 같은 고정 프레임·HUD. step 연출 중에만 띄운다 — 대기/작별 화면은
@@ -691,10 +769,16 @@ export default function AmbientScreen() {
                 무음으로 무한 반복한다. 관람객에게 보이는 글자는 두지 않는다. 영상 로드 실패 시 로더만 남는다. */}
             <video
               key={standbyVideoUrl}
+              // 대기 영상 음소거는 "배경 영상 음소거" 설정(bgVideoMuted)을 따른다. JSX muted 만으로는
+              // React 버그로 소리가 남아서, 노드가 붙는 즉시(콜백 ref, paint 전) el.muted 를 강제한다.
+              ref={(el) => {
+                standbyVideoRef.current = el;
+                if (el) el.muted = bgVideoMuted;
+              }}
               src={standbyVideoUrl}
               autoPlay
               loop
-              muted
+              muted={bgVideoMuted}
               playsInline
               preload="auto"
               className="absolute inset-0 h-full w-full object-cover"
@@ -893,6 +977,31 @@ export default function AmbientScreen() {
               </button>
             );
           })}
+          <div className="my-0.5 h-px bg-neutral-700" />
+          {/* 태블릿 대행: 수소충전 게이트 해제. step1 후 sticky 팝업이 떠 있을 때 누르면
+              서버가 완료를 감지해 팝업을 내리고 step2 를 생성한다. */}
+          <button
+            type="button"
+            disabled={!controlSid || hydrogenState === "busy"}
+            onClick={completeHydrogen}
+            title="태블릿 없이 수소충전(modal) 태스크를 완료 처리 — 게이트 해제 + step2 생성"
+            className={cn(
+              "rounded px-2 py-1.5 text-[11px] font-semibold transition-colors",
+              controlSid
+                ? "cursor-pointer bg-sky-800 hover:bg-sky-700"
+                : "cursor-not-allowed bg-neutral-800 text-neutral-500",
+              hydrogenState === "success" && "bg-green-700",
+              hydrogenState === "error" && "bg-red-700"
+            )}
+          >
+            {hydrogenState === "success"
+              ? "✓ 수소충전 완료"
+              : hydrogenState === "error"
+                ? "✕ 대기 세션 없음"
+                : hydrogenState === "busy"
+                  ? "…"
+                  : "수소충전 완료 대행"}
+          </button>
           {!controlSid && <div className="text-center text-[10px] text-neutral-500">세션 대기중</div>}
         </div>
       )}
@@ -952,6 +1061,43 @@ export default function AmbientScreen() {
               기본값
             </button>
           </div>
+          {/* 배경 영상 음소거 — 인트로/스텝 배경 영상에 박힌 내레이션 on/off. 기본 무음. 이 브라우저에 저장. */}
+          <div className="mt-2 flex flex-wrap items-center gap-2 rounded border border-neutral-300 bg-neutral-50 px-2 py-1.5 text-[11px]">
+            <span className="font-semibold">배경 영상 음소거</span>
+            <button
+              type="button"
+              onClick={toggleBgVideoMuted}
+              className={cn(
+                "rounded px-2 py-0.5 font-semibold text-white",
+                bgVideoMuted ? "bg-sky-700" : "bg-neutral-400"
+              )}
+            >
+              {bgVideoMuted ? "음소거 켬(무음)" : "음소거 끔(소리 남)"}
+            </button>
+            <span className="text-neutral-500">
+              {bgVideoMuted ? "인트로/배경 영상 내레이션 안 나옴(기본)" : "배경 영상 소리 재생됨"}
+            </span>
+          </div>
+          {/* 현장 설정: 대기(standby) 영상 소리 on/off (2026-09-20 비활성화 — 대기 영상은 항상 무음).
+              미래차 설명음이 새로고침·복제 재시작마다 흘러나와서 껐다. 되살리려면 아래 주석 해제.
+          <div className="mt-2 flex flex-wrap items-center gap-2 rounded border border-neutral-300 bg-neutral-50 px-2 py-1.5 text-[11px]">
+            <span className="font-semibold">대기 영상 소리</span>
+            <button
+              type="button"
+              onClick={toggleStandbySound}
+              className={cn(
+                "rounded px-2 py-0.5 font-semibold text-white",
+                standbySound ? "bg-sky-700" : "bg-neutral-400"
+              )}
+            >
+              {standbySound ? "켬" : "끔"}
+            </button>
+            {standbySound && muted && (
+              <span className="text-amber-600">전역 뮤트(M) 켜져 있어 지금은 무음</span>
+            )}
+            {!standbySound && <span className="text-neutral-500">기본(무음)</span>}
+          </div>
+          */}
           {/* 마이크 조작 안내(2026-09-19: 자동 마이크 → S/D 수동 전환). 렌더 완료 후에만 S 가 먹는다. */}
           <div className="mt-2 flex flex-wrap items-center gap-2 rounded border border-neutral-300 bg-neutral-50 px-2 py-1.5 text-[11px]">
             <span className="font-semibold">마이크</span>

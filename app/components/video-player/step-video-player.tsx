@@ -10,10 +10,12 @@ import { useEffect, useRef, useState } from 'react';
 // - 블러: classic 의 "두 번째 재생부터 배경을 뿌옇게" 를 ambient 의 모든 step 에 적용한다
 //   (대기 화면은 step 이 없으므로 블러 없음)
 // 아래 videoMuted 로 항상 음소거라 브라우저 자동재생 정책에도 걸리지 않는다.
-export default function StepVideoPlayer({ className, ambient = false }:
+export default function StepVideoPlayer({ className, ambient = false, bgMuted = true }:
     {
         className?: string,
-        ambient?: boolean
+        ambient?: boolean,
+        // 배경 영상 음소거 — 디버깅 설정 패널 버튼으로 제어(page.tsx). 기본 무음(true).
+        bgMuted?: boolean
     }) {
     const { videoPath, stepInfo } = useScene();
     const BASE_URL = BASE_S3_LINK;
@@ -34,9 +36,9 @@ export default function StepVideoPlayer({ className, ambient = false }:
     // ambient: 항상 루프. 블러는 step 연출 중에만(대기 화면 제외).
     const loopVideo = ambient ? true : classicLoop;
     const blurAfterFirst = ambient ? !!stepInfo?.step : classicLoop;
-    // step1 에서 인트로 영상(intro 01.mp4)에 박힌 고정 내레이션이 재생되는 문제 — 잠시 항상 음소거
-    // 원복하려면 아래 videoMuted 를 지우고 muted={classicLoop} 로 되돌린다
-    const videoMuted = true;
+    // 배경 영상 음소거 — 인트로 영상(intro1_1.mp4 등)에 박힌 내레이션이 대기 화면에서 흘러나오는
+    // 문제로 기본 무음. 디버깅 설정 패널 버튼으로 켜고 끌 수 있다(page.tsx → bgMuted prop).
+    const videoMuted = bgMuted;
 
     useEffect(() => {
         const handleKeyDown = () => {
@@ -110,6 +112,13 @@ export default function StepVideoPlayer({ className, ambient = false }:
         }
     }, [nextVideoPath, currentVideoPath]);
 
+    // 배경 영상 강제 무음 — <video muted> prop 은 React 버그로 DOM 에 실제 반영이 안 될 때가 있어
+    // (intro1_1.mp4 등 인트로 영상의 내레이션이 대기 화면에서 흘러나옴), ref 로 muted 를 직접 박는다.
+    useEffect(() => {
+        if (currentVideoRef.current) currentVideoRef.current.muted = videoMuted;
+        if (previousVideoRef.current) previousVideoRef.current.muted = videoMuted;
+    }, [currentVideoPath, previousVideoPath, videoMuted]);
+
     // 새 비디오가 준비되면 crossfade 시작
     useEffect(() => {
         if (isCurrentReady && previousVideoPath) {
@@ -136,7 +145,12 @@ export default function StepVideoPlayer({ className, ambient = false }:
         <div className={cn("absolute inset-0 overflow-hidden isolate bg-gray-900", className)}>
             {/* New video (always below) */}
             <video
-                ref={currentVideoRef}
+                // 노드가 붙는 즉시(콜백 ref, autoPlay 재생 전) muted 를 박는다 — JSX muted prop 만으로는
+                // React 버그로 자동재생 시작 시 소리가 새어나온다(인트로 내레이션).
+                ref={(el) => {
+                    currentVideoRef.current = el;
+                    if (el) el.muted = videoMuted;
+                }}
                 key={`${stepInfo?.step ? BASE_URL : ''}/${currentVideoPath}`}
                 src={`${stepInfo?.step ? BASE_URL : ''}/${currentVideoPath}`}
                 autoPlay={isVideoActive}
@@ -147,6 +161,7 @@ export default function StepVideoPlayer({ className, ambient = false }:
                 preload='auto'
                 onCanPlay={() => {
                     setIsCurrentReady(true);
+                    if (currentVideoRef.current) currentVideoRef.current.muted = videoMuted;
                     // 활성화된 상태인데 재생되지 않으면 즉시 시도
                     if (isVideoActive && currentVideoRef.current && currentVideoRef.current.paused) {
                         console.log('Video ready but not playing, forcing play');
@@ -156,10 +171,13 @@ export default function StepVideoPlayer({ className, ambient = false }:
                     }
                 }}
                 onPlay={() => {
+                    // 재생이 실제로 시작되는 순간에도 한 번 더 박는다(소리 유출 최종 방어).
+                    if (currentVideoRef.current) currentVideoRef.current.muted = videoMuted;
                     console.log('Current video started playing successfully');
                 }}
                 onLoadedData={() => {
                     console.log('Current video data loaded');
+                    if (currentVideoRef.current) currentVideoRef.current.muted = videoMuted;
                     // 데이터 로드 완료 시에도 재생 시도
                     if (isVideoActive && currentVideoRef.current && currentVideoRef.current.paused) {
                         currentVideoRef.current.play().catch(error => {
@@ -180,7 +198,10 @@ export default function StepVideoPlayer({ className, ambient = false }:
             {/* Previous video (fades out above) */}
             {previousVideoPath && (
                 <video
-                    ref={previousVideoRef}
+                    ref={(el) => {
+                        previousVideoRef.current = el;
+                        if (el) el.muted = videoMuted;
+                    }}
                     key={`${BASE_URL}/${previousVideoPath}`}
                     src={`${BASE_URL}/${previousVideoPath}`}
                     autoPlay={isVideoActive}
