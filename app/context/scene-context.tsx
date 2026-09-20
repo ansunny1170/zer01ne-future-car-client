@@ -98,9 +98,14 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
       setBgmPath(stepInfo?.bgm?.file_name || bgmDict[Math.floor(Math.random() * bgmDict.length)].file_name || null);
     }
 
+    // 인트로 브금/영상(intro1_1.mp4) 재생 비활성화 (2026-09-20) — 미래차 설명 내레이션이
+    // 대기 화면에서 흘러나오는 문제. 나중에 브금을 다른 파일로 교체 예정이라, 그전까지 아예
+    // 재생하지 않는다. (81행에서 세팅되는 bgv 폴백도 재생 안 되게 null 로 덮는다.)
+    // 복구/교체: 아래 setVideoPath(null) 를 지우고 주석을 풀거나 새 파일명으로 바꾼다.
     if (!stepInfo?.step){
-      setVideoPath("assets/video/intro1_1.mp4");
-    } 
+      // setVideoPath("assets/video/intro1_1.mp4");
+      setVideoPath(null);
+    }
 
     // ambient 는 step1 도 생성된 bgv 를 그대로 쓴다(위에서 이미 세팅됨).
     // classic 만 브랜드 인트로 영상으로 고정.

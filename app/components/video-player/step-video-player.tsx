@@ -10,12 +10,10 @@ import { useEffect, useRef, useState } from 'react';
 // - 블러: classic 의 "두 번째 재생부터 배경을 뿌옇게" 를 ambient 의 모든 step 에 적용한다
 //   (대기 화면은 step 이 없으므로 블러 없음)
 // 아래 videoMuted 로 항상 음소거라 브라우저 자동재생 정책에도 걸리지 않는다.
-export default function StepVideoPlayer({ className, ambient = false, bgMuted = true }:
+export default function StepVideoPlayer({ className, ambient = false }:
     {
         className?: string,
-        ambient?: boolean,
-        // 배경 영상 음소거 — 디버깅 설정 패널 버튼으로 제어(page.tsx). 기본 무음(true).
-        bgMuted?: boolean
+        ambient?: boolean
     }) {
     const { videoPath, stepInfo } = useScene();
     const BASE_URL = BASE_S3_LINK;
@@ -36,9 +34,9 @@ export default function StepVideoPlayer({ className, ambient = false, bgMuted = 
     // ambient: 항상 루프. 블러는 step 연출 중에만(대기 화면 제외).
     const loopVideo = ambient ? true : classicLoop;
     const blurAfterFirst = ambient ? !!stepInfo?.step : classicLoop;
-    // 배경 영상 음소거 — 인트로 영상(intro1_1.mp4 등)에 박힌 내레이션이 대기 화면에서 흘러나오는
-    // 문제로 기본 무음. 디버깅 설정 패널 버튼으로 켜고 끌 수 있다(page.tsx → bgMuted prop).
-    const videoMuted = bgMuted;
+    // 배경 영상은 항상 무음 — 인트로/스텝 배경 영상에 박힌 내레이션이 재생되지 않게. JSX muted prop 은
+    // React 버그로 안 먹을 때가 있어, 아래 콜백 ref + onCanPlay/onLoadedData/onPlay 에서 muted 를 강제한다.
+    const videoMuted = true;
 
     useEffect(() => {
         const handleKeyDown = () => {

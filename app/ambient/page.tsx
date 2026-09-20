@@ -32,7 +32,7 @@ import TabletSimModal from "@/components/ui/tablet-sim-modal";
 import DevLogPanel from "@/components/dev/dev-log-panel";
 import HyundaiLoading from "@/components/ui/hyundai-loading";
 import { appendDevLog } from "@/utils/devLog";
-import { BASE_API_LINK, BASE_S3_LINK, STANDBY_VIDEO, STANDBY_VIDEO_STORAGE_KEY, BG_VIDEO_MUTE_STORAGE_KEY, resolveMediaUrl } from "@/constants";
+import { BASE_API_LINK, BASE_S3_LINK, STANDBY_VIDEO, STANDBY_VIDEO_STORAGE_KEY, resolveMediaUrl } from "@/constants";
 import { cn } from "@/utils/cn";
 import { useCarListener } from "@/hooks/useCarListener";
 import ListenIndicator from "@/components/ambient/listen-indicator";
@@ -170,39 +170,15 @@ export default function AmbientScreen() {
     setStandbyVideo(v || STANDBY_VIDEO);
     setStandbyDraft("");
   };
-  // ── 배경 영상 음소거 (2026-09-20) ─────────────────────────────────────────────
-  // 배경 영상들(대기 en6.mp4, 인트로 intro1_1.mp4, 스텝 배경)에 박힌 미래차 설명 내레이션이
-  // 새로고침·복제 재시작마다 흘러나오는 문제. 기본 무음(true)이며, 디버깅 설정 패널 버튼으로
-  // 켜고 끈다. 이 브라우저 localStorage 에 저장(현장 설정).
-  // ⚠️ React 의 <video muted> prop 은 DOM 의 muted 프로퍼티에 실제로 안 먹는 알려진 버그가 있어
-  // (JSX muted 만으로는 소리가 남), 대기 영상은 ref 로, 배경 영상은 StepVideoPlayer 내부 ref 로
-  // muted 를 직접 박는다.
-  const [bgVideoMuted, setBgVideoMuted] = useState(true);
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(BG_VIDEO_MUTE_STORAGE_KEY);
-      if (saved !== null) setBgVideoMuted(saved === "true");
-    } catch {
-      /* 접근 불가 — 기본 무음 유지 */
-    }
-  }, []);
-  const toggleBgVideoMuted = () => {
-    setBgVideoMuted((prev) => {
-      const next = !prev;
-      try {
-        localStorage.setItem(BG_VIDEO_MUTE_STORAGE_KEY, String(next));
-      } catch {
-        /* noop */
-      }
-      return next;
-    });
-  };
-  // 대기 영상도 같은 설정을 따른다 — ref 로 muted 강제(JSX prop 버그 회피).
+  // ── 배경/대기 영상 항상 무음 (2026-09-20) ─────────────────────────────────────
+  // 인트로 브금(intro1_1.mp4)은 scene-context 에서 재생 자체를 껐고, 나머지 배경 영상(대기
+  // en6.mp4, 스텝 배경)에 박힌 내레이션도 안 나오게 무음 고정. React 의 <video muted> prop 은
+  // DOM 에 실제로 안 먹는 버그가 있어(JSX muted 만으로는 소리가 남), ref 로 직접 박는다.
   const standbyVideoRef = useRef<HTMLVideoElement>(null);
   useEffect(() => {
     const el = standbyVideoRef.current;
-    if (el) el.muted = bgVideoMuted;
-  }, [standbyVideo, screen, bgVideoMuted]);
+    if (el) el.muted = true;
+  }, [standbyVideo, screen]);
   // (2026-09-19) 발화 전송이 침묵 디바운스 → S/D 수동 조작으로 바뀌어 '발화 딜레이' 설정은 제거됐다.
   // LLM 모델·옵션 — 다른 현장 설정과 달리 localStorage 가 아니라 **서버 런타임 값**이다
   // (GET/PUT /ambient/llm-config). 즉시 반영되고, 서버 컨테이너 재시작 시 env 기본값으로 복귀.
@@ -741,7 +717,7 @@ export default function AmbientScreen() {
         />
       )}
       {/* ambient 모드: 키 입력 없이 즉시 재생, 전 스텝 루프, 두 번째 재생부터 블러 */}
-      <StepVideoPlayer ambient bgMuted={bgVideoMuted} />
+      <StepVideoPlayer ambient />
       <StepAudioPlayer />
 
       {/* classic(`/`)과 같은 고정 프레임·HUD. step 연출 중에만 띄운다 — 대기/작별 화면은
@@ -769,16 +745,16 @@ export default function AmbientScreen() {
                 무음으로 무한 반복한다. 관람객에게 보이는 글자는 두지 않는다. 영상 로드 실패 시 로더만 남는다. */}
             <video
               key={standbyVideoUrl}
-              // 대기 영상 음소거는 "배경 영상 음소거" 설정(bgVideoMuted)을 따른다. JSX muted 만으로는
-              // React 버그로 소리가 남아서, 노드가 붙는 즉시(콜백 ref, paint 전) el.muted 를 강제한다.
+              // 대기 영상은 항상 무음. JSX muted 만으로는 React 버그로 소리가 남아서,
+              // 노드가 붙는 즉시(콜백 ref, paint 전) el.muted=true 를 강제한다.
               ref={(el) => {
                 standbyVideoRef.current = el;
-                if (el) el.muted = bgVideoMuted;
+                if (el) el.muted = true;
               }}
               src={standbyVideoUrl}
               autoPlay
               loop
-              muted={bgVideoMuted}
+              muted
               playsInline
               preload="auto"
               className="absolute inset-0 h-full w-full object-cover"
@@ -1060,23 +1036,6 @@ export default function AmbientScreen() {
             >
               기본값
             </button>
-          </div>
-          {/* 배경 영상 음소거 — 인트로/스텝 배경 영상에 박힌 내레이션 on/off. 기본 무음. 이 브라우저에 저장. */}
-          <div className="mt-2 flex flex-wrap items-center gap-2 rounded border border-neutral-300 bg-neutral-50 px-2 py-1.5 text-[11px]">
-            <span className="font-semibold">배경 영상 음소거</span>
-            <button
-              type="button"
-              onClick={toggleBgVideoMuted}
-              className={cn(
-                "rounded px-2 py-0.5 font-semibold text-white",
-                bgVideoMuted ? "bg-sky-700" : "bg-neutral-400"
-              )}
-            >
-              {bgVideoMuted ? "음소거 켬(무음)" : "음소거 끔(소리 남)"}
-            </button>
-            <span className="text-neutral-500">
-              {bgVideoMuted ? "인트로/배경 영상 내레이션 안 나옴(기본)" : "배경 영상 소리 재생됨"}
-            </span>
           </div>
           {/* 현장 설정: 대기(standby) 영상 소리 on/off (2026-09-20 비활성화 — 대기 영상은 항상 무음).
               미래차 설명음이 새로고침·복제 재시작마다 흘러나와서 껐다. 되살리려면 아래 주석 해제.
