@@ -303,6 +303,19 @@ export default function AmbientScreen() {
   // 트리거: Ctrl/Cmd+Shift+L 또는 상단 중앙 영역 3연속 클릭 (devMode와 독립)
   useDevTrigger({ code: "KeyL", corner: "top-center" }, () => setDevLogOpen((prev) => !prev));
 
+  // M 키: 음소거 토글. 이 키와 디버그창 버튼 외에는 뮤트를 바꿀 수 없다(화면 오터치 방지).
+  // 물리 키 위치(code) 기준 — 한글 자판(ㅡ=M)에서도 동작. 입력칸 타이핑 중엔 무시.
+  useEffect(() => {
+    const onKey = (ev: KeyboardEvent) => {
+      if (ev.code !== "KeyM" || ev.repeat) return;
+      const t = ev.target as HTMLElement | null;
+      if (t && ["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName)) return;
+      toggleMute();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   // 쿼리(?sid=) 에서 세션 id 읽기 (클라이언트 전용)
   useEffect(() => {
     const q = new URLSearchParams(window.location.search).get("sid");
@@ -623,7 +636,7 @@ export default function AmbientScreen() {
       <ListenIndicator state={listener} />
       <NoticePopup notice={notice} />
       {/* 소리 뮤트 표시(표시 전용) — 뮤트면 디버그 여부와 무관하게 항상 보이고, 아니면 없다.
-          토글은 디버그 설정창의 "소리" 행에서만 한다(화면 오터치 방지). */}
+          토글은 M 키 또는 디버그창 상단 음소거 버튼으로만 한다(화면 오터치 방지). */}
       {muted && (
         <div className="pointer-events-none fixed right-24 top-3 z-[1000] flex h-14 w-14 items-center justify-center rounded-full bg-black/60 backdrop-blur-sm">
           <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#ff5a5a" strokeWidth="2.2" strokeLinecap="round">
@@ -796,6 +809,17 @@ export default function AmbientScreen() {
           >
             관리자 페이지 ↗
           </button>
+          {/* 음소거 토글 — M 키와 이 버튼으로만 바꾼다(우상단 아이콘은 표시 전용). */}
+          <button
+            type="button"
+            onClick={toggleMute}
+            className={cn(
+              "w-full rounded px-2 py-1 text-[11px] font-semibold text-white",
+              muted ? "bg-neutral-500 hover:bg-neutral-400" : "bg-red-600 hover:bg-red-500",
+            )}
+          >
+            {muted ? "🔇 음소거 해제 (M)" : "🔊 음소거 (M)"}
+          </button>
           <div className="text-center">
             <div className="text-[10px] text-neutral-400">현재 STEP</div>
             <div className="text-2xl font-bold leading-tight">{stepInfo?.step ?? "-"}</div>
@@ -938,23 +962,7 @@ export default function AmbientScreen() {
             </span>
             <span className="text-neutral-400">— 에셋 렌더 완료 후에만 S 반응</span>
           </div>
-          {/* 현장 설정: 소리 뮤트 — 화면의 모든 출력 음소거. 뮤트면 우상단에 아이콘이 상시 표시된다. */}
-          <div className="mt-2 flex flex-wrap items-center gap-2 rounded border border-neutral-300 bg-neutral-50 px-2 py-1.5 text-[11px]">
-            <span className="font-semibold">소리</span>
-            <span className={cn("font-mono", muted ? "text-red-600" : "text-sky-700")}>
-              {muted ? "음소거 중" : "켜짐"}
-            </span>
-            <button
-              type="button"
-              onClick={toggleMute}
-              className={cn(
-                "rounded px-2 py-0.5 font-semibold text-white",
-                muted ? "bg-neutral-500 hover:bg-neutral-400" : "bg-red-600 hover:bg-red-500",
-              )}
-            >
-              {muted ? "음소거 해제" : "음소거"}
-            </button>
-          </div>
+          {/* 소리 뮤트는 디버깅 창 상단 '음소거' 버튼(또는 M 키)으로 옮겼다. */}
           {/* LLM 모델·옵션 — 서버 런타임 값(브라우저 저장 아님). 다음 스텝 생성부터 즉시 반영,
               서버 컨테이너 재시작 시 env 기본값으로 복귀. */}
           <div className="mt-2 flex flex-wrap items-center gap-2 rounded border border-neutral-300 bg-neutral-50 px-2 py-1.5 text-[11px]">
