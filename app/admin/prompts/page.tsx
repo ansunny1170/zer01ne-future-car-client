@@ -24,7 +24,8 @@ export default function PromptAdminPage() {
     const [busy, setBusy] = useState(false);
     const [editor, setEditor] = useState<EditorSlot | null>(null);
     const [memoDrafts, setMemoDrafts] = useState<Record<number, string>>({});
-    // 프롬프트 용도 탭 — scenario(스텝 생성) / ending(일기·엔딩 리플렉션, 규칙 단일 패널)
+    // 프롬프트 용도 탭 — scenario(스텝 생성) / ending(일기·엔딩) / greeting(탑승 인사).
+    // scenario 만 섹션 분할, 나머지는 규칙 단일 패널(plainOnly).
     const [kind, setKind] = useState<PromptKind>("scenario");
 
     const active = useMemo(() => items.find((i) => i.active) ?? null, [items]);
@@ -146,7 +147,7 @@ export default function PromptAdminPage() {
     const editorNode = editor && (
         <PromptEditor
             key={`${kind}-${editor.anchorId ?? "new"}`}
-            plainOnly={kind === "ending"}
+            plainOnly={kind !== "scenario"}
             initial={editor.initial}
             items={items}
             busy={busy}
