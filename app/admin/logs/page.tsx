@@ -1,8 +1,9 @@
 "use client";
 
-// 서버 로그 뷰어 — GET /logs (dev_log + traffic). 세션·출처 필터, 자동 새로고침, 행 클릭 시 detail JSON.
+// 서버 로그 뷰어 — GET /logs (dev_log + traffic). 세션·출처·분류 필터, 자동 새로고침,
+// 행 클릭 시 detail JSON(여러 행 동시 펼침, 가로 스크롤 기본 + 줄바꿈 토글).
 
-import { useCallback, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import { BASE_API_LINK } from "@/constants";
 
 import { Badge, Card, EmptyState, PageHeader, btn, input } from "../admin-ui";
@@ -21,8 +22,25 @@ export default function LogsPage() {
     // 분류(category) 필터 — 인사 LLM(greeting)·임시 디버그(debug)·스텝 생성(stepgen)만 골라 본다
     const [category, setCategory] = useState("");
     const [auto, setAuto] = useState(true);
-    const [openId, setOpenId] = useState<number | null>(null);
+    // 펼쳐진 행 집합 — 여러 로그(예: greeting llm_call 과 llm_done)를 나란히 놓고 비교한다
+    const [openIds, setOpenIds] = useState<Set<number>>(new Set());
+    // 줄바꿈 토글 — 끄면 가로 스크롤(원문 그대로), 켜면 줄바꿈 + 문자열 안의 \n 도 실제 개행으로
+    // 풀어서 보여준다(프롬프트 전문 읽기용 표시 변형 — 원본 JSON 은 아님).
+    const [wrap, setWrap] = useState(false);
     const [error, setError] = useState("");
+
+    const toggleOpen = (id: number) =>
+        setOpenIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+
+    const renderDetail = (detail: unknown) => {
+        const s = JSON.stringify(detail, null, 2);
+        return wrap ? s.replace(/\\n/g, "\n") : s;
+    };
 
     const load = useCallback(async () => {
         try {
@@ -83,6 +101,15 @@ export default function LogsPage() {
                         <option value="reflection">reflection (엔딩 일기)</option>
                     </select>
                     <button onClick={load} className={btn.secondary}>새로고침</button>
+                    <label className="flex items-center gap-1.5 text-sm text-slate-500">
+                        <input type="checkbox" checked={wrap} onChange={(e) => setWrap(e.target.checked)} />
+                        줄바꿈
+                    </label>
+                    {openIds.size > 0 && (
+                        <button onClick={() => setOpenIds(new Set())} className={btn.secondary}>
+                            모두 접기 ({openIds.size})
+                        </button>
+                    )}
                     {error && <span className="text-sm text-rose-600">{error}</span>}
                 </div>
 
@@ -90,51 +117,56 @@ export default function LogsPage() {
                     <EmptyState>조건에 맞는 로그가 없습니다.</EmptyState>
                 ) : (
                     <div className="overflow-hidden rounded-xl border border-slate-200">
-                        <table className="w-full text-left text-sm">
+                        {/* table-fixed — detail(colSpan) 안의 긴 내용이 열 폭을 밀어내지 못한다.
+                            가로 스크롤은 아래 detail <pre> 안에서만 생긴다. */}
+                        <table className="w-full table-fixed text-left text-sm">
                             <thead className="bg-slate-50 text-xs text-slate-400">
                                 <tr>
-                                    <th className="px-3 py-2 font-medium">시각</th>
-                                    <th className="px-3 py-2 font-medium">세션</th>
-                                    <th className="px-3 py-2 font-medium">단계</th>
+                                    <th className="w-32 px-3 py-2 font-medium">시각</th>
+                                    <th className="w-32 px-3 py-2 font-medium">세션</th>
+                                    <th className="w-40 px-3 py-2 font-medium">단계</th>
                                     <th className="px-3 py-2 font-medium">내용</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
                                 {rows.map((r) => (
-                                    <>
+                                    <Fragment key={r.id}>
                                         <tr
-                                            key={r.id}
-                                            onClick={() => setOpenId(openId === r.id ? null : r.id)}
+                                            onClick={() => toggleOpen(r.id)}
                                             className="cursor-pointer hover:bg-slate-50"
                                         >
                                             <td className="whitespace-nowrap px-3 py-2 font-mono text-xs text-slate-400">
                                                 {r.ts?.slice(5, 19).replace("T", " ")}
                                             </td>
                                             <td
-                                                className="max-w-28 truncate px-3 py-2 font-mono text-xs text-sky-600"
+                                                className="truncate px-3 py-2 font-mono text-xs text-sky-600"
                                                 title={r.session_id ?? ""}
                                             >
                                                 {r.session_id ?? "-"}
                                             </td>
-                                            <td className="px-3 py-2">
+                                            <td className="truncate px-3 py-2">
                                                 <Badge tone={r.level === "error" ? "rose" : r.level === "warn" ? "amber" : r.source === "traffic" ? "sky" : "slate"}>
                                                     {r.stage || r.category || "-"}
                                                 </Badge>
                                             </td>
-                                            <td className="max-w-0 truncate px-3 py-2 text-slate-600" style={{ width: "60%" }}>
+                                            <td className="truncate px-3 py-2 text-slate-600" title={r.message ?? ""}>
                                                 {r.message}
                                             </td>
                                         </tr>
-                                        {openId === r.id && r.detail != null && (
-                                            <tr key={`${r.id}-detail`}>
+                                        {openIds.has(r.id) && r.detail != null && (
+                                            <tr>
                                                 <td colSpan={4} className="bg-slate-50 px-4 py-3">
-                                                    <pre className="max-h-72 overflow-auto rounded-lg bg-[#0d1117] p-3 font-mono text-xs leading-relaxed text-slate-200">
-                                                        {JSON.stringify(r.detail, null, 2)}
+                                                    <pre
+                                                        className={`max-h-96 overflow-auto rounded-lg bg-[#0d1117] p-3 font-mono text-xs leading-relaxed text-slate-200 ${
+                                                            wrap ? "whitespace-pre-wrap break-all" : "whitespace-pre"
+                                                        }`}
+                                                    >
+                                                        {renderDetail(r.detail)}
                                                     </pre>
                                                 </td>
                                             </tr>
                                         )}
-                                    </>
+                                    </Fragment>
                                 ))}
                             </tbody>
                         </table>
