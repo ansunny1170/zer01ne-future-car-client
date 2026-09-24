@@ -6,7 +6,7 @@
 import { Fragment, useCallback, useEffect, useState } from "react";
 import { BASE_API_LINK } from "@/constants";
 
-import { Badge, Card, EmptyState, PageHeader, btn, input } from "../admin-ui";
+import { Badge, Card, EmptyState, PageHeader, btn, fmtKstShort, input } from "../admin-ui";
 
 const API = BASE_API_LINK.replace(/\/+$/, "");
 
@@ -27,6 +27,9 @@ export default function LogsPage() {
     // 줄바꿈 토글 — 끄면 가로 스크롤(원문 그대로), 켜면 줄바꿈 + 문자열 안의 \n 도 실제 개행으로
     // 풀어서 보여준다(프롬프트 전문 읽기용 표시 변형 — 원본 JSON 은 아님).
     const [wrap, setWrap] = useState(false);
+    // dashboard 숨김(기본 ON) — OC 주기 재발행이 최신순 화면을 초 단위로 덮어
+    // restart·pregen 같은 이벤트가 묻힌다(2026-09-25 실측). 서버 exclude_stages 로 거른다.
+    const [hideDashboard, setHideDashboard] = useState(true);
     const [error, setError] = useState("");
 
     const toggleOpen = (id: number) =>
@@ -48,6 +51,7 @@ export default function LogsPage() {
             if (sessionId.trim()) q.set("session_id", sessionId.trim());
             if (source) q.set("source", source);
             if (category) q.set("category", category);
+            if (hideDashboard) q.set("exclude_stages", "dashboard");
             const r = await fetch(`${API}/logs?${q}`, { cache: "no-store" });
             if (!r.ok) throw new Error(`로그 조회 실패 (${r.status})`);
             setRows((await r.json()).entries ?? []);
@@ -55,7 +59,7 @@ export default function LogsPage() {
         } catch (e) {
             setError(e instanceof Error ? e.message : String(e));
         }
-    }, [sessionId, source, category]);
+    }, [sessionId, source, category, hideDashboard]);
 
     useEffect(() => {
         load();
@@ -105,6 +109,11 @@ export default function LogsPage() {
                         <input type="checkbox" checked={wrap} onChange={(e) => setWrap(e.target.checked)} />
                         줄바꿈
                     </label>
+                    <label className="flex items-center gap-1.5 text-sm text-slate-500">
+                        <input type="checkbox" checked={hideDashboard}
+                               onChange={(e) => setHideDashboard(e.target.checked)} />
+                        dashboard 숨김
+                    </label>
                     {openIds.size > 0 && (
                         <button onClick={() => setOpenIds(new Set())} className={btn.secondary}>
                             모두 접기 ({openIds.size})
@@ -136,7 +145,7 @@ export default function LogsPage() {
                                             className="cursor-pointer hover:bg-slate-50"
                                         >
                                             <td className="whitespace-nowrap px-3 py-2 font-mono text-xs text-slate-400">
-                                                {r.ts?.slice(5, 19).replace("T", " ")}
+                                                {fmtKstShort(r.ts)}
                                             </td>
                                             <td
                                                 className="truncate px-3 py-2 font-mono text-xs text-sky-600"

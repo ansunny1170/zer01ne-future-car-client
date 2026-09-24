@@ -69,8 +69,37 @@ export function EmptyState({ children }: { children: ReactNode }) {
     );
 }
 
+// DB 시각은 전부 UTC 다 — dev_log.ts 는 "+00:00" 명시, MySQL TIMESTAMP/DATETIME 은
+// 오프셋 없는 문자열(서버 UTC). 오프셋이 없으면 UTC 로 간주해 KST 로 변환해 보여준다.
+// (브라우저 로컬이 아니라 Asia/Seoul 고정 — 어느 기기에서 열어도 같은 시각.)
+function parseUtc(iso: string): Date | null {
+    const hasTz = /Z$|[+-]\d{2}:?\d{2}$/.test(iso);
+    const d = new Date(hasTz ? iso : `${iso}Z`);
+    return isNaN(d.getTime()) ? null : d;
+}
+
+const KST: Intl.DateTimeFormatOptions = { timeZone: "Asia/Seoul", hour12: false };
+
 export function fmtDateTime(iso?: string | null): string {
     if (!iso) return "-";
-    const d = new Date(iso);
-    return isNaN(d.getTime()) ? iso : d.toLocaleString("ko-KR", { hour12: false });
+    const d = parseUtc(iso);
+    return d ? d.toLocaleString("ko-KR", KST) : iso;
+}
+
+/** "MM-DD HH:mm:ss" (KST) — 로그 테이블처럼 좁은 자리용. */
+export function fmtKstShort(iso?: string | null): string {
+    if (!iso) return "-";
+    const d = parseUtc(iso);
+    if (!d) return iso;
+    const p = new Intl.DateTimeFormat("ko-KR", {
+        ...KST, month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit",
+    }).formatToParts(d);
+    const g = (t: string) => p.find((x) => x.type === t)?.value ?? "";
+    return `${g("month")}-${g("day")} ${g("hour")}:${g("minute")}:${g("second")}`;
+}
+
+/** "HH:mm:ss" (KST) — 카드 한 줄용. */
+export function fmtKstTime(iso?: string | null): string {
+    const s = fmtKstShort(iso);
+    return s.includes(" ") ? s.split(" ")[1] : s;
 }

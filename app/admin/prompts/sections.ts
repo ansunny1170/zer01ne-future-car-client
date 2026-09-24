@@ -77,8 +77,10 @@ export function nextFilename(from: string, all: PromptMeta[]): string {
 
 export function fmtDate(iso: string | null): string {
     if (!iso) return "-";
-    const d = new Date(iso);
-    return isNaN(d.getTime()) ? iso : d.toLocaleString("ko-KR", { hour12: false });
+    // MySQL 이 주는 오프셋 없는 시각은 UTC — KST(Asia/Seoul) 고정으로 변환해 표시.
+    const hasTz = /Z$|[+-]\d{2}:?\d{2}$/.test(iso);
+    const d = new Date(hasTz ? iso : `${iso}Z`);
+    return isNaN(d.getTime()) ? iso : d.toLocaleString("ko-KR", { timeZone: "Asia/Seoul", hour12: false });
 }
 
 /** 글자 수·줄 수 — 패널 헤더 카운터. */

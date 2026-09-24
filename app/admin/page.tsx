@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { BASE_API_LINK } from "@/constants";
 
-import { Badge, Card, EmptyState, PageHeader, btn, fmtDateTime } from "./admin-ui";
+import { Badge, Card, EmptyState, PageHeader, btn, fmtDateTime, fmtKstTime } from "./admin-ui";
 
 const API = BASE_API_LINK.replace(/\/+$/, "");
 
@@ -110,7 +110,7 @@ export default function AdminDashboard() {
                         <ul className="space-y-1.5">
                             {logs.map((l, i) => (
                                 <li key={i} className="flex items-baseline gap-2 text-xs">
-                                    <span className="shrink-0 font-mono text-slate-400">{l.ts?.slice(11, 19)}</span>
+                                    <span className="shrink-0 font-mono text-slate-400">{fmtKstTime(l.ts)}</span>
                                     <Badge tone={l.level === "error" ? "rose" : l.level === "warn" ? "amber" : "slate"}>
                                         {l.stage || "-"}
                                     </Badge>
