@@ -141,7 +141,7 @@ export default function AmbientScreen() {
   const [questionDismissed, setQuestionDismissed] = useState(false);
   // 인사(greeting)가 오기 전/안 올 때의 마이크 개방 폴백 타이머 — waiting 화면에서만 발화한다.
   const greetingWaitTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // 스텝 질문 구간 표식: 렌더 완료 ~ 다음 step 수신 전. 질문 타이핑 완료 +1초 뒤 마이크를 열고,
+  // 스텝 질문 구간 표식: 렌더 완료 ~ 다음 step 수신 전. 질문 타이핑 완료 +2초 뒤 마이크를 열고,
   // 질문이 안 뜨는 예외는 8초 폴백으로 연다. ref 는 타이머 콜백의 stale 값 방지.
   const [stepQuestionActive, setStepQuestionActive] = useState(false);
   const stepQuestionActiveRef = useRef(false);
@@ -436,10 +436,12 @@ export default function AmbientScreen() {
                 if (greetingWaitTimer.current) clearTimeout(greetingWaitTimer.current);
                 setGreeting((msg as { greeting: string }).greeting);
               } else if (!greetingWaitTimer.current) {
+                // 25초: 복제 재시작은 인사가 사전 생성(step1 포함) 완료 후에 와서 10~20초
+                // 걸린다 — 폴백이 인사보다 먼저 마이크를 열지 않도록 그보다 길게 잡는다.
                 greetingWaitTimer.current = setTimeout(() => {
                   greetingWaitTimer.current = null;
                   if (screenRef.current === "waiting") setVisitorTurn(true);
-                }, 8000);
+                }, 25000);
               }
             } else if (msg.phase === "done") {
               setScreen("standby");   // exit(또는 태블릿 종료) — 다음 탑승까지 대기
@@ -608,7 +610,7 @@ export default function AmbientScreen() {
         source: "client",
       });
       const API = BASE_API_LINK.replace(/\/+$/, "");
-      // 렌더 완료 — 질문을 먼저 띄우고, 마이크는 질문 타이핑 완료 +1초 뒤에 연다(아래 onComplete).
+      // 렌더 완료 — 질문을 먼저 띄우고, 마이크는 질문 타이핑 완료 +2초 뒤에 연다(아래 onComplete).
       // 마지막 스텝은 질문이 없어 열지 않는다(엔딩으로 넘어감).
       setQuestionDismissed(false);
       setStepQuestionActive(step < TOTAL_STEPS);
@@ -709,10 +711,10 @@ export default function AmbientScreen() {
           text={stepInfo.question}
           keepLastLine
           onComplete={() => {
-            // 질문 타이핑 완료 +1초 뒤 마이크 개방 — 시작 인사와 동일한 리듬.
+            // 질문 타이핑 완료 +2초 뒤 마이크 개방 — 시작 인사와 동일한 리듬.
             setTimeout(() => {
               if (stepQuestionActiveRef.current) setVisitorTurn(true);
-            }, 1000);
+            }, 2000);
           }}
         />
       )}
@@ -786,10 +788,10 @@ export default function AmbientScreen() {
                 text={greeting}
                 keepLastLine
                 onComplete={() => {
-                  // 타이핑 완료 + 1초 뒤 마이크 개방 — 인사를 읽을 틈을 주고 나서 듣는다.
+                  // 타이핑 완료 + 2초 뒤 마이크 개방 — 인사를 읽을 틈을 주고 나서 듣는다.
                   setTimeout(() => {
                     if (screenRef.current === "waiting") setVisitorTurn(true);
-                  }, 1000);
+                  }, 2000);
                 }}
               />
             )}
