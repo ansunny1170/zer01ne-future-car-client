@@ -54,7 +54,10 @@ export default function LogsPage() {
             if (hideDashboard) q.set("exclude_stages", "dashboard");
             const r = await fetch(`${API}/logs?${q}`, { cache: "no-store" });
             if (!r.ok) throw new Error(`로그 조회 실패 (${r.status})`);
-            setRows((await r.json()).entries ?? []);
+            // API 는 오래된 순으로 준다 — 화면은 최신이 위로. (dashboard 홍수 시절엔
+            // 최신 150건 창이 전부 최근이라 티가 안 났지만, 걷어낸 뒤엔 창이 긴
+            // 시간대를 덮어 최신 기록이 맨 아래로 숨었다 — 2026-09-25 관측)
+            setRows(((await r.json()).entries ?? []).slice().reverse());
             setError("");
         } catch (e) {
             setError(e instanceof Error ? e.message : String(e));

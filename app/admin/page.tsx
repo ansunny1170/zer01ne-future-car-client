@@ -27,7 +27,8 @@ export default function AdminDashboard() {
         fetch(`${API}/prompt/latest`).then(j).then(setPrompt).catch(() => {});
         fetch(`${API}/ambient/llm-config`).then(j).then(setLlm).catch(() => {});
         fetch(`${API}/ambient/sessions?limit=5`).then(j).then((d) => setSessions(d?.sessions ?? [])).catch(() => setSessions([]));
-        fetch(`${API}/logs?source=dev_log&limit=6`).then(j).then((d) => setLogs(d?.entries ?? [])).catch(() => setLogs([]));
+        // entries 는 오래된 순 — 카드에는 최신이 위로.
+        fetch(`${API}/logs?source=dev_log&limit=6`).then(j).then((d) => setLogs((d?.entries ?? []).slice().reverse())).catch(() => setLogs([]));
     }, []);
 
     return (
