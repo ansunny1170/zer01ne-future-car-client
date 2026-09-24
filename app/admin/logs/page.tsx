@@ -18,6 +18,8 @@ export default function LogsPage() {
     const [rows, setRows] = useState<LogRow[]>([]);
     const [sessionId, setSessionId] = useState("");
     const [source, setSource] = useState("");
+    // 분류(category) 필터 — 인사 LLM(greeting)·임시 디버그(debug)·스텝 생성(stepgen)만 골라 본다
+    const [category, setCategory] = useState("");
     const [auto, setAuto] = useState(true);
     const [openId, setOpenId] = useState<number | null>(null);
     const [error, setError] = useState("");
@@ -27,6 +29,7 @@ export default function LogsPage() {
             const q = new URLSearchParams({ limit: "150" });
             if (sessionId.trim()) q.set("session_id", sessionId.trim());
             if (source) q.set("source", source);
+            if (category) q.set("category", category);
             const r = await fetch(`${API}/logs?${q}`, { cache: "no-store" });
             if (!r.ok) throw new Error(`로그 조회 실패 (${r.status})`);
             setRows((await r.json()).entries ?? []);
@@ -34,7 +37,7 @@ export default function LogsPage() {
         } catch (e) {
             setError(e instanceof Error ? e.message : String(e));
         }
-    }, [sessionId, source]);
+    }, [sessionId, source, category]);
 
     useEffect(() => {
         load();
@@ -71,6 +74,13 @@ export default function LogsPage() {
                         <option value="">전체 출처</option>
                         <option value="dev_log">dev_log (진행 로그)</option>
                         <option value="traffic">traffic (MQTT)</option>
+                    </select>
+                    <select value={category} onChange={(e) => setCategory(e.target.value)} className={input}>
+                        <option value="">전체 분류</option>
+                        <option value="greeting">greeting (탑승 인사 LLM)</option>
+                        <option value="debug">debug (임시 디버그)</option>
+                        <option value="stepgen">stepgen (스텝 생성)</option>
+                        <option value="reflection">reflection (엔딩 일기)</option>
                     </select>
                     <button onClick={load} className={btn.secondary}>새로고침</button>
                     {error && <span className="text-sm text-rose-600">{error}</span>}
