@@ -133,7 +133,7 @@ export default function LlmSettingsPage() {
                                     : "끔 — 태블릿엔 아무것도 안 뜨고, 진행은 차 화면 마이크로만 합니다"}
                             </label>
                             <p className="mt-1 text-xs text-slate-400">
-                                서버 재시작 시 켬(기본값)으로 돌아옵니다. 끈 발행은 로그에 ask_skip 으로 남습니다.
+                                마지막 상태가 저장되어 서버 재시작·재배포 후에도 유지됩니다. 끈 발행은 로그에 ask_skip 으로 남습니다.
                             </p>
                         </div>
 
