@@ -19,6 +19,8 @@ export default function LlmSettingsPage() {
     const [model, setModel] = useState("");
     const [effort, setEffort] = useState("");
     const [verbosity, setVerbosity] = useState("");
+    // 태블릿 채팅 발행(질문·답 칩) 스위치 — "direct"(켬) | "off"(끔). request 는 레거시라 UI 미노출.
+    const [chatPublish, setChatPublish] = useState("direct");
     const [loaded, setLoaded] = useState(false);
     const [busy, setBusy] = useState(false);
     const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(null);
@@ -31,6 +33,7 @@ export default function LlmSettingsPage() {
                 setModel(d.model ?? "");
                 setEffort(d.reasoning_effort ?? "");
                 setVerbosity(d.verbosity ?? "");
+                setChatPublish(d.chat_publish ?? "direct");
                 setLoaded(true);
             })
             .catch(() => {});
@@ -46,7 +49,7 @@ export default function LlmSettingsPage() {
             const r = await fetch(`${API}/ambient/llm-config`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ model, reasoning_effort: effort, verbosity }),
+                body: JSON.stringify({ model, reasoning_effort: effort, verbosity, chat_publish: chatPublish }),
             });
             if (!r.ok) throw new Error(`저장 실패 (${r.status})`);
             setNotice({ ok: true, text: "저장되었습니다 — 다음 스텝 생성부터 반영됩니다." });
@@ -113,6 +116,25 @@ export default function LlmSettingsPage() {
                                     ))}
                                 </select>
                             </div>
+                        </div>
+
+                        <div className="border-t border-slate-100 pt-4">
+                            <label className="mb-1.5 block text-sm font-medium text-slate-600">
+                                태블릿 채팅 발행 (질문 · 답 칩)
+                            </label>
+                            <label className="flex items-center gap-2 text-sm text-slate-600">
+                                <input
+                                    type="checkbox"
+                                    checked={chatPublish !== "off"}
+                                    onChange={(e) => setChatPublish(e.target.checked ? "direct" : "off")}
+                                />
+                                {chatPublish !== "off"
+                                    ? "켬 — 인사·스텝 질문과 답 칩이 태블릿 채팅에 뜹니다"
+                                    : "끔 — 태블릿엔 아무것도 안 뜨고, 진행은 차 화면 마이크로만 합니다"}
+                            </label>
+                            <p className="mt-1 text-xs text-slate-400">
+                                서버 재시작 시 켬(기본값)으로 돌아옵니다. 끈 발행은 로그에 ask_skip 으로 남습니다.
+                            </p>
                         </div>
 
                         <div className="flex items-center gap-3 border-t border-slate-100 pt-4">
