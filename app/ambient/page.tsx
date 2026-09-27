@@ -68,7 +68,7 @@ function truncateSid(v: string): string {
 }
 
 export default function AmbientScreen() {
-  const { stepInfo, setStepInfo, reStart, preloadedAudio } = useScene();
+  const { stepInfo, setStepInfo, reStart, preloadedAudio, setVideoPath } = useScene();
   // sid === null → 자동 추종(와일드카드) 모드. ?sid= 쿼리가 있으면 그 값으로 고정된다.
   const [sid, setSid] = useState<string | null>(null);
   // 와일드카드 모드에서 지금 화면이 따라가고 있는 session_id
@@ -98,6 +98,9 @@ export default function AmbientScreen() {
   const [greeting, setGreeting] = useState<string | null>(null);
   // 엔딩 화면에 보여줄 최종 목적지(한글) — next=exit state 의 next_place 에서 받는다.
   const [endingPlace, setEndingPlace] = useState<string | null>(null);
+  // 서버 state.ending(2026-09-26): 마지막 step 렌더 완료에만 실린다 — 최종 목적지 영상(file_name)과 하차 문구.
+  // video 가 있으면 배경을 그 영상으로 바꾸고 블러를 끈다. 없으면(구 서버·매핑 없음) 스텝 3 영상 + 기존 문구.
+  const [endingInfo, setEndingInfo] = useState<{ video?: string | null; message?: string | null } | null>(null);
   // 소리 뮤트(운영자 토글, localStorage 지속) — 화면의 모든 audio/video 와 프리로드 오디오를 음소거.
   // 뮤트면 우상단 아이콘이 디버그 여부와 무관하게 항상 보이고, 아니면 아무것도 안 보인다
   // (투명하지만 같은 자리가 토글 버튼이다). 마이크 입력(STT)에는 영향 없다.
@@ -453,6 +456,10 @@ export default function AmbientScreen() {
               setScreen("ending");
               setVisitorTurn(false);
               setEndingPlace(typeof msg.next_place === "string" && msg.next_place ? msg.next_place : null);
+              const ending = msg.ending && typeof msg.ending === "object" ? msg.ending : null;
+              setEndingInfo(ending ? { video: typeof ending.video === "string" ? ending.video : null,
+                                       message: typeof ending.message === "string" ? ending.message : null } : null);
+              if (ending && typeof ending.video === "string" && ending.video) setVideoPath(ending.video); // 최종 목적지 영상
             }
             // 그 외 "driving" / "arrived" 는 화면 전환 없음 (step 메시지가 비주얼을 이끈다)
             break;
@@ -483,7 +490,7 @@ export default function AmbientScreen() {
       clearTimeout(retry);
       wsRef.current?.close();
     };
-  }, [sid, setStepInfo, reStart]);
+  }, [sid, setStepInfo, reStart, setVideoPath]);
 
   // 고정 세션 모드면 sid, 와일드카드 모드면 지금 추종 중인 activeSid를 사용
   const controlSid = sid ?? activeSid;
@@ -719,7 +726,7 @@ export default function AmbientScreen() {
         />
       )}
       {/* ambient 모드: 키 입력 없이 즉시 재생, 전 스텝 루프, 두 번째 재생부터 블러 */}
-      <StepVideoPlayer ambient />
+      <StepVideoPlayer ambient clear={screen === "ending" && !!endingInfo?.video} />
       <StepAudioPlayer />
 
       {/* classic(`/`)과 같은 고정 프레임·HUD. step 연출 중에만 띄운다 — 대기/작별 화면은
@@ -818,9 +825,10 @@ export default function AmbientScreen() {
             animate="animate"
             exit="exit"
             transition={{ duration: 1 }}
-            className="fixed inset-0 z-[22] flex flex-col items-center justify-center text-center text-white backdrop-blur-lg bg-black/10"
+            className={`fixed inset-0 z-[22] flex flex-col items-center justify-center text-center text-white ${endingInfo?.video ? "bg-black/20" : "backdrop-blur-lg bg-black/10"}`}
           >
-            <h1 className="text-[96px] font-bold">{endingPlace ? `${endingPlace}에 도착했습니다.` : "목적지에 도착했습니다."}</h1>
+            {/* 서버가 하차 문구를 주면 그것을(예: "마트에 도착했습니다. 하차해 주세요."), 없으면 기존 문구 */}
+            <h1 className="text-[96px] font-bold">{endingInfo?.message || (endingPlace ? `${endingPlace}에 도착했습니다.` : "목적지에 도착했습니다.")}</h1>
             <HyundaiLoading />
             <p className="text-[28px] opacity-60">다음 장소에서 경험을 이어주세요.</p>
           </motion.div>
