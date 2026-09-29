@@ -16,19 +16,17 @@ export default function ListenIndicator({ state }: { state: CarListenerState }) 
   if (status === "off" || status === "unsupported") return null;
 
   const isError = status === "error";
-  // armed-off: 관람객 차례지만 아직 S 를 안 눌렀다 — "S 눌러 말하기" 안내.
-  // 듣는 중: 중간 자막 > 누적 발화(+D 전송 힌트) > 안내 문구 순으로 보여 준다.
+  // 관람객에게 보이는 문구라 운영 키(S 열기·D 전송) 설명은 싣지 않는다(QA 2026-09-29).
+  // armed-off: 관람객 차례, 아직 마이크 안 열림. 듣는 중: 중간 자막 > 누적 발화 > 안내 문구.
   const label = isError
     ? `마이크 오류: ${error ?? "알 수 없음"}`
     : status === "armed-off"
-      ? "S 키를 눌러 말씀해 주세요."
+      ? "말씀해 주세요."
       : status === "paused"
         ? lastFinal
           ? `전송됨 · "${lastFinal}"`
           : "잠시만요…"
-        : interim || pending
-          ? `${interim || pending}  —  전송: D 또는 S 길게`
-          : "듣고 있어요. 말씀 끝나면 D 키(또는 S 길게)를 누르세요.";
+        : interim || pending || "듣고 있어요.";
 
   return (
     <AnimatePresence>
