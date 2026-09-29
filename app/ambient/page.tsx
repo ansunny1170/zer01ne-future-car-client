@@ -79,11 +79,13 @@ export default function AmbientScreen() {
   // 서버 단발 알림(수소충전 게이트 등) — 받을 때마다 NoticePopup 이 3초 띄우고 스스로 닫는다.
   const [notice, setNotice] = useState<NoticeMsg | null>(null);
   // 수소충전 게이트 래치 — 게이트 진입(sticky 팝업 등장)부터 **다음 step(step2) 도착 전까지** true.
-  // 게이트 중에는 발화 유도(마이크·질문 UI)를 전면 차단한다: step1 의 질문을 화면에 띄우지 않고,
-  // S 를 눌러도 마이크가 열리지 않으며, "S 눌러 말하기" 안내도 감춘다.
+  // 게이트 중에는 마이크를 열지 않는다(음성으로는 게이트가 안 풀린다 — 태블릿 완료만 푼다).
+  // step1 질문(수소충전 승인 요청)은 태블릿 완료 → step2 도착 전까지 계속 보인다(QA 2026-09-29).
   // 주의: 팝업이 clear 되는 순간(완료 대행 직후)이 아니라, 실제로 step2 가 도착할 때 풀어야 한다.
   // clear 시점에 풀면 step2 생성 전 짧은 틈에 step1 질문·마이크 UI 가 튀어나온다(관측된 버그).
   const [gateLatched, setGateLatched] = useState(false);
+  const gateLatchedRef = useRef(false);
+  gateLatchedRef.current = gateLatched;
   // sticky 팝업이 뜨면 래치를 건다. clear(active=false)로는 풀지 않는다 — step 수신에서만 푼다.
   const handleStickyChange = useCallback((active: boolean) => {
     if (active) setGateLatched(true);
@@ -712,18 +714,21 @@ export default function AmbientScreen() {
       {/* 스텝 질문을 clone talk 자리에 표시 — 렌더 완료(visitorTurn) 후 관람객 발화가
           서버에 수집되기 전(paused 전)까지 유지한다. 태블릿 없이 화면만 보고도
           무엇에 답할지 알 수 있게. 다음 step 이 오면 visitorTurn 이 꺼져 사라진다. */}
-      {screen === "step" && stepQuestionActive && !questionDismissed && !gateLatched && stepInfo?.question && (
-        <CloneTalkSplit
-          key={`q-${stepInfo.step}`}
-          text={stepInfo.question}
-          keepLastLine
-          onComplete={() => {
-            // 질문 타이핑 완료 +2초 뒤 마이크 개방 — 시작 인사와 동일한 리듬.
-            setTimeout(() => {
-              if (stepQuestionActiveRef.current) setVisitorTurn(true);
-            }, 2000);
-          }}
-        />
+      {screen === "step" && stepQuestionActive && !questionDismissed && stepInfo?.question && (
+        // 게이트 중에도 질문(충전 승인 요청)은 유지 — sticky 알림의 전체 블러(z-40) 위로 올린다.
+        <div className={gateLatched ? "relative z-50" : undefined}>
+          <CloneTalkSplit
+            key={`q-${stepInfo.step}`}
+            text={stepInfo.question}
+            keepLastLine
+            onComplete={() => {
+              // 질문 타이핑 완료 +2초 뒤 마이크 개방 — 시작 인사와 동일한 리듬. 게이트 중엔 열지 않는다.
+              setTimeout(() => {
+                if (stepQuestionActiveRef.current && !gateLatchedRef.current) setVisitorTurn(true);
+              }, 2000);
+            }}
+          />
+        </div>
       )}
       {/* ambient 모드: 키 입력 없이 즉시 재생, 전 스텝 루프, 두 번째 재생부터 블러 */}
       <StepVideoPlayer ambient clear={screen === "ending" && !!endingInfo?.video} />
