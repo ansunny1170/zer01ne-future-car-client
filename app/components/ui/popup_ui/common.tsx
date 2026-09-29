@@ -107,6 +107,13 @@ const popupDict: {
         defaultText: "",
         className: "",
     },
+    // 동물출현 이벤트(2026-09-29) — 동물출현 BGV 시퀀스의 TRIGGER_POPUP "전방 동물 감지"
+    ANIMAL_DETECTED: {
+        icon: <Icons.alert />,
+        type: "warm",
+        defaultText: "전방 동물 감지",
+        className: "",
+    },
     TEMPERATURE: {
         icon: <Icons.thermometer />,
         type: "cold",
