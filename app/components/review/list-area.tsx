@@ -5,11 +5,12 @@ import { Icons } from "../ui/icons";
 
 interface ListAreaProps {
     data: Reflection[];
+    total: number;
     onItemClick: (item: Reflection) => void;
     selectedItem?: Reflection | null;
 }
 
-export default function ListArea({ data, onItemClick, selectedItem }: ListAreaProps) {
+export default function ListArea({ data, total, onItemClick, selectedItem }: ListAreaProps) {
     const scrollRef = useRef<HTMLDivElement>(null);
     const [currentPage, setCurrentPage] = useState(0);
     
@@ -118,6 +119,11 @@ export default function ListArea({ data, onItemClick, selectedItem }: ListAreaPr
                 ))}
             </div>
             
+            {/* 좌하단 - DB 에 저장된 리뷰 총 개수 */}
+            <div className="absolute bottom-[20px] left-8 z-20 text-white text-sm font-mono">
+                total: {total}
+            </div>
+
             {/* Bottom index display - 현재 페이지 표시 */}
             {groupedData.length > 1 && (
                 <div className="absolute bottom-[20px] left-1/2 transform -translate-x-1/2 z-20">

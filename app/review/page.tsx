@@ -16,11 +16,26 @@ export default function Review() {
     const wsRef = useRef<WebSocket | null>(null);
     const [wsData, setWsData] = useState<Reflection[]>([]);
     const [selectedItem, setSelectedItem] = useState<Reflection | null>(null);
+    // 리스트는 최근 120건만 받으므로 DB 전체 건수는 따로 조회한다(실패 시 받은 건수로 대체).
+    const [total, setTotal] = useState<number | null>(null);
     // 태블릿 전시용 전체화면. 이 화면에는 눈에 보이는 버튼을 둔다(운영자가 직접 켠다).
     // 나머지 화면은 layout 의 FullscreenToggle 이 좌하단 3연속 탭으로 처리한다.
     const { isFullscreen, supported, toggle } = useFullscreen();
 
     useEffect(() => {
+        const fetchTotal = async () => {
+            try {
+                const res = await fetch(`${API_BASE}/ending-reflection/count`);
+                if (res.ok) {
+                    const { total } = await res.json();
+                    if (typeof total === 'number') setTotal(total);
+                }
+            } catch (error) {
+                console.error('Failed to fetch total:', error);
+            }
+        };
+        fetchTotal();
+
         // 웹소켓 연결 시도 (현재 서버에서 즉시 끊어짐)
         const ws = new WebSocket(`${WS_BASE}/ws/ending-reflection`);
         wsRef.current = ws;
@@ -55,6 +70,7 @@ export default function Review() {
             const message = JSON.parse(event.data);
             if (message.type === 'reflection_update' && Array.isArray(message.data)) {
                 setWsData(message.data);
+                fetchTotal();
             }
         };
 
@@ -84,7 +100,7 @@ export default function Review() {
         // 무시되며 h-screen 으로 폴백된다(tailwind 3.3 이라 h-dvh 클래스가 없다).
         <div className="w-full h-screen flex items-stretch" style={{ height: "100dvh" }}>
             <DetailArea selectedItem={selectedItem} />
-            <ListArea data={limitedWsData} onItemClick={setSelectedItem} selectedItem={selectedItem} />
+            <ListArea data={limitedWsData} total={total ?? safeWsData.length} onItemClick={setSelectedItem} selectedItem={selectedItem} />
 
             {/* 전체화면 진입 버튼. 전체화면이 되면 사라져 전시 화면을 가리지 않는다.
                 Fullscreen API 는 사용자 제스처 안에서만 허용되므로 자동 진입은 불가능하다. */}
