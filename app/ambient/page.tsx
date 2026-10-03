@@ -13,8 +13,9 @@
  * - 고정 세션 모드: ?sid= 쿼리가 있으면 `/ws/futurecar/{sid}` 로 접속해 그 세션만 받는다.
  * - 자동 추종(와일드카드) 모드: ?sid= 가 없으면 `/ws/futurecar` 로 접속해 모든 세션의
  *   메시지를 받는다(차 1대·화면 1개뿐이라 실제 상영 중인 세션이 하나뿐이라는 전제).
- *   서버가 각 메시지에 session_id 를 붙여 보내주므로, 새 plan(state.idle)이 오면 그
- *   세션으로 갈아타고, 그 외에는 지금 따라가는 세션의 메시지만 받는다.
+ *   서버가 각 메시지에 session_id 를 붙여 보내주므로, 새 plan(state.idle) 또는 탑승
+ *   (어떤 세션이 waiting 으로 바뀜)이 오면 그 세션으로 갈아타고, 그 외에는 지금 따라가는
+ *   세션의 메시지만 받는다.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -244,6 +245,8 @@ export default function AmbientScreen() {
   screenRef.current = screen;
   // activeSid 최신값을 이벤트 핸들러에서 참조하기 위한 ref (stale closure 방지, screenRef와 동일 패턴)
   const activeSidRef = useRef<string | null>(null);
+  // 와일드카드 모드: 세션별 마지막 phase — 어떤 세션이 waiting 으로 '바뀌는' 순간(탑승)을 잡는다.
+  const lastPhaseBySidRef = useRef<Map<string, string>>(new Map());
   activeSidRef.current = activeSid;
 
   // 🥚 개발자 전용
@@ -417,10 +420,26 @@ export default function AmbientScreen() {
             console.warn("[ambient] session_id 없는 메시지 무시:", msg.type);
             return;
           }
+          const prevPhase = lastPhaseBySidRef.current.get(msgSid);
+          if (msg.type === "state" && typeof msg.phase === "string") {
+            lastPhaseBySidRef.current.set(msgSid, msg.phase);
+          }
           if (msg.type === "state" && msg.phase === "idle") {
             // 새 plan/여정 시작 → 이 세션으로 갈아탄다 (이후 정상 처리로 이어짐)
             setActiveSid(msgSid);
             activeSidRef.current = msgSid;
+          } else if (
+            msg.type === "state" && msg.phase === "waiting" && prevPhase !== "waiting" &&
+            msgSid !== activeSidRef.current
+          ) {
+            // 탑승(enter)한 세션으로 갈아탄다 — 실제로 차에 탄 세션이 화면을 가져간다(2026-10-03).
+            // 다른 세션(복제 재시작 등)이 먼저 화면을 잡아도 실관람 세션의 탑승이 되찾는다.
+            // waiting→waiting(인사 갱신) 재발행으로는 전환하지 않아 서로 뺏고 뺏기지 않는다.
+            setActiveSid(msgSid);
+            activeSidRef.current = msgSid;
+            reStart();
+            setGateLatched(false);
+            setGreeting(null);
           } else if (activeSidRef.current === null) {
             // 페이지 로드 후 처음 받은 메시지 → 일단 이 세션을 채택
             setActiveSid(msgSid);
