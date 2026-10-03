@@ -100,7 +100,7 @@ export default function ListArea({ data, total, onItemClick, selectedItem }: Lis
                                     </div>
                                     <div className="font-semibold text-[26px] pb-[24px] leading-[1.2] break-keep">{item.event_title}</div>
                                     <div className="flex-1 relative overflow-hidden">
-                                        <p className="text-sm leading-relaxed">
+                                        <div className="text-sm leading-relaxed">
                                             {item.reflection_text}
                                             {
                                                 item.failed_response && (
@@ -109,7 +109,7 @@ export default function ListArea({ data, total, onItemClick, selectedItem }: Lis
                                                     </pre>
                                                 )
                                             }
-                                        </p>
+                                        </div>
                                         <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-white to-transparent pointer-events-none" />
                                     </div>
                                 </button>
