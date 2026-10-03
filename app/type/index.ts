@@ -167,4 +167,8 @@ export interface Reflection {
     nick_name: string;
     reflection_text: string;
     session_id: string;
+    // 작년 차량 전용 전시 '2025-car' / 올해 확장 전시 '2026-ambient' (구버전 서버 응답에는 없음)
+    edition?: string;
+    status?: string;
+    payload?: unknown;
 }

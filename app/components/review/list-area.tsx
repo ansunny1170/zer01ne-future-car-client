@@ -5,11 +5,12 @@ import { Icons } from "../ui/icons";
 
 interface ListAreaProps {
     data: Reflection[];
+    total: number;
     onItemClick: (item: Reflection) => void;
     selectedItem?: Reflection | null;
 }
 
-export default function ListArea({ data, onItemClick, selectedItem }: ListAreaProps) {
+export default function ListArea({ data, total, onItemClick, selectedItem }: ListAreaProps) {
     const scrollRef = useRef<HTMLDivElement>(null);
     const [currentPage, setCurrentPage] = useState(0);
     
@@ -99,7 +100,7 @@ export default function ListArea({ data, onItemClick, selectedItem }: ListAreaPr
                                     </div>
                                     <div className="font-semibold text-[26px] pb-[24px] leading-[1.2] break-keep">{item.event_title}</div>
                                     <div className="flex-1 relative overflow-hidden">
-                                        <p className="text-sm leading-relaxed">
+                                        <div className="text-sm leading-relaxed">
                                             {item.reflection_text}
                                             {
                                                 item.failed_response && (
@@ -108,7 +109,7 @@ export default function ListArea({ data, onItemClick, selectedItem }: ListAreaPr
                                                     </pre>
                                                 )
                                             }
-                                        </p>
+                                        </div>
                                         <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-white to-transparent pointer-events-none" />
                                     </div>
                                 </button>
@@ -118,6 +119,11 @@ export default function ListArea({ data, onItemClick, selectedItem }: ListAreaPr
                 ))}
             </div>
             
+            {/* 좌하단 - DB 에 저장된 리뷰 총 개수 */}
+            <div className="absolute bottom-[20px] left-8 z-20 text-white text-sm font-mono">
+                total: {total}
+            </div>
+
             {/* Bottom index display - 현재 페이지 표시 */}
             {groupedData.length > 1 && (
                 <div className="absolute bottom-[20px] left-1/2 transform -translate-x-1/2 z-20">
