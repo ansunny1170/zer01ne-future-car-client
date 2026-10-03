@@ -6,25 +6,54 @@ import { Reflection } from "@/type";
 import { useEffect, useRef, useState } from "react";
 import { BASE_API_LINK } from "@/constants";
 import { useFullscreen } from "@/hooks/useFullscreen";
+import { applyReflectionUpdate, parseEditions } from "@/utils/reflection";
 
 // .env(NEXT_PUBLIC_API_URL) 기반으로 REST/WS 주소 생성
 // 예: "https://api.ftcar.org/" → API_BASE="https://api.ftcar.org", WS_BASE="wss://api.ftcar.org"
 const API_BASE = BASE_API_LINK.replace(/\/+$/, "");
 const WS_BASE = API_BASE.replace(/^http/, "ws"); // http→ws, https→wss
+// 한 번에 받는 최대 건수(서버 상한 2000). 구버전 서버는 limit 을 무시하고 전부 준다.
+const LIST_LIMIT = 2000;
 
 export default function Review() {
     const wsRef = useRef<WebSocket | null>(null);
     const [wsData, setWsData] = useState<Reflection[]>([]);
+    // WS 핸들러는 마운트 시점 클로저라 최신 목록을 ref 로 본다.
+    const dataRef = useRef<Reflection[]>([]);
+    useEffect(() => {
+        dataRef.current = wsData;
+    }, [wsData]);
     const [selectedItem, setSelectedItem] = useState<Reflection | null>(null);
+    // 목록은 최근 LIST_LIMIT 건까지만 받으므로 DB 전체 건수는 따로 조회한다(실패 시 받은 건수로 대체).
+    const [total, setTotal] = useState<number | null>(null);
+    // 보여줄 엔딩 버전(작년 2025-car / 올해 2026-ambient). ?editions=2025-car 처럼 골라 본다. 기본은 둘 다.
+    // useSearchParams 는 정적 빌드에서 Suspense 경계를 요구해서, 마운트 후 location 에서 한 번 읽는다.
+    const [editions, setEditions] = useState<string[] | null>(null);
+    useEffect(() => {
+        setEditions(parseEditions(new URLSearchParams(window.location.search).get("editions")));
+    }, []);
     // 태블릿 전시용 전체화면. 이 화면에는 눈에 보이는 버튼을 둔다(운영자가 직접 켠다).
     // 나머지 화면은 layout 의 FullscreenToggle 이 좌하단 3연속 탭으로 처리한다.
     const { isFullscreen, supported, toggle } = useFullscreen();
 
     // 초기 엔딩 데이터는 HTTP GET 으로 받는다 (WS 연결 성공 여부와 무관하게 마운트 시 즉시).
     useEffect(() => {
+        if (!editions) return;
+        const query = `editions=${encodeURIComponent(editions.join(","))}`;
         (async () => {
             try {
-                const response = await fetch(`${API_BASE}/ending-reflection/`, {
+                const res = await fetch(`${API_BASE}/ending-reflection/count?${query}`);
+                if (res.ok) {
+                    const { total } = await res.json();
+                    if (typeof total === 'number') setTotal(total);
+                }
+            } catch (error) {
+                console.error('Failed to fetch total:', error);
+            }
+        })();
+        (async () => {
+            try {
+                const response = await fetch(`${API_BASE}/ending-reflection/?${query}&limit=${LIST_LIMIT}`, {
                     method: 'GET',
                 });
                 if (response.ok) {
@@ -38,10 +67,12 @@ export default function Review() {
                 console.error('Failed to fetch initial data:', error);
             }
         })();
-    }, []);
+    }, [editions]);
 
     // WS 는 이후 실시간 갱신(reflection_update)만 담당한다.
+    // 신버전 서버는 새 일기 1건만 mode:"append" 로, 구버전은 전체 목록을 보낸다(applyReflectionUpdate).
     useEffect(() => {
+        if (!editions) return;
         const ws = new WebSocket(`${WS_BASE}/ws/ending-reflection`);
         wsRef.current = ws;
 
@@ -53,7 +84,10 @@ export default function Review() {
             console.log('Received:', event.data);
             const message = JSON.parse(event.data);
             if (message.type === 'reflection_update' && Array.isArray(message.data)) {
-                setWsData(message.data);
+                const { list, added } = applyReflectionUpdate(dataRef.current, message, editions);
+                dataRef.current = list;
+                setWsData(list);
+                if (added > 0) setTotal((t) => (t === null ? t : t + added));
             }
         };
 
@@ -70,12 +104,11 @@ export default function Review() {
                 wsRef.current.close();
             }
         };
-    }, []);
+    }, [editions]);
 
-    // 최대 120개(20페이지 x 6개)로 데이터 제한
+    // 예전엔 120개(20페이지)로 잘랐지만, 작년 일기만 260건이라 받은 만큼 다 보여준다(상한은 LIST_LIMIT).
     const safeWsData = Array.isArray(wsData) ? wsData : [];
-    const limitedWsData = safeWsData.slice(0, 120);
-    console.log('Original data length:', wsData.length, 'Limited data length:', limitedWsData.length);
+    console.log('Data length:', safeWsData.length, 'total:', total);
 
     return (
         // h-screen(100vh) 은 모바일 브라우저에서 주소창 높이까지 포함해 스크롤이 생긴다.
@@ -83,7 +116,7 @@ export default function Review() {
         // 무시되며 h-screen 으로 폴백된다(tailwind 3.3 이라 h-dvh 클래스가 없다).
         <div className="w-full h-screen flex items-stretch" style={{ height: "100dvh" }}>
             <DetailArea selectedItem={selectedItem} />
-            <ListArea data={limitedWsData} onItemClick={setSelectedItem} selectedItem={selectedItem} />
+            <ListArea data={safeWsData} total={total ?? safeWsData.length} onItemClick={setSelectedItem} selectedItem={selectedItem} />
 
             {/* 전체화면 진입 버튼. 전체화면이 되면 사라져 전시 화면을 가리지 않는다.
                 Fullscreen API 는 사용자 제스처 안에서만 허용되므로 자동 진입은 불가능하다. */}
