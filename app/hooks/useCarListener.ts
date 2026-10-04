@@ -130,10 +130,10 @@ export function useCarListener({ active, onFinal, lang = "ko-KR" }: UseCarListen
   }, []);
 
   // ── S/D 키 핸들러 — active 인 동안 항상 붙어 있다(마이크 개방 여부와 무관) ──────────
-  // 조작: S 짧게=열기/재녹음 · S 길게(800ms)=전송 · D=전송. 전송은 D 와 S-long 둘 다 가능.
+  // 조작: S 짧게=열기/재녹음 · S 길게(1200ms, main 과 동일)=전송 · D=전송. 전송은 D 와 S-long 둘 다 가능.
   useEffect(() => {
     if (!active) return;
-    const LONG_PRESS_MS = 800;
+    const LONG_PRESS_MS = 1200;
     let longTimer: ReturnType<typeof setTimeout> | null = null;
     let longFired = false; // 이번 S 누름이 long-press(전송)로 소비됐는가 — keyup 의 짧은 처리 차단용
 
