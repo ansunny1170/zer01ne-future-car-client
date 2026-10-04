@@ -7,6 +7,7 @@ import UspPopupWrapper from "../ui/usp-popup-wrapper";
 import CloneTalkSplit from "../ui/clone-talk-split";
 import HudLayer from "../ui/popup_ui/hud-layer";
 import { useDevTrigger } from "@/hooks/useDevTrigger";
+import BriefingPopup from "../ambient/briefing-popup";
 
 // onTimelineComplete: ambient(전시) 전용 — 이 스텝의 asset 을 전부 렌더·재생했음을
 // 상위(→ 서버)에 알린다. 클래식(/) 경로는 이 prop 을 넘기지 않으므로 동작 변화 없음.
@@ -251,7 +252,8 @@ export default function StepRepeat({ dafultComment, onTimelineComplete }: {
         const isVisualAsset = asset?.type === "CLONE_TALKS" || 
                              asset?.type === "DEFAULT_POPUP" || 
                              asset?.type === "TRIGGER_POPUP" ||
-                             asset?.type === "HUD_POPUP";
+                             asset?.type === "HUD_POPUP" ||
+                             asset?.type === "BRIEFING_POPUP";
         const isUspPoolAsset = asset?.type === "FUNCTION_POPUP";
 
         // 진행 조건 결정 (우선순위: Visual > USP_Pool > Audio > Empty)
@@ -284,7 +286,8 @@ export default function StepRepeat({ dafultComment, onTimelineComplete }: {
                              asset?.type === "DEFAULT_POPUP" || 
                              asset?.type === "TRIGGER_POPUP" ||
                              asset?.type === "FUNCTION_POPUP" ||
-                             asset?.type === "HUD_POPUP";
+                             asset?.type === "HUD_POPUP" ||
+                             asset?.type === "BRIEFING_POPUP";
 
         // 오디오도 비주얼도 없으면 바로 다음으로 진행
         if (!isAudioAsset && !isVisualAsset) {
@@ -385,6 +388,13 @@ export default function StepRepeat({ dafultComment, onTimelineComplete }: {
         
         // 🎯 단일 객체로 변경된 assets 처리
         const asset = item.assets;
+
+        // 이 항목을 끝냈을 때만 다음으로 — 완료 콜백이 두 번 불리거나(부모 재렌더로 타이머가 다시 걸림)
+        // 늦게 도착해도 이미 넘어간 뒤면 아무것도 하지 않는다. 예전엔 idx+1 이 두 번 쌓여 다음 항목을
+        // 0.5초 만에 건너뛰는 일이 있었다(2026-10-05 step3 끝 '다음 일정 브리핑'이 실주행에서 간헐적으로 스킵).
+        const itemIdx = currentIdx;
+        const advanceFrom = (delay: number) =>
+            setTimeout(() => setCurrentIdx(idx => (idx === itemIdx ? idx + 1 : idx)), delay);
         
         // 🔧 오디오 에셋일 때는 빈 div 렌더링 (재생과 타이밍은 useEffect에서 처리)
         const isAudioAsset = asset?.type === "VEHICLE_SOUND_EFFECT" || asset?.type === "COMPANION_VOICE";
@@ -400,7 +410,7 @@ export default function StepRepeat({ dafultComment, onTimelineComplete }: {
                 <CloneTalkSplit
                     text={asset.text || ""}
                     onComplete={() => {
-                        setTimeout(() => setCurrentIdx(idx => idx + 1), CLONE_TALK_DELAY);
+                        advanceFrom(CLONE_TALK_DELAY);
                     }}
                 />
             );
@@ -419,7 +429,20 @@ export default function StepRepeat({ dafultComment, onTimelineComplete }: {
                     key={currentIdx}
                     keyName={keyName}
                     onComplete={() => {
-                        setTimeout(() => setCurrentIdx(idx => idx + 1), POPUP_COMPLETE_DELAY);
+                        advanceFrom(POPUP_COMPLETE_DELAY);
+                    }}
+                />
+            );
+        }
+
+        // step3 끝 '다음 일정 브리핑' — 서버가 타임라인 맨 끝(도착 직전)에 끼운다
+        if (asset?.type === "BRIEFING_POPUP") {
+            return (
+                <BriefingPopup
+                    key={currentIdx}
+                    data={asset}
+                    onComplete={() => {
+                        advanceFrom(POPUP_COMPLETE_DELAY);
                     }}
                 />
             );
@@ -436,7 +459,7 @@ export default function StepRepeat({ dafultComment, onTimelineComplete }: {
                     text={asset.description}
                     description={asset.subtext_popup}
                     onComplete={() => {
-                        setTimeout(() => setCurrentIdx(idx => idx + 1), POPUP_COMPLETE_DELAY);
+                        advanceFrom(POPUP_COMPLETE_DELAY);
                     }}
                 />
             );

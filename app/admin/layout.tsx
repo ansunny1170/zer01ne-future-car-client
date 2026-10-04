@@ -19,6 +19,7 @@ const MENU = [
     { href: "/admin/media", label: "미디어 저장소", icon: "🗂️" },
     { href: "/admin/logs", label: "서버 로그", icon: "📋" },
     { href: "/admin/sessions", label: "세션 관리", icon: "🚗" },
+    { href: "/admin/briefing", label: "브리핑 사진", icon: "🖼️" },
 ];
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
