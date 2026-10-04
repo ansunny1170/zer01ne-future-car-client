@@ -44,6 +44,7 @@ export enum AssetsType {
     HUD_POPUP = 'HUD_POPUP',
     COMPANION_VOICE = 'COMPANION_VOICE',
     VEHICLE_SOUND_EFFECT = 'VEHICLE_SOUND_EFFECT',
+    BRIEFING_POPUP = 'BRIEFING_POPUP', // step3 끝 '다음 일정 브리핑' (2026-10-05, 서버가 끼움)
 }
 export enum CompanionType {
     CHILD_GIRL = 'CHILD_GIRL', 
@@ -104,6 +105,24 @@ export interface CompanionVoice {
     description: string,
     file_name: string,
 }
+// '다음 일정 브리핑' 카드 1장 — 다음 장소(마트·공원)에서 할 태스크 1개를 LLM 이 일정처럼 꾸민 것
+export interface BriefingItem {
+    tag: string,        // 예: "예약 필요" (비면 칩 없음)
+    title: string,
+    line1: string,      // "<위치> | <주차 상황>"
+    line2: string,      // "이동 2.1km / 9분 예상 / 정체 보통"
+    time_label: string, // "출발 예상 시각"
+    time: string,       // "12:00"
+    status: string,     // "정시 도착 가능"
+    image: string | null, // 관리자 화면에서 태스크별로 올린 사진 URL
+}
+export interface BriefingPopup {
+    type: AssetsType.BRIEFING_POPUP,
+    title: string,
+    subtitle: string,
+    section_title: string,
+    items: BriefingItem[],
+}
 export type Assets = CloneTalks 
   | DefaultPopup 
   | TriggerPopup
@@ -111,6 +130,7 @@ export type Assets = CloneTalks
   | HudPopup
   | VehicleSoundEffect 
   | CompanionVoice
+  | BriefingPopup
 interface AssetsTimeline {
     parallel: boolean,
     assets: Assets,

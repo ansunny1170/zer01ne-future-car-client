@@ -2,7 +2,7 @@
 // 섹션 정본 순서는 서버 app/models/prompt.py 의 SECTION_ORDER 와 반드시 일치해야 한다
 // (조립 = 이 순서로 \n\n 이어붙임 — 서버가 최종 조립하고 화면 전체보기는 동일 규칙으로 미리 보여줌).
 
-export type PromptKind = "scenario" | "ending" | "greeting" | "route" | "ending2026";
+export type PromptKind = "scenario" | "ending" | "greeting" | "route" | "ending2026" | "briefing";
 
 export const KIND_LABELS: Record<PromptKind, string> = {
     scenario: "시나리오",
@@ -10,6 +10,7 @@ export const KIND_LABELS: Record<PromptKind, string> = {
     greeting: "탑승 인사",
     route: "경로 판정",
     ending2026: "일기 2026 (전체 여정)",
+    briefing: "다음 일정 브리핑",
 };
 
 export type PromptMeta = {
