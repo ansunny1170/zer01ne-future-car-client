@@ -16,6 +16,7 @@ const MENU = [
     { href: "/admin/prompts", label: "프롬프트 관리", icon: "📝" },
     { href: "/admin/llm", label: "LLM 설정", icon: "🤖" },
     { href: "/admin/reflections", label: "엔딩 일기", icon: "📖" },
+    { href: "/admin/media", label: "미디어 저장소", icon: "🗂️" },
     { href: "/admin/logs", label: "서버 로그", icon: "📋" },
     { href: "/admin/sessions", label: "세션 관리", icon: "🚗" },
 ];
