@@ -14,6 +14,9 @@ const API_BASE = BASE_API_LINK.replace(/\/+$/, "");
 const WS_BASE = API_BASE.replace(/^http/, "ws"); // http→ws, https→wss
 // 한 번에 받는 최대 건수(서버 상한 2000). 구버전 서버는 limit 을 무시하고 전부 준다.
 const LIST_LIMIT = 2000;
+// 새 일기가 도착하면 상세에 자동으로 띄워 두는 시간. 지나면 띄우기 전 화면으로 돌아간다.
+// 출구 화면은 관람객이 조작하지 않으므로, 방금 체험을 끝낸 사람이 자기 일기를 바로 보게 하려는 것.
+const SPOTLIGHT_MS = 60_000;
 
 export default function Review() {
     const wsRef = useRef<WebSocket | null>(null);
@@ -24,6 +27,38 @@ export default function Review() {
         dataRef.current = wsData;
     }, [wsData]);
     const [selectedItem, setSelectedItem] = useState<Reflection | null>(null);
+    // 자동 강조 — 강조 전 선택(돌아갈 곳)과 타이머. 강조 중에 새 일기가 또 오면 돌아갈 곳은 처음 것 그대로 둔다.
+    const selectedRef = useRef<Reflection | null>(null);
+    useEffect(() => {
+        selectedRef.current = selectedItem;
+    }, [selectedItem]);
+    const spotlightRef = useRef<{ timer: ReturnType<typeof setTimeout>; previous: Reflection | null } | null>(null);
+    const [listTopSignal, setListTopSignal] = useState(0);
+
+    const spotlight = (item: Reflection) => {
+        const previous = spotlightRef.current ? spotlightRef.current.previous : selectedRef.current;
+        if (spotlightRef.current) clearTimeout(spotlightRef.current.timer);
+        const timer = setTimeout(() => {
+            spotlightRef.current = null;
+            setSelectedItem(previous);
+        }, SPOTLIGHT_MS);
+        spotlightRef.current = { timer, previous };
+        setSelectedItem(item);
+        setListTopSignal((n) => n + 1); // 새 일기는 목록 맨 앞(첫 페이지)에 있다
+    };
+
+    // 사람이 직접 고르면 자동 강조를 끝낸다 — 60초 뒤에 화면이 저절로 바뀌지 않게.
+    const selectByHand = (item: Reflection) => {
+        if (spotlightRef.current) {
+            clearTimeout(spotlightRef.current.timer);
+            spotlightRef.current = null;
+        }
+        setSelectedItem(item);
+    };
+
+    useEffect(() => () => {
+        if (spotlightRef.current) clearTimeout(spotlightRef.current.timer);
+    }, []);
     // 목록은 최근 LIST_LIMIT 건까지만 받으므로 DB 전체 건수는 따로 조회한다(실패 시 받은 건수로 대체).
     const [total, setTotal] = useState<number | null>(null);
     // 보여줄 엔딩 버전(작년 2025-car / 올해 2026-ambient). ?editions=2025-car 처럼 골라 본다. 기본은 둘 다.
@@ -87,7 +122,10 @@ export default function Review() {
                 const { list, added } = applyReflectionUpdate(dataRef.current, message, editions);
                 dataRef.current = list;
                 setWsData(list);
-                if (added > 0) setTotal((t) => (t === null ? t : t + added));
+                if (added > 0) {
+                    setTotal((t) => (t === null ? t : t + added));
+                    spotlight(list[0]); // 새로 온 것은 맨 앞에 붙는다
+                }
             }
         };
 
@@ -116,7 +154,7 @@ export default function Review() {
         // 무시되며 h-screen 으로 폴백된다(tailwind 3.3 이라 h-dvh 클래스가 없다).
         <div className="w-full h-screen flex items-stretch" style={{ height: "100dvh" }}>
             <DetailArea selectedItem={selectedItem} />
-            <ListArea data={safeWsData} total={total ?? safeWsData.length} onItemClick={setSelectedItem} selectedItem={selectedItem} />
+            <ListArea data={safeWsData} total={total ?? safeWsData.length} onItemClick={selectByHand} selectedItem={selectedItem} scrollTopSignal={listTopSignal} />
 
             {/* 전체화면 진입 버튼. 전체화면이 되면 사라져 전시 화면을 가리지 않는다.
                 Fullscreen API 는 사용자 제스처 안에서만 허용되므로 자동 진입은 불가능하다. */}
