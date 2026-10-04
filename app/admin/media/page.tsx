@@ -239,21 +239,22 @@ export default function MediaPage() {
                 ) : (
                     <div className="max-h-[32rem] overflow-auto rounded-xl border border-slate-200">
                         <table className="w-full text-left text-sm">
+                            {/* 열 폭: 파일 이름 15rem·접두사 14rem 고정, 종류·크기·수정 시각은 내용 폭에 딱 맞춤(w-[1%]+nowrap), 남는 폭은 동작 열이 받는다. */}
                             <thead className="sticky top-0 bg-slate-50 text-xs text-slate-400">
                                 <tr>
-                                    <th className="px-4 py-2.5 font-medium">파일 이름</th>
-                                    <th className="px-4 py-2.5 font-medium">접두사 (prefix)</th>
-                                    <th className="whitespace-nowrap px-4 py-2.5 font-medium">종류</th>
-                                    <th className="px-4 py-2.5 text-right font-medium">크기</th>
-                                    <th className="px-4 py-2.5 font-medium">수정 시각</th>
+                                    <th className="w-60 px-4 py-2.5 font-medium">파일 이름</th>
+                                    <th className="w-56 px-4 py-2.5 font-medium">접두사 (prefix)</th>
+                                    <th className="w-[1%] whitespace-nowrap px-4 py-2.5 font-medium">종류</th>
+                                    <th className="w-[1%] whitespace-nowrap px-4 py-2.5 text-right font-medium">크기</th>
+                                    <th className="w-[1%] whitespace-nowrap px-4 py-2.5 font-medium">수정 시각</th>
                                     <th className="px-4 py-2.5 text-right font-medium">동작</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
                                 {shown.map((i) => (
                                     <tr key={i.key} className="hover:bg-slate-50">
-                                        <td className="w-40 max-w-40 break-all px-4 py-2.5 font-mono text-slate-700">{nameOf(i.key)}</td>
-                                        <td className="px-4 py-2.5 font-mono text-xs text-slate-500">{prefixOf(i.key) || <span className="text-slate-300">없음</span>}</td>
+                                        <td className="w-60 max-w-60 break-all px-4 py-2.5 font-mono text-slate-700">{nameOf(i.key)}</td>
+                                        <td className="w-56 max-w-56 break-all px-4 py-2.5 font-mono text-xs text-slate-500">{prefixOf(i.key) || <span className="text-slate-300">없음</span>}</td>
                                         <td className="whitespace-nowrap px-4 py-2.5 text-xs text-slate-500">{kindOf(i.key)}</td>
                                         <td className="whitespace-nowrap px-4 py-2.5 text-right text-xs text-slate-500">{fmtSize(i.size)}</td>
                                         <td className="whitespace-nowrap px-4 py-2.5 text-xs text-slate-400">{fmtDateTime(i.last_modified)}</td>
