@@ -73,17 +73,26 @@ export interface CloneTalks {
     type: AssetsType.CLONE_TALKS,
     text: string,
 }
+// 서버가 팝업마다 붙이는 표시 정보(2026-10-05, 관리자 '팝업 설정'): 모양·표시 시간·이미지 팝업 그림·고정 제목
+export interface PopupDisplay {
+    style: "icon" | "image" | "auto", // auto = 그림이 있을 때만 이미지 팝업
+    seconds: number,
+    image: string | null, // 이미지 팝업 그림 — 없으면 아이콘을 크게
+    title: string | null, // 이미지 팝업 카탈로그의 고정 제목 — 없으면 description
+}
 export interface DefaultPopup {
     type: AssetsType.DEFAULT_POPUP,
     description: string,
     subtext_popup: string,
     id: number,
+    display?: PopupDisplay,
 }
 export interface TriggerPopup {
     type: AssetsType.TRIGGER_POPUP,
     description: string,
     subtext_popup: string,
     id: number,
+    display?: PopupDisplay,
 }
 export interface FunctionPopup {
     type: AssetsType.FUNCTION_POPUP,

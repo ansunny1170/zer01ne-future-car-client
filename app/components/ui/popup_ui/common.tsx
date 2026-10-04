@@ -2,6 +2,8 @@ import { Icons } from "../icons";
 import BasicPopupBox from "./basic-popup-box";
 import { useEffect } from "react";
 import BreakPadPopup from "./break-pad-popup";
+import ImagePopup from "./image-popup";
+import { PopupDisplay } from "@/type";
 
 const popupDict: {
     [key: string]: {
@@ -160,21 +162,35 @@ const popupDict: {
     },
 }
 
-export default function CommonPopupUI({keyName, text, description, onComplete}: {keyName: string, text?: string, description?: string, onComplete?: () => void}) {
+export default function CommonPopupUI({keyName, text, description, onComplete, display}: {keyName: string, text?: string, description?: string, onComplete?: () => void, display?: PopupDisplay}) {
   console.log('CommonPopupUI rendered:', { keyName, text, description });
   
-  // 팝업 표시 시간 (기본 3초)
+  // 팝업 표시 시간 — 서버 display.seconds(관리자 '팝업 설정'), 없으면 기본 3초
+  const showMs = display?.seconds ? display.seconds * 1000 : 3000;
   useEffect(() => {
     if (keyName !== 'CLONE_TALKS' && onComplete) {
       console.log('Setting popup timer for:', keyName);
       const timer = setTimeout(() => {
         console.log('Popup timer completed:', keyName);
         onComplete();
-      }, 3000);
+      }, showMs);
       
       return () => clearTimeout(timer);
     }
-  }, [keyName, onComplete]);
+  }, [keyName, onComplete, showMs]);
+
+  // 관리자 '팝업 설정'에서 이미지 팝업을 고른 경우 — 고정 제목(카탈로그)·그림. 그림이 없으면 아이콘을 크게.
+  // auto 는 그림이 있는 팝업만 이미지 팝업으로, 나머지는 기존 아이콘 카드로.
+  if (display?.style === 'image' || (display?.style === 'auto' && display.image)) {
+    return (
+      <ImagePopup
+        title={display.title || text || popupDict[keyName]?.defaultText || ''}
+        image={display.image}
+        subtext={description}
+        icon={popupDict[keyName]?.icon || <Icons.alert />}
+      />
+    );
+  }
 
   return (
     <>

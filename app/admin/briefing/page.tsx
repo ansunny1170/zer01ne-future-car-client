@@ -9,6 +9,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { BASE_API_LINK } from "@/constants";
 
 import { Badge, Card, EmptyState, PageHeader, btn, fmtDateTime, input } from "../admin-ui";
+import { normalizeImage } from "../image-normalize";
 
 const API = BASE_API_LINK.replace(/\/+$/, "");
 
@@ -17,75 +18,6 @@ const SLOT_W = 140;
 const SLOT_H = 100;
 const OUT_W = SLOT_W * 3;
 const OUT_H = SLOT_H * 3;
-
-// 불투명(알파 > 10) 픽셀이 있는 영역. 전부 투명하면 원본 전체.
-function opaqueBounds(bmp: ImageBitmap): { x: number; y: number; w: number; h: number } {
-    const full = { x: 0, y: 0, w: bmp.width, h: bmp.height };
-    const c = document.createElement("canvas");
-    c.width = bmp.width;
-    c.height = bmp.height;
-    const cx = c.getContext("2d");
-    if (!cx) return full;
-    cx.drawImage(bmp, 0, 0);
-    const data = cx.getImageData(0, 0, c.width, c.height).data;
-    let minX = c.width, minY = c.height, maxX = -1, maxY = -1;
-    for (let y = 0; y < c.height; y++) {
-        for (let x = 0; x < c.width; x++) {
-            if (data[(y * c.width + x) * 4 + 3] > 10) {
-                if (x < minX) minX = x;
-                if (x > maxX) maxX = x;
-                if (y < minY) minY = y;
-                if (y > maxY) maxY = y;
-            }
-        }
-    }
-    return maxX < 0 ? full : { x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1 };
-}
-
-// 올리기 전에 브라우저에서 420×300 으로 맞춘다 — 원본 크기·비율이 제각각이어도 카드에 똑같이 보이게.
-// 투명 배경(일러스트·누끼)은 잘리지 않게 칸 안에 맞추고(여백 8%), 사진은 칸을 꽉 채우도록 가운데 기준으로 자른다.
-async function normalizeImage(file: File): Promise<File> {
-    const bmp = await createImageBitmap(file);
-    const probe = document.createElement("canvas");
-    probe.width = 64;
-    probe.height = 64;
-    const pctx = probe.getContext("2d");
-    let transparent = false;
-    if (pctx) {
-        pctx.drawImage(bmp, 0, 0, 64, 64);
-        const alpha = pctx.getImageData(0, 0, 64, 64).data;
-        for (let i = 3; i < alpha.length; i += 4) {
-            if (alpha[i] < 250) {
-                transparent = true;
-                break;
-            }
-        }
-    }
-    const canvas = document.createElement("canvas");
-    canvas.width = OUT_W;
-    canvas.height = OUT_H;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return file;
-    ctx.imageSmoothingQuality = "high";
-    if (transparent) {
-        // 투명 여백을 걷어낸 뒤 맞춘다 — 원본에 빈 공간이 많으면 대상이 칸 안에서 너무 작아 보인다.
-        const box = opaqueBounds(bmp);
-        const pad = 0.08;
-        const scale = Math.min((OUT_W * (1 - pad * 2)) / box.w, (OUT_H * (1 - pad * 2)) / box.h);
-        const w = box.w * scale;
-        const h = box.h * scale;
-        ctx.drawImage(bmp, box.x, box.y, box.w, box.h, (OUT_W - w) / 2, (OUT_H - h) / 2, w, h);
-    } else {
-        const scale = Math.max(OUT_W / bmp.width, OUT_H / bmp.height);
-        const w = bmp.width * scale;
-        const h = bmp.height * scale;
-        ctx.drawImage(bmp, (OUT_W - w) / 2, (OUT_H - h) / 2, w, h);
-    }
-    const type = transparent ? "image/png" : "image/jpeg";
-    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, type, 0.9));
-    if (!blob) return file;
-    return new File([blob], transparent ? "briefing.png" : "briefing.jpg", { type });
-}
 
 type Row = {
     key: string;
@@ -106,7 +38,7 @@ function ImageRow({ row, onChanged }: { row: Row; onChanged: () => void }) {
         setBusy(true);
         setError(null);
         const form = new FormData();
-        form.append("file", await normalizeImage(file));
+        form.append("file", await normalizeImage(file, OUT_W, OUT_H, "smart"));
         if (row.title) form.append("label", row.title);
         if (row.place) form.append("place", row.place);
         try {
