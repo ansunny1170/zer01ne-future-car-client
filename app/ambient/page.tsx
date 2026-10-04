@@ -270,6 +270,24 @@ export default function AmbientScreen() {
     { session_id: string; updated_at: string | null; step?: number | null; persona_title?: string }[]
   >([]);
   const [restartSid, setRestartSid] = useState("");
+  // 디버그 '리뷰 생성하기' — 켜 두면 재시작한 테스트 여정이 끝날 때(엔딩 화면) 서버가 일기를 만들어 /review 에 올린다.
+  // 이 브라우저에만 기억한다(새로고침해도 유지).
+  const [reviewOnRestart, setReviewOnRestart] = useState(false);
+  useEffect(() => {
+    try {
+      setReviewOnRestart(localStorage.getItem("ftcar_review_on_restart") === "true");
+    } catch {
+      // 저장소 차단(사생활 보호 모드 등) — 기본값(꺼짐)으로 둔다
+    }
+  }, []);
+  const toggleReviewOnRestart = (next: boolean) => {
+    setReviewOnRestart(next);
+    try {
+      localStorage.setItem("ftcar_review_on_restart", String(next));
+    } catch {
+      // 저장 실패해도 이번 화면에서는 동작한다
+    }
+  };
 
   // localStorage에서 devMode 초기값 로드 (SSR 하이드레이션 불일치 방지 위해 effect에서)
   useEffect(() => {
@@ -606,6 +624,7 @@ export default function AmbientScreen() {
       body: JSON.stringify({
         session_id: restartSid || sid || activeSidRef.current || undefined,
         clone: !!restartSid,
+        review: reviewOnRestart,
       }),
     })
       .then(async (res) => {
@@ -614,7 +633,7 @@ export default function AmbientScreen() {
           category: "ambient",
           stage: "restart",
           level: res.ok ? "info" : "warn",
-          message: res.ok ? `여정 재시작 → ${body.session_id}` : `재시작 실패 ${res.status}: ${body.detail ?? ""}`,
+          message: res.ok ? `여정 재시작 → ${body.session_id}${reviewOnRestart ? " (리뷰 생성)" : ""}` : `재시작 실패 ${res.status}: ${body.detail ?? ""}`,
           sessionId: body.session_id ?? undefined,
           source: "client",
         });
@@ -960,6 +979,19 @@ export default function AmbientScreen() {
           >
             {restartState === "success" ? "✓ 재시작" : restartState === "error" ? "✕ 재시작" : restartState === "busy" ? "…" : restartSid ? "복제 재시작" : "여정 재시작"}
           </button>
+          {/* 리뷰 생성하기 — 켜고 재시작하면 그 여정이 끝날 때(엔딩) 일기가 생성돼 /review 에 뜬다 */}
+          <label
+            title="체크하고 여정 재시작하면, 그 여정이 끝날 때(마지막 스텝 → 엔딩 화면) 일기를 만들어 리뷰 페이지에 올립니다 (2026-ambient · 테스트 표시)"
+            className="flex cursor-pointer items-center gap-1.5 rounded px-1 py-0.5 text-[11px] text-neutral-200 hover:bg-neutral-800"
+          >
+            <input
+              type="checkbox"
+              checked={reviewOnRestart}
+              onChange={(e) => toggleReviewOnRestart(e.target.checked)}
+              className="h-3 w-3 accent-teal-500"
+            />
+            리뷰 생성하기
+          </label>
           {/* 전송 대기(2초 디바운스) 중인 발화를 버리고 다시 듣는다. 이미 전송된 발화는
               서버가 수집 즉시 다음 스텝 생성을 시작하므로 되돌릴 수 없다. */}
           <button
