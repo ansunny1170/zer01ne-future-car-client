@@ -37,6 +37,7 @@ import { BASE_API_LINK, BASE_S3_LINK, STANDBY_VIDEO, STANDBY_VIDEO_STORAGE_KEY, 
 import { cn } from "@/utils/cn";
 import { useCarListener } from "@/hooks/useCarListener";
 import ListenIndicator from "@/components/ambient/listen-indicator";
+import PopupPreview, { PreviewItem } from "@/components/ambient/popup-preview";
 import NoticePopup, { type NoticeMsg } from "@/components/ambient/notice-popup";
 import CloneTalkSplit from "@/components/ui/clone-talk-split";
 
@@ -631,6 +632,36 @@ export default function AmbientScreen() {
   // 세션이 있으면 서버 스냅샷의 엔딩(최종 목적지 영상·하차 문구)을, 없으면 기본 문구를 쓴다.
   // 다시 누르면 들어오기 전 화면·영상·마이크 상태로 돌아간다(그사이 실제 흐름이 화면을 바꿨으면 그대로 둔다).
   const endingPreviewRef = useRef<{ screen: Screen; video: string | null; visitorTurn: boolean } | null>(null);
+  // 디버그 '이미지 팝업 미리보기' — 스텝과 무관하게 이미지 팝업(관리자 '팝업 설정'의 14종)을 이 화면에 띄운다. 조회만.
+  const [popupPreviewId, setPopupPreviewId] = useState<string>("ALL");
+  const [popupPreviewItems, setPopupPreviewItems] = useState<PreviewItem[] | null>(null);
+  const [popupPreviewSeconds, setPopupPreviewSeconds] = useState(5);
+  const [popupCatalog, setPopupCatalog] = useState<PreviewItem[]>([]);
+  useEffect(() => {
+    if (!devMode) return;
+    const API = BASE_API_LINK.replace(/\/+$/, "");
+    fetch(`${API}/popups/images`).then((r) => (r.ok ? r.json() : null))
+      .then((d) => setPopupCatalog((d?.rows ?? []) as PreviewItem[])).catch(() => {});
+  }, [devMode]);
+  const startPopupPreview = () => {
+    if (popupPreviewItems) {
+      setPopupPreviewItems(null); // 다시 누르면 멈춤
+      return;
+    }
+    const API = BASE_API_LINK.replace(/\/+$/, "");
+    Promise.all([
+      fetch(`${API}/popups/images`).then((r) => (r.ok ? r.json() : null)).catch(() => null),
+      fetch(`${API}/popups/config`).then((r) => (r.ok ? r.json() : null)).catch(() => null),
+    ]).then(([imgs, cfg]) => {
+      const rows = (imgs?.rows ?? []) as PreviewItem[];
+      setPopupCatalog(rows);
+      const items = popupPreviewId === "ALL" ? rows : rows.filter((r) => r.id === popupPreviewId);
+      if (items.length === 0) return;
+      setPopupPreviewSeconds(Number(cfg?.default?.seconds) || 5); // 관리자 '팝업 설정'의 DEFAULT 표시 시간
+      setPopupPreviewItems(items);
+    });
+  };
+
   const toggleEndingPreview = () => {
     const saved = endingPreviewRef.current;
     if (saved && screen === "ending") {
@@ -815,6 +846,9 @@ export default function AmbientScreen() {
   return (
     <div className="w-full h-full min-h-screen overflow-hidden bg-black text-white">
       <ListenIndicator state={listener} />
+      {popupPreviewItems && (
+        <PopupPreview items={popupPreviewItems} seconds={popupPreviewSeconds} onDone={() => setPopupPreviewItems(null)} />
+      )}
       <NoticePopup notice={notice} onStickyChange={handleStickyChange} />
       {/* 소리 뮤트 표시(표시 전용) — 뮤트면 디버그 여부와 무관하게 항상 보이고, 아니면 없다.
           토글은 M 키 또는 디버그창 상단 음소거 버튼으로만 한다(화면 오터치 방지). */}
@@ -975,9 +1009,10 @@ export default function AmbientScreen() {
       )}
 
       {devMode && (
-        <div className="absolute top-[15%] left-4 w-28 z-[999] flex flex-col gap-1.5 rounded-md border border-neutral-700 bg-neutral-900/90 px-2 py-2 text-white">
+        <div className="absolute top-[15%] left-4 w-60 z-[999] grid grid-cols-2 content-start gap-1.5 rounded-md border border-neutral-700 bg-neutral-900/90 px-2 py-2 text-white">
+          {/* 2열 그리드(2026-10-05) — 세로로 너무 길어 짝 버튼은 나란히, 선택 상자·구분선·닫기는 두 칸 차지 */}
           {/* 명시적 닫기 — 호버하면 다시 켜는 방법(단축키·클릭 영역)이 뜬다 */}
-          <div className="group relative">
+          <div className="group relative col-span-2">
             <button
               type="button"
               onClick={() => setDevModePersist(false)}
@@ -1023,13 +1058,13 @@ export default function AmbientScreen() {
             <div className="text-[10px] text-neutral-400">현재 STEP</div>
             <div className="text-2xl font-bold leading-tight">{stepInfo?.step ?? "-"}</div>
           </div>
-          <div className="my-0.5 h-px bg-neutral-700" />
+          <div className="col-span-2 my-0.5 h-px bg-neutral-700" />
           {/* 재시작할 세션 선택 — 비우면 자동(추종/최근). 목록은 devMode 켤 때 서버에서 받는다 */}
           <select
             value={restartSid}
             onChange={(e) => setRestartSid(e.target.value)}
             title="여정 재시작에 쓸 세션 (2026-08 이후, plan 보유). 자동 = 추종 중인 세션 또는 최근 세션"
-            className="w-full rounded border border-neutral-600 bg-neutral-800 px-1 py-1 text-[10px]"
+            className="col-span-2 w-full rounded border border-neutral-600 bg-neutral-800 px-1 py-1 text-[10px]"
           >
             <option value="">세션: 자동(최근)</option>
             {sessionChoices.map((s) => (
@@ -1103,7 +1138,7 @@ export default function AmbientScreen() {
           >
             발화 초기화
           </button>
-          <div className="my-0.5 h-px bg-neutral-700" />
+          <div className="col-span-2 my-0.5 h-px bg-neutral-700" />
           {TABLET_CONTROL_TYPES.map((type) => {
             const state = publishState[type];
             return (
@@ -1125,7 +1160,7 @@ export default function AmbientScreen() {
               </button>
             );
           })}
-          <div className="my-0.5 h-px bg-neutral-700" />
+          <div className="col-span-2 my-0.5 h-px bg-neutral-700" />
           {/* 태블릿 대행: 수소충전 게이트 해제. step1 후 sticky 팝업이 떠 있을 때 누르면
               서버가 완료를 감지해 팝업을 내리고 step2 를 생성한다. */}
           <button
@@ -1150,6 +1185,32 @@ export default function AmbientScreen() {
                   ? "…"
                   : "수소충전 완료 대행"}
           </button>
+          {/* 이미지 팝업 미리보기 — 스텝과 무관하게 이 화면에만. 하나 또는 전체(순서대로), 다시 누르면 멈춤 */}
+          <select
+            value={popupPreviewId}
+            onChange={(e) => setPopupPreviewId(e.target.value)}
+            title="미리 볼 이미지 팝업 — 관리자 '팝업 설정'의 14종"
+            className="col-span-2 w-full rounded border border-neutral-600 bg-neutral-800 px-1 py-1 text-[10px]"
+          >
+            <option value="ALL">이미지 팝업: 전체</option>
+            {popupCatalog.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.title}
+                {p.image_url ? "" : " (그림 없음)"}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={startPopupPreview}
+            title="스텝과 무관하게 이미지 팝업을 이 화면에 띄웁니다(서버·태블릿에는 보내지 않음). 표시 시간은 팝업 설정의 DEFAULT 값"
+            className={cn(
+              "rounded px-2 py-1.5 text-[11px] font-semibold transition-colors cursor-pointer",
+              popupPreviewItems ? "bg-teal-500 hover:bg-teal-400" : "bg-teal-800 hover:bg-teal-700"
+            )}
+          >
+            {popupPreviewItems ? "미리보기 멈춤" : "팝업 미리보기"}
+          </button>
           {/* 엔딩 화면 미리보기 — 이 화면만 바뀐다(서버·태블릿에는 알리지 않음). 다시 누르면 원래 화면으로 */}
           <button
             type="button"
@@ -1162,12 +1223,12 @@ export default function AmbientScreen() {
           >
             {screen === "ending" && endingPreviewRef.current ? "엔딩 닫기" : "엔딩 화면 보기"}
           </button>
-          {!controlSid && <div className="text-center text-[10px] text-neutral-500">세션 대기중</div>}
+          {!controlSid && <div className="col-span-2 text-center text-[10px] text-neutral-500">세션 대기중</div>}
         </div>
       )}
 
       {devMode && (
-        <div className="absolute top-[15%] left-32 max-h-[90vh] overflow-y-auto bg-white max-w-1/2 text-black px-4 py-2 rounded-md z-[999]">
+        <div className="absolute top-[15%] left-[264px] max-h-[90vh] overflow-y-auto bg-white max-w-1/2 text-black px-4 py-2 rounded-md z-[999]">
           {/* 설정 토글 — 대기 영상·발화 딜레이·LLM 세 줄을 접었다 편다(평소엔 접어 화면을 아낀다) */}
           <button
             type="button"
