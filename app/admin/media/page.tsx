@@ -25,6 +25,7 @@ const KINDS: Record<string, string[]> = {
 // 키 = 접두사 + 파일 이름. "prompts/a.md" → 접두사 "prompts/", 파일 이름 "a.md".
 const nameOf = (key: string) => key.slice(key.lastIndexOf("/") + 1);
 const prefixOf = (key: string) => key.slice(0, key.lastIndexOf("/") + 1);
+const NO_PREFIX = "(none)";
 const extOf = (key: string) => (key.includes(".") ? key.split(".").pop()!.toLowerCase() : "");
 const kindOf = (key: string) => Object.keys(KINDS).find((k) => KINDS[k].includes(extOf(key))) ?? "기타";
 
@@ -60,6 +61,8 @@ export default function MediaPage() {
     const [error, setError] = useState("");
     const [search, setSearch] = useState("");
     const [kind, setKind] = useState("");
+    // 접두사 필터 — "" 전체, NO_PREFIX 접두사 없는 것만, 그 외는 해당 접두사.
+    const [prefixFilter, setPrefixFilter] = useState("");
     const [overwrite, setOverwrite] = useState(false);
     // 접두사(prefix) — 저장소에는 폴더가 없고 파일마다 키(이름) 하나만 있다. 키 앞에 "prompts/" 처럼 붙는 부분이 접두사다.
     const [prefix, setPrefix] = useState("");
@@ -107,8 +110,17 @@ export default function MediaPage() {
 
     const shown = useMemo(() => {
         const q = search.trim().toLowerCase();
-        return (items ?? []).filter((i) => (!q || i.key.toLowerCase().includes(q)) && (!kind || kindOf(i.key) === kind));
-    }, [items, search, kind]);
+        return (items ?? []).filter((i) =>
+            (!q || i.key.toLowerCase().includes(q)) &&
+            (!kind || kindOf(i.key) === kind) &&
+            (!prefixFilter || (prefixFilter === NO_PREFIX ? prefixOf(i.key) === "" : prefixOf(i.key) === prefixFilter)));
+    }, [items, search, kind, prefixFilter]);
+    // 저장소에 실제로 있는 접두사들(개수와 함께) — 필터 선택지.
+    const prefixes = useMemo(() => {
+        const counts = new Map<string, number>();
+        (items ?? []).forEach((i) => counts.set(prefixOf(i.key), (counts.get(prefixOf(i.key)) ?? 0) + 1));
+        return [...counts.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+    }, [items]);
     const totalSize = useMemo(() => (items ?? []).reduce((sum, i) => sum + i.size, 0), [items]);
 
     const copy = (text: string) => navigator.clipboard?.writeText(text).catch(() => {});
@@ -212,6 +224,12 @@ export default function MediaPage() {
                         <option value="">모든 종류</option>
                         {[...Object.keys(KINDS), "기타"].map((k) => <option key={k} value={k}>{k}</option>)}
                     </select>
+                    <select value={prefixFilter} onChange={(e) => setPrefixFilter(e.target.value)} className={input} aria-label="접두사">
+                        <option value="">모든 접두사</option>
+                        {prefixes.map(([p, n]) => (
+                            <option key={p || NO_PREFIX} value={p || NO_PREFIX}>{p || "접두사 없음"} ({n.toLocaleString()})</option>
+                        ))}
+                    </select>
                     <span className="ml-auto text-sm text-slate-500">{shown.length.toLocaleString()}개</span>
                 </div>
                 {!items ? (
@@ -225,7 +243,7 @@ export default function MediaPage() {
                                 <tr>
                                     <th className="px-4 py-2.5 font-medium">파일 이름</th>
                                     <th className="px-4 py-2.5 font-medium">접두사 (prefix)</th>
-                                    <th className="px-4 py-2.5 font-medium">종류</th>
+                                    <th className="whitespace-nowrap px-4 py-2.5 font-medium">종류</th>
                                     <th className="px-4 py-2.5 text-right font-medium">크기</th>
                                     <th className="px-4 py-2.5 font-medium">수정 시각</th>
                                     <th className="px-4 py-2.5 text-right font-medium">동작</th>
@@ -234,9 +252,9 @@ export default function MediaPage() {
                             <tbody className="divide-y divide-slate-100">
                                 {shown.map((i) => (
                                     <tr key={i.key} className="hover:bg-slate-50">
-                                        <td className="max-w-80 truncate px-4 py-2.5 font-mono text-slate-700">{nameOf(i.key)}</td>
+                                        <td className="w-40 max-w-40 break-all px-4 py-2.5 font-mono text-slate-700">{nameOf(i.key)}</td>
                                         <td className="px-4 py-2.5 font-mono text-xs text-slate-500">{prefixOf(i.key) || <span className="text-slate-300">없음</span>}</td>
-                                        <td className="px-4 py-2.5 text-xs text-slate-500">{kindOf(i.key)}</td>
+                                        <td className="whitespace-nowrap px-4 py-2.5 text-xs text-slate-500">{kindOf(i.key)}</td>
                                         <td className="whitespace-nowrap px-4 py-2.5 text-right text-xs text-slate-500">{fmtSize(i.size)}</td>
                                         <td className="whitespace-nowrap px-4 py-2.5 text-xs text-slate-400">{fmtDateTime(i.last_modified)}</td>
                                         <td className="whitespace-nowrap px-4 py-2.5 text-right">
