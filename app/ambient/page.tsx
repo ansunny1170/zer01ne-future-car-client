@@ -37,6 +37,7 @@ import { BASE_API_LINK, BASE_S3_LINK, STANDBY_VIDEO, STANDBY_VIDEO_STORAGE_KEY, 
 import { cn } from "@/utils/cn";
 import { useCarListener } from "@/hooks/useCarListener";
 import ListenIndicator from "@/components/ambient/listen-indicator";
+import PopupPreview, { PreviewItem } from "@/components/ambient/popup-preview";
 import NoticePopup, { type NoticeMsg } from "@/components/ambient/notice-popup";
 import CloneTalkSplit from "@/components/ui/clone-talk-split";
 
@@ -631,6 +632,36 @@ export default function AmbientScreen() {
   // 세션이 있으면 서버 스냅샷의 엔딩(최종 목적지 영상·하차 문구)을, 없으면 기본 문구를 쓴다.
   // 다시 누르면 들어오기 전 화면·영상·마이크 상태로 돌아간다(그사이 실제 흐름이 화면을 바꿨으면 그대로 둔다).
   const endingPreviewRef = useRef<{ screen: Screen; video: string | null; visitorTurn: boolean } | null>(null);
+  // 디버그 '이미지 팝업 미리보기' — 스텝과 무관하게 이미지 팝업(관리자 '팝업 설정'의 14종)을 이 화면에 띄운다. 조회만.
+  const [popupPreviewId, setPopupPreviewId] = useState<string>("ALL");
+  const [popupPreviewItems, setPopupPreviewItems] = useState<PreviewItem[] | null>(null);
+  const [popupPreviewSeconds, setPopupPreviewSeconds] = useState(5);
+  const [popupCatalog, setPopupCatalog] = useState<PreviewItem[]>([]);
+  useEffect(() => {
+    if (!devMode) return;
+    const API = BASE_API_LINK.replace(/\/+$/, "");
+    fetch(`${API}/popups/images`).then((r) => (r.ok ? r.json() : null))
+      .then((d) => setPopupCatalog((d?.rows ?? []) as PreviewItem[])).catch(() => {});
+  }, [devMode]);
+  const startPopupPreview = () => {
+    if (popupPreviewItems) {
+      setPopupPreviewItems(null); // 다시 누르면 멈춤
+      return;
+    }
+    const API = BASE_API_LINK.replace(/\/+$/, "");
+    Promise.all([
+      fetch(`${API}/popups/images`).then((r) => (r.ok ? r.json() : null)).catch(() => null),
+      fetch(`${API}/popups/config`).then((r) => (r.ok ? r.json() : null)).catch(() => null),
+    ]).then(([imgs, cfg]) => {
+      const rows = (imgs?.rows ?? []) as PreviewItem[];
+      setPopupCatalog(rows);
+      const items = popupPreviewId === "ALL" ? rows : rows.filter((r) => r.id === popupPreviewId);
+      if (items.length === 0) return;
+      setPopupPreviewSeconds(Number(cfg?.default?.seconds) || 5); // 관리자 '팝업 설정'의 DEFAULT 표시 시간
+      setPopupPreviewItems(items);
+    });
+  };
+
   const toggleEndingPreview = () => {
     const saved = endingPreviewRef.current;
     if (saved && screen === "ending") {
@@ -815,6 +846,9 @@ export default function AmbientScreen() {
   return (
     <div className="w-full h-full min-h-screen overflow-hidden bg-black text-white">
       <ListenIndicator state={listener} />
+      {popupPreviewItems && (
+        <PopupPreview items={popupPreviewItems} seconds={popupPreviewSeconds} onDone={() => setPopupPreviewItems(null)} />
+      )}
       <NoticePopup notice={notice} onStickyChange={handleStickyChange} />
       {/* 소리 뮤트 표시(표시 전용) — 뮤트면 디버그 여부와 무관하게 항상 보이고, 아니면 없다.
           토글은 M 키 또는 디버그창 상단 음소거 버튼으로만 한다(화면 오터치 방지). */}
@@ -1149,6 +1183,32 @@ export default function AmbientScreen() {
                 : hydrogenState === "busy"
                   ? "…"
                   : "수소충전 완료 대행"}
+          </button>
+          {/* 이미지 팝업 미리보기 — 스텝과 무관하게 이 화면에만. 하나 또는 전체(순서대로), 다시 누르면 멈춤 */}
+          <select
+            value={popupPreviewId}
+            onChange={(e) => setPopupPreviewId(e.target.value)}
+            title="미리 볼 이미지 팝업 — 관리자 '팝업 설정'의 14종"
+            className="w-full rounded border border-neutral-600 bg-neutral-800 px-1 py-1 text-[10px]"
+          >
+            <option value="ALL">이미지 팝업: 전체</option>
+            {popupCatalog.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.title}
+                {p.image_url ? "" : " (그림 없음)"}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={startPopupPreview}
+            title="스텝과 무관하게 이미지 팝업을 이 화면에 띄웁니다(서버·태블릿에는 보내지 않음). 표시 시간은 팝업 설정의 DEFAULT 값"
+            className={cn(
+              "rounded px-2 py-1.5 text-[11px] font-semibold transition-colors cursor-pointer",
+              popupPreviewItems ? "bg-teal-500 hover:bg-teal-400" : "bg-teal-800 hover:bg-teal-700"
+            )}
+          >
+            {popupPreviewItems ? "미리보기 멈춤" : "이미지 팝업 미리보기"}
           </button>
           {/* 엔딩 화면 미리보기 — 이 화면만 바뀐다(서버·태블릿에는 알리지 않음). 다시 누르면 원래 화면으로 */}
           <button
