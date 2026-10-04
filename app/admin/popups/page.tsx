@@ -12,9 +12,12 @@ import { Card, EmptyState, PageHeader, btn, input } from "../admin-ui";
 import { normalizeImage } from "../image-normalize";
 
 const API = BASE_API_LINK.replace(/\/+$/, "");
-// 이미지 팝업 그림 칸 509×388 — 2배로 저장, 잘리지 않게 맞춤
-const SLOT_W = 509;
-const SLOT_H = 388;
+// 이미지 팝업 그림 칸 339×259(2026-10-05 피그마 509×388 의 2/3 로 축소).
+// 저장은 1018×776(축소 전 2배·지금 3배) 그대로 — 이미 올린 그림과 같은 크기·비율로 맞추고, 화면은 선명하게.
+const SLOT_W = 339;
+const SLOT_H = 259;
+const SAVE_W = 1018;
+const SAVE_H = 776;
 
 type KindConfig = { style: "icon" | "image" | "auto"; seconds: number };
 type Config = { default: KindConfig; trigger: KindConfig };
@@ -132,7 +135,7 @@ function ImageRowView({ row, onChanged }: { row: ImageRow; onChanged: () => void
         setBusy(true);
         setError(null);
         const form = new FormData();
-        form.append("file", await normalizeImage(file, SLOT_W * 2, SLOT_H * 2, "contain"));
+        form.append("file", await normalizeImage(file, SAVE_W, SAVE_H, "contain"));
         form.append("label", row.title);
         try {
             const r = await fetch(`${API}/briefing-images/${encodeURIComponent(row.key)}`, { method: "POST", body: form });
@@ -157,7 +160,7 @@ function ImageRowView({ row, onChanged }: { row: ImageRow; onChanged: () => void
 
     return (
         <div className="flex items-center gap-4 border-b border-slate-100 py-3 last:border-b-0">
-            {/* 팝업 그림 칸과 같은 비율(509×388) 미리보기 */}
+            {/* 팝업 그림 칸과 같은 비율(339×259) 미리보기 */}
             <div className="flex h-[76px] w-[100px] shrink-0 items-center justify-center overflow-hidden rounded-lg bg-slate-800">
                 {row.image_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -212,7 +215,7 @@ export default function PopupSettingsPage() {
                 <div className="rounded-xl border border-sky-200 bg-sky-50 px-5 py-4 text-sm leading-relaxed text-sky-900">
                     <div className="font-semibold">차량 화면에서 이미지 팝업이 보이는 크기</div>
                     <ul className="mt-1 list-disc pl-5">
-                        <li>팝업 577×610px, 그림 칸 <b>{SLOT_W}×{SLOT_H}px</b>. 올리면 자동으로 {SLOT_W * 2}×{SLOT_H * 2}px(2배)로 맞춰 저장합니다.</li>
+                        <li>팝업 385×407px, 그림 칸 <b>{SLOT_W}×{SLOT_H}px</b>(피그마 원본의 2/3). 올리면 자동으로 {SAVE_W}×{SAVE_H}px(3배)로 맞춰 저장합니다.</li>
                         <li>그림은 잘리지 않게 칸 안에 맞추고, 배경이 투명하면 투명 여백을 걷어냅니다.</li>
                         <li>제목은 아래 목록의 제목으로 고정, 설명 문구는 LLM 이 상황에 맞게 씁니다(시나리오 프롬프트 v21~).</li>
                     </ul>
