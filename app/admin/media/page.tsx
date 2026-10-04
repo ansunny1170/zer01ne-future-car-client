@@ -22,6 +22,9 @@ const KINDS: Record<string, string[]> = {
     소리: ["mp3", "wav", "m4a", "ogg"],
     이미지: ["png", "jpg", "jpeg", "webp", "gif", "svg"],
 };
+// 키 = 접두사 + 파일 이름. "prompts/a.md" → 접두사 "prompts/", 파일 이름 "a.md".
+const nameOf = (key: string) => key.slice(key.lastIndexOf("/") + 1);
+const prefixOf = (key: string) => key.slice(0, key.lastIndexOf("/") + 1);
 const extOf = (key: string) => (key.includes(".") ? key.split(".").pop()!.toLowerCase() : "");
 const kindOf = (key: string) => Object.keys(KINDS).find((k) => KINDS[k].includes(extOf(key))) ?? "기타";
 
@@ -32,10 +35,11 @@ function fmtSize(bytes: number): string {
 }
 
 // 진행률이 필요해 fetch 대신 XHR 을 쓴다(영상은 수십 MB).
-function uploadOne(file: File, overwrite: boolean, onProgress: (p: number) => void): Promise<{ status: number; body: UploadReply }> {
+function uploadOne(file: File, prefix: string, overwrite: boolean, onProgress: (p: number) => void): Promise<{ status: number; body: UploadReply }> {
     return new Promise((resolve) => {
         const form = new FormData();
         form.append("file", file);
+        form.append("prefix", prefix);
         form.append("overwrite", overwrite ? "true" : "false");
         const xhr = new XMLHttpRequest();
         xhr.open("POST", `${API}/media/upload`);
@@ -57,6 +61,8 @@ export default function MediaPage() {
     const [search, setSearch] = useState("");
     const [kind, setKind] = useState("");
     const [overwrite, setOverwrite] = useState(false);
+    // 접두사(prefix) — 저장소에는 폴더가 없고 파일마다 키(이름) 하나만 있다. 키 앞에 "prompts/" 처럼 붙는 부분이 접두사다.
+    const [prefix, setPrefix] = useState("");
     const [jobs, setJobs] = useState<Job[]>([]);
     const [busy, setBusy] = useState(false);
     const [dragging, setDragging] = useState(false);
@@ -90,7 +96,7 @@ export default function MediaPage() {
         for (let n = 0; n < files.length; n++) {
             const job = queued[n];
             patch(job.id, { state: "uploading" });
-            const { status, body } = await uploadOne(files[n], overwrite, (percent) => patch(job.id, { percent }));
+            const { status, body } = await uploadOne(files[n], prefix.trim(), overwrite, (percent) => patch(job.id, { percent }));
             if (status === 200) patch(job.id, { state: "done", percent: 100, message: body?.key });
             else if (status === 409) patch(job.id, { state: "exists", message: "이미 있는 파일 — 바꾸려면 덮어쓰기를 켜고 다시 올리세요" });
             else patch(job.id, { state: "error", message: typeof body?.detail === "string" ? body.detail : status ? `업로드 실패 (${status})` : "서버에 연결하지 못했습니다" });
@@ -162,12 +168,17 @@ export default function MediaPage() {
                     </div>
                     <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
                         <label className="flex items-center gap-2 text-slate-600">
+                            접두사 (prefix)
+                            <input value={prefix} onChange={(e) => setPrefix(e.target.value)} placeholder="보통 비워 둠" className={`${input} w-40`} />
+                        </label>
+                        <label className="flex items-center gap-2 text-slate-600">
                             <input type="checkbox" checked={overwrite} onChange={(e) => setOverwrite(e.target.checked)} />
                             같은 이름이 있으면 덮어쓰기
                         </label>
                     </div>
                     <p className="mt-2 text-xs text-slate-400">
-                        파일명은 영문·숫자·한글로 시작하고 . _ - 만 섞어 쓸 수 있습니다(공백 불가). 올린 파일명이 그대로 프롬프트에 적는 이름입니다.
+                        파일명은 영문·숫자·한글로 시작하고 . _ - 만 섞어 쓸 수 있습니다(공백 불가). 저장소에는 폴더가 없고 파일마다 키(이름) 하나만 있습니다.
+                        접두사를 적으면 키가 &quot;접두사/파일명&quot; 이 됩니다. 시나리오 에셋은 접두사 없이 올려야 프롬프트에 파일명만 적어 쓸 수 있습니다.
                     </p>
                 </Card>
             </div>
@@ -196,7 +207,7 @@ export default function MediaPage() {
 
             <Card>
                 <div className="mb-3 flex flex-wrap items-center gap-2">
-                    <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="파일명 검색 (예: bgm)" className={`${input} w-64`} />
+                    <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="파일 이름·접두사 검색 (예: bgm)" className={`${input} w-64`} />
                     <select value={kind} onChange={(e) => setKind(e.target.value)} className={input} aria-label="종류">
                         <option value="">모든 종류</option>
                         {[...Object.keys(KINDS), "기타"].map((k) => <option key={k} value={k}>{k}</option>)}
@@ -212,7 +223,8 @@ export default function MediaPage() {
                         <table className="w-full text-left text-sm">
                             <thead className="sticky top-0 bg-slate-50 text-xs text-slate-400">
                                 <tr>
-                                    <th className="px-4 py-2.5 font-medium">파일</th>
+                                    <th className="px-4 py-2.5 font-medium">파일 이름</th>
+                                    <th className="px-4 py-2.5 font-medium">접두사 (prefix)</th>
                                     <th className="px-4 py-2.5 font-medium">종류</th>
                                     <th className="px-4 py-2.5 text-right font-medium">크기</th>
                                     <th className="px-4 py-2.5 font-medium">수정 시각</th>
@@ -222,12 +234,13 @@ export default function MediaPage() {
                             <tbody className="divide-y divide-slate-100">
                                 {shown.map((i) => (
                                     <tr key={i.key} className="hover:bg-slate-50">
-                                        <td className="max-w-80 truncate px-4 py-2.5 font-mono text-slate-700">{i.key}</td>
+                                        <td className="max-w-80 truncate px-4 py-2.5 font-mono text-slate-700">{nameOf(i.key)}</td>
+                                        <td className="px-4 py-2.5 font-mono text-xs text-slate-500">{prefixOf(i.key) || <span className="text-slate-300">없음</span>}</td>
                                         <td className="px-4 py-2.5 text-xs text-slate-500">{kindOf(i.key)}</td>
                                         <td className="whitespace-nowrap px-4 py-2.5 text-right text-xs text-slate-500">{fmtSize(i.size)}</td>
                                         <td className="whitespace-nowrap px-4 py-2.5 text-xs text-slate-400">{fmtDateTime(i.last_modified)}</td>
                                         <td className="whitespace-nowrap px-4 py-2.5 text-right">
-                                            <button onClick={() => copy(i.key)} className={btn.ghost}>이름 복사</button>
+                                            <button onClick={() => copy(i.key)} className={btn.ghost} title="접두사를 포함한 전체 키를 복사합니다">키 복사</button>
                                             <a href={i.url} target="_blank" rel="noreferrer" className={btn.ghost}>열기</a>
                                         </td>
                                     </tr>
