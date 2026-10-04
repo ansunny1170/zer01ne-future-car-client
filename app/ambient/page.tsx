@@ -914,6 +914,14 @@ export default function AmbientScreen() {
           >
             관리자 페이지 ↗
           </button>
+          {/* 엔딩 리플렉션(일기) 목록 /review — 차 화면 연결이 끊기지 않게 새 탭으로 연다 */}
+          <button
+            type="button"
+            onClick={() => window.open("/review", "_blank", "noopener")}
+            className="w-full rounded bg-teal-700 px-2 py-1 text-[11px] font-semibold hover:bg-teal-600"
+          >
+            리뷰 페이지 ↗
+          </button>
           {/* 음소거 토글 — M 키와 이 버튼으로만 바꾼다(우상단 아이콘은 표시 전용). */}
           <button
             type="button"
