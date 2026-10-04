@@ -68,7 +68,7 @@ function truncateSid(v: string): string {
 }
 
 export default function AmbientScreen() {
-  const { stepInfo, setStepInfo, reStart, preloadedAudio, setVideoPath } = useScene();
+  const { stepInfo, setStepInfo, reStart, preloadedAudio, videoPath, setVideoPath } = useScene();
   // sid === null → 자동 추종(와일드카드) 모드. ?sid= 쿼리가 있으면 그 값으로 고정된다.
   const [sid, setSid] = useState<string | null>(null);
   // 와일드카드 모드에서 지금 화면이 따라가고 있는 session_id
@@ -201,6 +201,8 @@ export default function AmbientScreen() {
     journey_to_place?: string | null;
     path_plan?: { step1?: string; final?: string };
     tasks?: { key: string; title: string; kind: string; done: boolean }[];
+    // 마지막 스텝 렌더 완료 때 실릴 엔딩(서버 ending_for) — 디버그 '엔딩 화면 보기'가 같은 영상·문구로 미리 본다
+    ending?: { place?: string | null; place_name?: string | null; video?: string | null; message?: string | null } | null;
   };
   const [sessionDebug, setSessionDebug] = useState<SessionDebug | null>(null);
   const applyLlmConfig = () => {
@@ -561,6 +563,34 @@ export default function AmbientScreen() {
         setTimeout(() => setHydrogenState("idle"), 1600);
       });
   };
+
+  // 디버그: 엔딩 화면 미리보기. 이 화면에서만 바뀌고 서버·태블릿·OC 에는 아무것도 보내지 않는다.
+  // 세션이 있으면 서버 스냅샷의 엔딩(최종 목적지 영상·하차 문구)을, 없으면 기본 문구를 쓴다.
+  // 다시 누르면 들어오기 전 화면·영상·마이크 상태로 돌아간다(그사이 실제 흐름이 화면을 바꿨으면 그대로 둔다).
+  const endingPreviewRef = useRef<{ screen: Screen; video: string | null; visitorTurn: boolean } | null>(null);
+  const toggleEndingPreview = () => {
+    const saved = endingPreviewRef.current;
+    if (saved && screen === "ending") {
+      endingPreviewRef.current = null;
+      setScreen(saved.screen);
+      setVideoPath(saved.video);
+      setVisitorTurn(saved.visitorTurn);
+      return;
+    }
+    endingPreviewRef.current = { screen, video: videoPath, visitorTurn };
+    const ending = sessionDebug?.ending ?? null;
+    setScreen("ending");
+    setVisitorTurn(false);
+    setEndingPlace(ending?.place_name ?? null);
+    // 영상은 step 진행 중일 때만 — StepVideoPlayer 는 step 이 없으면 로컬 경로로 찾아서(classic 인트로용) 대기 화면에선 안 뜬다.
+    const video = stepInfo?.step ? ending?.video ?? null : null;
+    setEndingInfo(ending ? { video, message: ending.message ?? null } : null);
+    if (video) setVideoPath(video);
+  };
+  // 미리보기 중 실제 흐름이 화면을 바꾸면(새 step·exit) 되돌릴 대상이 사라진 것 — 기억을 버린다.
+  useEffect(() => {
+    if (screen !== "ending") endingPreviewRef.current = null;
+  }, [screen]);
 
   // 디버그: 가장 최근 세션(추종 중인 세션이 있으면 그 세션)의 plan 으로 여정을 처음부터 다시 시작.
   // 태블릿에서 새 세션을 만들고 차로 이동 확정을 누르는 과정을 건너뛴다. 서버가 state idle → waiting
@@ -992,6 +1022,18 @@ export default function AmbientScreen() {
                 : hydrogenState === "busy"
                   ? "…"
                   : "수소충전 완료 대행"}
+          </button>
+          {/* 엔딩 화면 미리보기 — 이 화면만 바뀐다(서버·태블릿에는 알리지 않음). 다시 누르면 원래 화면으로 */}
+          <button
+            type="button"
+            onClick={toggleEndingPreview}
+            title="엔딩 화면(최종 목적지 영상·하차 문구)으로 바로 이동 — 이 화면에서만 보이고 여정은 그대로"
+            className={cn(
+              "rounded px-2 py-1.5 text-[11px] font-semibold transition-colors cursor-pointer",
+              screen === "ending" && endingPreviewRef.current ? "bg-violet-600 hover:bg-violet-500" : "bg-violet-800 hover:bg-violet-700"
+            )}
+          >
+            {screen === "ending" && endingPreviewRef.current ? "엔딩 닫기" : "엔딩 화면 보기"}
           </button>
           {!controlSid && <div className="text-center text-[10px] text-neutral-500">세션 대기중</div>}
         </div>
