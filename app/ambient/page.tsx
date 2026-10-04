@@ -68,6 +68,9 @@ function truncateSid(v: string): string {
   return v.length > 8 ? `${v.slice(0, 8)}…` : v;
 }
 
+// 복제 재시작 세션 id — 서버 규칙 '{원본}-tN' (app/services/mqtt/client.py _next_clone_sid)
+const isCloneSid = (sessionId: string) => /-t\d+$/.test(sessionId);
+
 export default function AmbientScreen() {
   const { stepInfo, setStepInfo, reStart, preloadedAudio, videoPath, setVideoPath } = useScene();
   // sid === null → 자동 추종(와일드카드) 모드. ?sid= 쿼리가 있으면 그 값으로 고정된다.
@@ -247,6 +250,12 @@ export default function AmbientScreen() {
   const activeSidRef = useRef<string | null>(null);
   // 와일드카드 모드: 세션별 마지막 phase — 어떤 세션이 waiting 으로 '바뀌는' 순간(탑승)을 잡는다.
   const lastPhaseBySidRef = useRef<Map<string, string>>(new Map());
+  // 복제 세션 격리(2026-10-05): 복제 재시작 세션('{원본}-tN')은 그걸 실행한 화면만 따라간다.
+  // 다른 화면(전시 화면)은 무시해서 테스트가 관람객 여정 화면을 빼앗지 않는다. 무시한 메시지는
+  // 세션별로 잠깐 담아 두었다가, 이 화면에서 복제 재시작을 눌러 그 세션으로 고정할 때 재생한다
+  // (재시작 응답보다 idle·waiting state 가 먼저 도착하기 때문).
+  const pinnedCloneRef = useRef<string | null>(null);
+  const cloneBufferRef = useRef<Map<string, string[]>>(new Map());
   activeSidRef.current = activeSid;
 
   // 🥚 개발자 전용
@@ -420,12 +429,25 @@ export default function AmbientScreen() {
             console.warn("[ambient] session_id 없는 메시지 무시:", msg.type);
             return;
           }
+          if (isCloneSid(msgSid) && msgSid !== pinnedCloneRef.current) {
+            // 남이 띄운 복제(테스트) 세션 — 따라가지 않는다. 이 화면이 고정할 때를 대비해 최근 것만 담아 둔다.
+            const buf = cloneBufferRef.current.get(msgSid) ?? [];
+            buf.push(e.data);
+            if (buf.length > 40) buf.shift();
+            cloneBufferRef.current.delete(msgSid);
+            cloneBufferRef.current.set(msgSid, buf);
+            if (cloneBufferRef.current.size > 5) {
+              cloneBufferRef.current.delete(cloneBufferRef.current.keys().next().value as string);
+            }
+            return;
+          }
           const prevPhase = lastPhaseBySidRef.current.get(msgSid);
           if (msg.type === "state" && typeof msg.phase === "string") {
             lastPhaseBySidRef.current.set(msgSid, msg.phase);
           }
           if (msg.type === "state" && msg.phase === "idle") {
             // 새 plan/여정 시작 → 이 세션으로 갈아탄다 (이후 정상 처리로 이어짐)
+            if (msgSid !== pinnedCloneRef.current) pinnedCloneRef.current = null; // 관람객 새 여정이 테스트 고정을 푼다
             setActiveSid(msgSid);
             activeSidRef.current = msgSid;
           } else if (
@@ -435,6 +457,8 @@ export default function AmbientScreen() {
             // 탑승(enter)한 세션으로 갈아탄다 — 실제로 차에 탄 세션이 화면을 가져간다(2026-10-03).
             // 다른 세션(복제 재시작 등)이 먼저 화면을 잡아도 실관람 세션의 탑승이 되찾는다.
             // waiting→waiting(인사 갱신) 재발행으로는 전환하지 않아 서로 뺏고 뺏기지 않는다.
+            // 이 화면이 복제 테스트에 고정돼 있어도 관람객 탑승이 우선이다(고정 해제).
+            pinnedCloneRef.current = null;
             setActiveSid(msgSid);
             activeSidRef.current = msgSid;
             reStart();
@@ -632,6 +656,19 @@ export default function AmbientScreen() {
   // 디버그: 가장 최근 세션(추종 중인 세션이 있으면 그 세션)의 plan 으로 여정을 처음부터 다시 시작.
   // 태블릿에서 새 세션을 만들고 차로 이동 확정을 누르는 과정을 건너뛴다. 서버가 state idle → waiting
   // 을 발행하므로 와일드카드 모드면 그 세션으로 자동 추종된다.
+  // 이 화면을 복제 세션에 고정하고, 그동안 무시해 둔 그 세션 메시지(idle·waiting·인사 등)를 순서대로 재생한다.
+  const pinClone = (cloneSid: string) => {
+    pinnedCloneRef.current = cloneSid;
+    const buffered = cloneBufferRef.current.get(cloneSid) ?? [];
+    cloneBufferRef.current.delete(cloneSid);
+    const ws = wsRef.current;
+    if (ws?.onmessage) {
+      for (const data of buffered) ws.onmessage(new MessageEvent("message", { data }));
+    }
+    setActiveSid(cloneSid);
+    activeSidRef.current = cloneSid;
+  };
+
   const restartJourney = () => {
     const API = BASE_API_LINK.replace(/\/+$/, "");
     setRestartState("busy");
@@ -657,6 +694,11 @@ export default function AmbientScreen() {
           source: "client",
         });
         setRestartState(res.ok ? "success" : "error");
+        // 자동 추종 화면에서 복제 재시작을 눌렀으면 이 화면만 그 복제 세션으로 고정한다.
+        // 다른 화면(전시 화면)은 복제 세션을 무시하므로 관람객 여정이 그대로 보인다.
+        if (res.ok && sid === null && body.session_id && isCloneSid(body.session_id)) {
+          pinClone(body.session_id);
+        }
       })
       .catch((err) => {
         console.error("[ambient] 재시작 요청 실패", err);
