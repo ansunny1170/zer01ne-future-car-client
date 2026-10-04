@@ -285,6 +285,8 @@ export default function AmbientScreen() {
   // 디버그 '리뷰 생성하기' — 켜 두면 재시작한 테스트 여정이 끝날 때(엔딩 화면) 서버가 일기를 만들어 /review 에 올린다.
   // 이 브라우저에만 기억한다(새로고침해도 유지).
   const [reviewOnRestart, setReviewOnRestart] = useState(false);
+  // 디버그 '시작 스텝'(복제 재시작 전용) — 2·3 이면 서버가 앞 스텝을 화면 없이 자동 진행하고 그 스텝부터 보여준다.
+  const [startStep, setStartStep] = useState(1);
   useEffect(() => {
     try {
       setReviewOnRestart(localStorage.getItem("ftcar_review_on_restart") === "true");
@@ -681,6 +683,8 @@ export default function AmbientScreen() {
         session_id: restartSid || sid || activeSidRef.current || undefined,
         clone: !!restartSid,
         review: reviewOnRestart,
+        // 시작 스텝은 복제(세션을 고른 경우)에서만 — 실세션 되감기는 OC 에 태스크 완료를 보고하므로 서버가 막는다.
+        start_step: restartSid ? startStep : 1,
       }),
     })
       .then(async (res) => {
@@ -689,7 +693,9 @@ export default function AmbientScreen() {
           category: "ambient",
           stage: "restart",
           level: res.ok ? "info" : "warn",
-          message: res.ok ? `여정 재시작 → ${body.session_id}${reviewOnRestart ? " (리뷰 생성)" : ""}` : `재시작 실패 ${res.status}: ${body.detail ?? ""}`,
+          message: res.ok
+            ? `여정 재시작 → ${body.session_id}${restartSid && startStep > 1 ? ` (step${startStep} 부터)` : ""}${reviewOnRestart ? " (리뷰 생성)" : ""}`
+            : `재시작 실패 ${res.status}: ${body.detail ?? ""}`,
           sessionId: body.session_id ?? undefined,
           source: "client",
         });
@@ -1048,6 +1054,26 @@ export default function AmbientScreen() {
           >
             {restartState === "success" ? "✓ 재시작" : restartState === "error" ? "✕ 재시작" : restartState === "busy" ? "…" : restartSid ? "복제 재시작" : "여정 재시작"}
           </button>
+          {/* 시작 스텝 — 복제 재시작 전용. 앞 스텝은 서버가 화면 없이 자동 진행(스텝당 LLM 생성 시간만큼 대기) */}
+          <label
+            title="복제 재시작(세션 선택)에서만 — 2·3 을 고르면 앞 스텝을 화면 없이 자동으로 진행하고 그 스텝부터 보여줍니다(step3 은 약 15~20초 대기)"
+            className={cn(
+              "flex items-center justify-between gap-1 rounded px-1 py-0.5 text-[11px]",
+              restartSid ? "text-neutral-200" : "text-neutral-500",
+            )}
+          >
+            시작 스텝
+            <select
+              value={restartSid ? startStep : 1}
+              disabled={!restartSid}
+              onChange={(e) => setStartStep(Number(e.target.value))}
+              className="rounded border border-neutral-600 bg-neutral-800 px-1 py-0.5 text-[11px] disabled:opacity-50"
+            >
+              <option value={1}>1</option>
+              <option value={2}>2</option>
+              <option value={3}>3</option>
+            </select>
+          </label>
           {/* 리뷰 생성하기 — 켜고 재시작하면 그 여정이 끝날 때(엔딩) 일기가 생성돼 /review 에 뜬다 */}
           <label
             title="체크하고 여정 재시작하면, 그 여정이 끝날 때(마지막 스텝 → 엔딩 화면) 일기를 만들어 리뷰 페이지에 올립니다 (2026-ambient · 테스트 표시)"
