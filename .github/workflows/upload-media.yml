@@ -8,6 +8,8 @@
 #   find   파일명을 홈 폴더에서 찾아 경로만 출력(업로드 안 함). 어디에 넣었는지 모를 때.
 #   src    staging 밖에 있는 파일(절대 경로)을 staging/<dest> 로 복사한 뒤 업로드.
 #   dest   src 를 복사할 staging 안 상대 경로(기본 videos/). 버킷 키가 된다.
+#   urls   내려받을 URL 들(공백 구분). Mac Studio 에 파일이 없을 때 — staging/<dest> 에 받아서 업로드.
+#          버킷 최상위에 두려면 dest 를 "./" 로 준다(bg200.mp4 같은 시나리오 에셋).
 #   check  업로드 후 존재 확인할 버킷 키(예: videos/rescene.mp4).
 name: Upload media to MinIO
 
@@ -26,6 +28,10 @@ on:
         description: "staging 안 복사 위치 (기본 videos/)"
         required: false
         default: "videos/"
+      urls:
+        description: "staging 으로 내려받을 URL (공백으로 여러 개). 파일명 그대로 staging/<dest> 에 저장 후 업로드"
+        required: false
+        default: ""
       check:
         description: "업로드 후 존재 확인할 버킷 키 (예: videos/rescene.mp4)"
         required: false
@@ -54,6 +60,23 @@ jobs:
           [ -f "${{ inputs.src }}" ] || { echo "::error::src 없음: ${{ inputs.src }}"; exit 1; }
           mkdir -p "$STAGING/${{ inputs.dest }}"
           cp -v "${{ inputs.src }}" "$STAGING/${{ inputs.dest }}"
+
+      - name: Download urls into staging
+        if: ${{ inputs.urls != '' }}
+        env:
+          URLS: ${{ inputs.urls }}
+          DEST: ${{ inputs.dest }}
+        run: |
+          set -euo pipefail
+          STAGING=/Users/zer01ne/minio-staging
+          mkdir -p "$STAGING/$DEST"
+          for u in $URLS; do
+            name=$(basename "${u%%\?*}")
+            echo "== $u → $STAGING/$DEST$name"
+            curl -fL --retry 2 -o "$STAGING/$DEST$name.part" "$u"
+            mv "$STAGING/$DEST$name.part" "$STAGING/$DEST$name"
+            ls -l "$STAGING/$DEST$name"
+          done
 
       - name: Run upload.sh on Mac Studio
         if: ${{ inputs.find == '' }}
