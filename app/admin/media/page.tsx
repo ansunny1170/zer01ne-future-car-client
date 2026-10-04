@@ -32,11 +32,10 @@ function fmtSize(bytes: number): string {
 }
 
 // 진행률이 필요해 fetch 대신 XHR 을 쓴다(영상은 수십 MB).
-function uploadOne(file: File, prefix: string, overwrite: boolean, onProgress: (p: number) => void): Promise<{ status: number; body: UploadReply }> {
+function uploadOne(file: File, overwrite: boolean, onProgress: (p: number) => void): Promise<{ status: number; body: UploadReply }> {
     return new Promise((resolve) => {
         const form = new FormData();
         form.append("file", file);
-        form.append("prefix", prefix);
         form.append("overwrite", overwrite ? "true" : "false");
         const xhr = new XMLHttpRequest();
         xhr.open("POST", `${API}/media/upload`);
@@ -57,7 +56,6 @@ export default function MediaPage() {
     const [error, setError] = useState("");
     const [search, setSearch] = useState("");
     const [kind, setKind] = useState("");
-    const [prefix, setPrefix] = useState("");
     const [overwrite, setOverwrite] = useState(false);
     const [jobs, setJobs] = useState<Job[]>([]);
     const [busy, setBusy] = useState(false);
@@ -92,7 +90,7 @@ export default function MediaPage() {
         for (let n = 0; n < files.length; n++) {
             const job = queued[n];
             patch(job.id, { state: "uploading" });
-            const { status, body } = await uploadOne(files[n], prefix.trim(), overwrite, (percent) => patch(job.id, { percent }));
+            const { status, body } = await uploadOne(files[n], overwrite, (percent) => patch(job.id, { percent }));
             if (status === 200) patch(job.id, { state: "done", percent: 100, message: body?.key });
             else if (status === 409) patch(job.id, { state: "exists", message: "이미 있는 파일 — 바꾸려면 덮어쓰기를 켜고 다시 올리세요" });
             else patch(job.id, { state: "error", message: typeof body?.detail === "string" ? body.detail : status ? `업로드 실패 (${status})` : "서버에 연결하지 못했습니다" });
@@ -164,16 +162,12 @@ export default function MediaPage() {
                     </div>
                     <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
                         <label className="flex items-center gap-2 text-slate-600">
-                            폴더
-                            <input value={prefix} onChange={(e) => setPrefix(e.target.value)} placeholder="비우면 최상위" className={`${input} w-40`} />
-                        </label>
-                        <label className="flex items-center gap-2 text-slate-600">
                             <input type="checkbox" checked={overwrite} onChange={(e) => setOverwrite(e.target.checked)} />
                             같은 이름이 있으면 덮어쓰기
                         </label>
                     </div>
                     <p className="mt-2 text-xs text-slate-400">
-                        파일명은 영문·숫자·한글로 시작하고 . _ - 만 섞어 쓸 수 있습니다(공백 불가). 시나리오 에셋은 폴더 없이 최상위에 둡니다.
+                        파일명은 영문·숫자·한글로 시작하고 . _ - 만 섞어 쓸 수 있습니다(공백 불가). 올린 파일명이 그대로 프롬프트에 적는 이름입니다.
                     </p>
                 </Card>
             </div>
