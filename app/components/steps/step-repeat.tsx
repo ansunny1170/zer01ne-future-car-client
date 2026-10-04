@@ -458,6 +458,7 @@ export default function StepRepeat({ dafultComment, onTimelineComplete }: {
                     keyName={keyName}
                     text={asset.description}
                     description={asset.subtext_popup}
+                    display={asset.display}
                     onComplete={() => {
                         advanceFrom(POPUP_COMPLETE_DELAY);
                     }}
