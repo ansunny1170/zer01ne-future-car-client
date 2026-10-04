@@ -1,6 +1,6 @@
 /* eslint-disable react/display-name */
 import { Reflection } from "@/type";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Icons } from "../ui/icons";
 
 interface ListAreaProps {
@@ -8,9 +8,11 @@ interface ListAreaProps {
     total: number;
     onItemClick: (item: Reflection) => void;
     selectedItem?: Reflection | null;
+    // 값이 바뀌면 목록을 첫 페이지로 올린다(새 일기 자동 강조 때).
+    scrollTopSignal?: number;
 }
 
-export default function ListArea({ data, total, onItemClick, selectedItem }: ListAreaProps) {
+export default function ListArea({ data, total, onItemClick, selectedItem, scrollTopSignal }: ListAreaProps) {
     const scrollRef = useRef<HTMLDivElement>(null);
     const [currentPage, setCurrentPage] = useState(0);
     
@@ -23,6 +25,10 @@ export default function ListArea({ data, total, onItemClick, selectedItem }: Lis
         }
     };
     
+    useEffect(() => {
+        if (scrollTopSignal) scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+    }, [scrollTopSignal]);
+
     // 6개씩 페이지로 그룹핑 (제한 없음)
     const groupedData = [];
     for (let i = 0; i < data.length; i += 6) {
