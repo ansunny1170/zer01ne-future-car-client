@@ -12,9 +12,12 @@ import BriefingPopup from "../ambient/briefing-popup";
 // onTimelineComplete: ambient(전시) 전용 — 이 스텝의 asset 을 전부 렌더·재생했음을
 // 상위(→ 서버)에 알린다. 클래식(/) 경로는 이 prop 을 넘기지 않으므로 동작 변화 없음.
 // onAssetShown: ambient 전용 — 타임라인이 다음 asset 으로 넘어갈 때마다 그 asset 을 알린다(배터리 '충전 완료' 감지 등).
+// 진단용 타임라인 기록 — 각 항목을 스텝 시작 후 몇 ms 에 띄웠는지(렌더 완료 보고에 실려 서버 dev_log 로)
+export type TimelineTrace = { i: number; type: string; id?: string; ms: number };
+
 export default function StepRepeat({ dafultComment, onTimelineComplete, onAssetShown }: {
     dafultComment?: string,
-    onTimelineComplete?: (step: number) => void,
+    onTimelineComplete?: (step: number, trace?: TimelineTrace[]) => void,
     onAssetShown?: (asset: Record<string, unknown>, step: number) => void,
 }) {
     const BASE_URL = BASE_S3_LINK;
@@ -137,12 +140,29 @@ export default function StepRepeat({ dafultComment, onTimelineComplete, onAssetS
     // 중복 방지 키를 스텝 번호가 아니라 stepInfo 객체 동일성으로 잡아서, 새 여정에서
     // 같은 번호의 스텝이 다시 와도(다른 객체) 정상적으로 다시 보고된다.
     const renderedNotifiedRef = useRef<object | null>(null);
+    // 진단 기록 — 이 stepInfo 에서 각 항목이 처음 보인 시각(같은 항목 중복 기록 없음)
+    const traceRef = useRef<{ info: object | null; start: number; items: TimelineTrace[] }>({ info: null, start: 0, items: [] });
+    useEffect(() => {
+        if (!stepInfo || !assets_timeline || !idxIsFresh) return;
+        const tr = traceRef.current;
+        if (tr.info !== stepInfo) traceRef.current = { info: stepInfo, start: Date.now(), items: [] };
+        const cur = traceRef.current;
+        if (cur.items.some(x => x.i === currentIdx)) return;
+        const a = assets_timeline[currentIdx]?.assets as unknown as Record<string, unknown> | undefined;
+        cur.items.push({
+            i: currentIdx,
+            type: isTimelineFinished ? "END" : String(a?.type ?? "?"),
+            ...(typeof a?.id === "string" ? { id: a.id } : {}),
+            ms: Date.now() - cur.start,
+        });
+    }, [currentIdx, idxIsFresh, isTimelineFinished, stepInfo, assets_timeline]);
     useEffect(() => {
         if (!onTimelineComplete || !stepInfo?.step) return;
         if (!idxIsFresh || !isTimelineFinished) return;
         if (renderedNotifiedRef.current === stepInfo) return;
         renderedNotifiedRef.current = stepInfo;
-        onTimelineComplete(stepInfo.step);
+        const tr = traceRef.current;
+        onTimelineComplete(stepInfo.step, tr.info === stepInfo ? tr.items.slice(0, 200) : undefined);
     }, [idxIsFresh, isTimelineFinished, stepInfo, onTimelineComplete]);
 
     useEffect(() => {

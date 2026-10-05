@@ -22,7 +22,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useScene } from "@/context/scene-context";
 import { wsUrl } from "@/utils/wsUrl";
 import { StepInfo } from "@/type";
-import StepRepeat from "@/components/steps/step-repeat";
+import StepRepeat, { type TimelineTrace } from "@/components/steps/step-repeat";
 import StepAudioPlayer from "@/components/audio-player/step-audio-player";
 import StepVideoPlayer from "@/components/video-player/step-video-player";
 import TopLayout from "@/components/fixed-layout/top-layout";
@@ -864,7 +864,7 @@ export default function AmbientScreen() {
   // 화면은 응답을 기다리지 않는다(fire-and-forget) — 보고가 실패해도 렌더는 이미 끝났고,
   // 태블릿 조작은 여전히 가능해야 하기 때문.
   const notifyStepRendered = useCallback(
-    (step: number) => {
+    (step: number, trace?: TimelineTrace[]) => {
       if (step >= 2) chargeToFull(); // step2(무인 수소 충전) 재생 완료 — "충전 완료" 말이 없었어도 이때 차오른다
       const sessionId = sid ?? activeSidRef.current;
       if (!sessionId) {
@@ -897,7 +897,7 @@ export default function AmbientScreen() {
       fetch(`${API}/ambient/step-rendered`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ session_id: sessionId, step }),
+        body: JSON.stringify({ session_id: sessionId, step, ...(trace ? { trace } : {}) }),
       }).catch((err) => {
         console.error("[ambient] 렌더 완료 보고 실패", step, err);
         appendDevLog({
