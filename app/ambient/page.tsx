@@ -147,7 +147,8 @@ export default function AmbientScreen() {
   }, [rollBattery, stopCharge]);
   const onAssetShown = useCallback(
     (asset: Record<string, unknown>, step: number) => {
-      if (step < 2) return;
+      // 서버가 끼워 넣은 태블릿 완료 표시("수소 충전 완료" 등)는 실제 충전 진행이 아니다
+      if (step < 2 || asset.origin === "tablet") return;
       const text = ["description", "subtext_popup", "text", "title"]
         .map((k) => (typeof asset[k] === "string" ? (asset[k] as string) : ""))
         .join(" ");
