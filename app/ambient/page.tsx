@@ -140,7 +140,9 @@ export default function AmbientScreen() {
   const gateLatchedRef = useRef(false);
   gateLatchedRef.current = gateLatched;
   // sticky 팝업이 뜨면 래치를 건다. clear(active=false)로는 풀지 않는다 — step 수신에서만 푼다.
+  const [stickyActive, setStickyActive] = useState(false);
   const handleStickyChange = useCallback((active: boolean) => {
+    setStickyActive(active);
     if (active) setGateLatched(true);
   }, []);
   // 관람객 차례(마이크 열림): 대기 화면, 스텝 렌더 완료 뒤 ~ 다음 step 수신 전, 서버 error 뒤.
@@ -960,6 +962,14 @@ export default function AmbientScreen() {
   return (
     <div className="w-full h-full min-h-screen overflow-hidden bg-black text-white">
       <ListenIndicator state={listener} />
+      {/* 발화 없이 다음 스텝을 만드는 동안(태블릿 수소충전 확인으로 게이트가 풀린 뒤 ~ step2 도착)도 생성 중 로딩을
+          보여준다 — 발화를 보냈을 때(ListenIndicator paused)와 같은 자리·모양. 전에는 아무 표시가 없어 렉인지
+          생성 중인지 알 수 없었다(2026-10-05). 안내 팝업이 떠 있는 동안은 팝업이 상황을 설명하므로 띄우지 않는다. */}
+      {screen === "step" && gateLatched && !stickyActive && listener.status !== "paused" && (
+        <div className="pointer-events-none fixed inset-x-0 top-[20%] z-30 flex justify-center">
+          <HyundaiLoading />
+        </div>
+      )}
       {popupPreviewItems && (
         <PopupPreview items={popupPreviewItems} seconds={popupPreviewSeconds} onDone={() => setPopupPreviewItems(null)} />
       )}
