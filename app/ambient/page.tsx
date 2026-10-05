@@ -54,6 +54,18 @@ type ErrorMsg = { type: "error"; step: number; code: string; message: string };
 // 개발자 조작 패널이 발행할 수 있는 요청 종류 (manual_tablet.py 가 보내는 것과 동일)
 // 진행은 advance 로 통일했다(서버에서 start 는 advance 별칭). 버튼에서는 start 를 뺀다.
 const TABLET_CONTROL_TYPES = ["enter", "advance", "exit"] as const;
+
+// 세션 목록의 updated_at 은 오프셋 없는 UTC(MySQL) — 한국시간 "MM-DD HH:mm" 으로 보여준다.
+function sessionTimeKst(iso: string | null): string {
+  if (!iso) return "";
+  const d = new Date(/Z$|[+-]\d{2}:?\d{2}$/.test(iso) ? iso : `${iso}Z`);
+  if (isNaN(d.getTime())) return iso.slice(5, 16).replace("T", " ");
+  const p = new Intl.DateTimeFormat("ko-KR", {
+    timeZone: "Asia/Seoul", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false,
+  }).formatToParts(d);
+  const v = (t: string) => p.find((x) => x.type === t)?.value ?? "";
+  return `${v("month")}-${v("day")} ${v("hour")}:${v("minute")}`;
+}
 type TabletControlType = (typeof TABLET_CONTROL_TYPES)[number];
 // 버튼별 클릭 후 잠깐 보여줄 결과 상태
 type PublishState = "idle" | "success" | "error";
@@ -280,7 +292,7 @@ export default function AmbientScreen() {
   // 디버그 재시작 대상 세션 선택 — 서버 GET /ambient/sessions (plan 보유, 2026-08 이후만) 목록.
   // 빈 값이면 기존처럼 자동(추종 중인 세션 또는 최근 세션).
   const [sessionChoices, setSessionChoices] = useState<
-    { session_id: string; updated_at: string | null; step?: number | null; persona_title?: string }[]
+    { session_id: string; updated_at: string | null; step?: number | null; persona_title?: string; username?: string }[]
   >([]);
   const [restartSid, setRestartSid] = useState("");
   // 디버그 '리뷰 생성하기' — 켜 두면 재시작한 테스트 여정이 끝날 때(엔딩 화면) 서버가 일기를 만들어 /review 에 올린다.
@@ -1069,7 +1081,8 @@ export default function AmbientScreen() {
             <option value="">세션: 자동(최근)</option>
             {sessionChoices.map((s) => (
               <option key={s.session_id} value={s.session_id}>
-                {(s.updated_at ?? "").slice(5, 16).replace("T", " ")} · {s.persona_title || s.session_id.slice(0, 8)}
+                {sessionTimeKst(s.updated_at)} · {s.username ? `${s.username} · ` : ""}
+                {s.persona_title || s.session_id.slice(0, 8)}
                 {typeof s.step === "number" ? ` · s${s.step}` : ""}
               </option>
             ))}
