@@ -12,9 +12,12 @@ import BriefingPopup from "../ambient/briefing-popup";
 // onTimelineComplete: ambient(전시) 전용 — 이 스텝의 asset 을 전부 렌더·재생했음을
 // 상위(→ 서버)에 알린다. 클래식(/) 경로는 이 prop 을 넘기지 않으므로 동작 변화 없음.
 // onAssetShown: ambient 전용 — 타임라인이 다음 asset 으로 넘어갈 때마다 그 asset 을 알린다(배터리 '충전 완료' 감지 등).
+// 진단용 타임라인 기록 — 각 항목을 스텝 시작 후 몇 ms 에 띄웠는지(렌더 완료 보고에 실려 서버 dev_log 로)
+export type TimelineTrace = { i: number; type: string; id?: string; ms: number };
+
 export default function StepRepeat({ dafultComment, onTimelineComplete, onAssetShown }: {
     dafultComment?: string,
-    onTimelineComplete?: (step: number) => void,
+    onTimelineComplete?: (step: number, trace?: TimelineTrace[]) => void,
     onAssetShown?: (asset: Record<string, unknown>, step: number) => void,
 }) {
     const BASE_URL = BASE_S3_LINK;
@@ -23,6 +26,15 @@ export default function StepRepeat({ dafultComment, onTimelineComplete, onAssetS
     const [questionFlag, setQuestionFlag] = useState(false);
     // 현재 보여줄 timeline 인덱스
     const [currentIdx, setCurrentIdx] = useState(0);
+    // 타임라인을 한 칸 넘긴다 — 단, 그 항목(from)을 아직 보고 있을 때만. 늦게 도착한 완료 콜백·타이머가 이미 넘어간
+    // 다음 항목까지 건너뛰지 않게 한다(2026-10-05 현장: step1 마지막 팝업이 뜨자마자 사라지고 수소충전 안내가 뜸).
+    const advanceIdx = useCallback((from: number, why: string) => {
+        setCurrentIdx(idx => {
+            if (idx === from) return idx + 1;
+            console.warn(`⛔ 늦은 넘김 무시(${why}): ${from} → 지금 ${idx}`);
+            return idx;
+        });
+    }, []);
     const [currentUspPool, setCurrentUspPool] = useState<any[]>([]);
     const preloadedAudio = useRef<Map<string, HTMLAudioElement>>(new Map());
     const audioTimersRef = useRef<{playTimer?: NodeJS.Timeout, progressTimer?: NodeJS.Timeout, retryTimer?: NodeJS.Timeout}>({});
@@ -128,12 +140,29 @@ export default function StepRepeat({ dafultComment, onTimelineComplete, onAssetS
     // 중복 방지 키를 스텝 번호가 아니라 stepInfo 객체 동일성으로 잡아서, 새 여정에서
     // 같은 번호의 스텝이 다시 와도(다른 객체) 정상적으로 다시 보고된다.
     const renderedNotifiedRef = useRef<object | null>(null);
+    // 진단 기록 — 이 stepInfo 에서 각 항목이 처음 보인 시각(같은 항목 중복 기록 없음)
+    const traceRef = useRef<{ info: object | null; start: number; items: TimelineTrace[] }>({ info: null, start: 0, items: [] });
+    useEffect(() => {
+        if (!stepInfo || !assets_timeline || !idxIsFresh) return;
+        const tr = traceRef.current;
+        if (tr.info !== stepInfo) traceRef.current = { info: stepInfo, start: Date.now(), items: [] };
+        const cur = traceRef.current;
+        if (cur.items.some(x => x.i === currentIdx)) return;
+        const a = assets_timeline[currentIdx]?.assets as unknown as Record<string, unknown> | undefined;
+        cur.items.push({
+            i: currentIdx,
+            type: isTimelineFinished ? "END" : String(a?.type ?? "?"),
+            ...(typeof a?.id === "string" ? { id: a.id } : {}),
+            ms: Date.now() - cur.start,
+        });
+    }, [currentIdx, idxIsFresh, isTimelineFinished, stepInfo, assets_timeline]);
     useEffect(() => {
         if (!onTimelineComplete || !stepInfo?.step) return;
         if (!idxIsFresh || !isTimelineFinished) return;
         if (renderedNotifiedRef.current === stepInfo) return;
         renderedNotifiedRef.current = stepInfo;
-        onTimelineComplete(stepInfo.step);
+        const tr = traceRef.current;
+        onTimelineComplete(stepInfo.step, tr.info === stepInfo ? tr.items.slice(0, 200) : undefined);
     }, [idxIsFresh, isTimelineFinished, stepInfo, onTimelineComplete]);
 
     useEffect(() => {
@@ -206,14 +235,15 @@ export default function StepRepeat({ dafultComment, onTimelineComplete, onAssetS
                 }]);
             }, USP_POOL_INTERVAL);
             
-            const nextTimer = setTimeout(() => setCurrentIdx(idx => idx + 1), USP_POOL_INTERVAL + USP_POOL_FINAL_DELAY);
+            const itemIdx = currentIdx;
+            const nextTimer = setTimeout(() => advanceIdx(itemIdx, "FUNCTION_POPUP"), USP_POOL_INTERVAL + USP_POOL_FINAL_DELAY);
             
             return () => {
                 clearTimeout(timer);
                 clearTimeout(nextTimer);
             };
         }
-    }, [assets_timeline, currentIdx, isTimelineFinished]);
+    }, [assets_timeline, currentIdx, isTimelineFinished, advanceIdx]);
 
     // 연속된 오디오 아이템들을 하나로 묶어서 처리하는 함수
     const getConsecutiveAudioItems = useCallback((startIdx: number) => {
@@ -300,10 +330,11 @@ export default function StepRepeat({ dafultComment, onTimelineComplete, onAssetS
 
         // 오디오도 비주얼도 없으면 바로 다음으로 진행
         if (!isAudioAsset && !isVisualAsset) {
-            const timer = setTimeout(() => setCurrentIdx(idx => idx + 1), AUDIO_COMPLETE_DELAY);
+            const itemIdx = currentIdx;
+            const timer = setTimeout(() => advanceIdx(itemIdx, "빈 항목"), AUDIO_COMPLETE_DELAY);
             return () => clearTimeout(timer);
         }
-    }, [assets_timeline, currentIdx, isTimelineFinished]);
+    }, [assets_timeline, currentIdx, isTimelineFinished, advanceIdx]);
 
     // 오디오 에셋 처리 전용 useEffect
     useEffect(() => {
@@ -316,6 +347,7 @@ export default function StepRepeat({ dafultComment, onTimelineComplete, onAssetS
         
         if (isAudioAsset && asset.file_name) {
             console.log(`🎵 오디오 재생 시작: ${asset.type} (인덱스: ${currentIdx})`);
+            const itemIdx = currentIdx;
             
             // 기존 타이머들 정리
             if (audioTimersRef.current.playTimer) {
@@ -349,7 +381,7 @@ export default function StepRepeat({ dafultComment, onTimelineComplete, onAssetS
                         audioTimersRef.current.progressTimer = setTimeout(() => {
                             console.log(`✅ 오디오 완료 - 다음 인덱스로: ${currentIdx + 1}`);
                             setSfxPath(null);
-                            setCurrentIdx(idx => idx + 1);
+                            advanceIdx(itemIdx, "효과음 완료");
                         }, actualDuration);
                     } else if (durationRetryCount < MAX_DURATION_RETRIES) {
                         // duration이 아직 로드되지 않았으면 50ms 후 재시도 (최대 10회)
@@ -360,7 +392,7 @@ export default function StepRepeat({ dafultComment, onTimelineComplete, onAssetS
                         // 재시도 한도 초과 → 파일 누락으로 판단, 무한 대기 대신 다음 인덱스로 스킵
                         console.warn(`⚠️ 오디오 파일 없음 - ${MAX_DURATION_RETRIES}회 재시도 후 건너뜀: ${asset.file_name} → 다음 인덱스로: ${currentIdx + 1}`);
                         setSfxPath(null);
-                        setCurrentIdx(idx => idx + 1);
+                        advanceIdx(itemIdx, "효과음 파일 없음");
                     }
                 };
                 
@@ -384,7 +416,7 @@ export default function StepRepeat({ dafultComment, onTimelineComplete, onAssetS
                 setSfxPath(null);
             };
         }
-    }, [assets_timeline, currentIdx, isTimelineFinished, setSfxPath]);
+    }, [assets_timeline, currentIdx, isTimelineFinished, setSfxPath, advanceIdx]);
 
     // 현재 보여줄 콘텐츠 결정
     const renderContent = () => {  
@@ -403,7 +435,7 @@ export default function StepRepeat({ dafultComment, onTimelineComplete, onAssetS
         // 0.5초 만에 건너뛰는 일이 있었다(2026-10-05 step3 끝 '다음 일정 브리핑'이 실주행에서 간헐적으로 스킵).
         const itemIdx = currentIdx;
         const advanceFrom = (delay: number) =>
-            setTimeout(() => setCurrentIdx(idx => (idx === itemIdx ? idx + 1 : idx)), delay);
+            setTimeout(() => advanceIdx(itemIdx, asset?.type ?? "항목"), delay);
         
         // 🔧 오디오 에셋일 때는 빈 div 렌더링 (재생과 타이밍은 useEffect에서 처리)
         const isAudioAsset = asset?.type === "VEHICLE_SOUND_EFFECT" || asset?.type === "COMPANION_VOICE";
