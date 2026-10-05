@@ -42,6 +42,7 @@ import NoticePopup, { type NoticeMsg } from "@/components/ambient/notice-popup";
 import CloneTalkSplit from "@/components/ui/clone-talk-split";
 
 // 서버와 같은 고정 스텝 수. 마지막 스텝 뒤에는 질문이 없으므로 마이크도 열지 않는다.
+const CHARGE_FILL_MS = 4000; // 배터리가 100% 까지 차오르는 시간
 const TOTAL_STEPS = 3; // 스토리라인(2026-09-13): s1 선픽스 → s2 충전소 무인 → s3 경유지+최종
 
 // standby: exit ~ 다음 enter 사이(그리고 plan 만 온 idle, 세션이 아직 없을 때)의 대기 화면. 글자 없이 조용히.
@@ -128,18 +129,19 @@ export default function AmbientScreen() {
     stopCharge();
     setBattery(33 + Math.floor(Math.random() * 17));
   }, [stopCharge]);
-  // 100% 까지 1%씩 차오른다(약 2초). 이미 차는 중이거나 100% 면 그대로.
+  // 지금 값에서 100% 까지 4초에 걸쳐 차오른다(사람이 보고 알 수 있게). 이미 차는 중이거나 100% 면 그대로.
+  const batteryRef = useRef(41);
+  batteryRef.current = battery;
   const chargeToFull = useCallback(() => {
     if (chargeTimer.current) return;
+    const from = batteryRef.current;
+    if (from >= 100) return;
+    const started = Date.now();
     chargeTimer.current = setInterval(() => {
-      setBattery((b) => {
-        if (b >= 99) {
-          stopCharge();
-          return 100;
-        }
-        return b + 1;
-      });
-    }, 35);
+      const t = Math.min(1, (Date.now() - started) / CHARGE_FILL_MS);
+      setBattery(Math.round(from + (100 - from) * t));
+      if (t >= 1) stopCharge();
+    }, 50);
   }, [stopCharge]);
   useEffect(() => {
     rollBattery();
