@@ -42,6 +42,7 @@ import NoticePopup, { type NoticeMsg } from "@/components/ambient/notice-popup";
 import CloneTalkSplit from "@/components/ui/clone-talk-split";
 
 // 서버와 같은 고정 스텝 수. 마지막 스텝 뒤에는 질문이 없으므로 마이크도 열지 않는다.
+const CHARGE_FILL_MS = 4000; // 배터리가 100% 까지 차오르는 시간
 const TOTAL_STEPS = 3; // 스토리라인(2026-09-13): s1 선픽스 → s2 충전소 무인 → s3 경유지+최종
 
 // standby: exit ~ 다음 enter 사이(그리고 plan 만 온 idle, 세션이 아직 없을 때)의 대기 화면. 글자 없이 조용히.
@@ -115,6 +116,65 @@ export default function AmbientScreen() {
   }, [gateLatched]);
   // 차 화면 환영 대사 — 서버가 경로 픽스 후 waiting state 에 실어 보낸다(태블릿 AI 가 차로 이어지는 연출).
   const [greeting, setGreeting] = useState<string | null>(null);
+  // 우상단 배터리(2026-10-05): 여정마다 33~49% 중 하나로 시작한다. step2 이후 CLONE_TALKS·팝업에
+  // "충전 완료"가 보이는 즉시 100% 까지 차오르고, 그런 말이 없으면 step2 재생이 끝날 때 차오른다.
+  // SSR 과 값이 달라지지 않게 첫 값은 고정, 마운트 후 무작위로 바꾼다.
+  const [battery, setBattery] = useState(41);
+  const chargeTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const stopCharge = useCallback(() => {
+    if (chargeTimer.current) clearInterval(chargeTimer.current);
+    chargeTimer.current = null;
+  }, []);
+  const rollBattery = useCallback(() => {
+    stopCharge();
+    setBattery(33 + Math.floor(Math.random() * 17));
+  }, [stopCharge]);
+  // 지금 값에서 100% 까지 4초에 걸쳐 차오른다(사람이 보고 알 수 있게). 이미 차는 중이거나 100% 면 그대로.
+  const batteryRef = useRef(41);
+  batteryRef.current = battery;
+  const chargeToFull = useCallback(() => {
+    if (chargeTimer.current) return;
+    const from = batteryRef.current;
+    if (from >= 100) return;
+    const started = Date.now();
+    chargeTimer.current = setInterval(() => {
+      const t = Math.min(1, (Date.now() - started) / CHARGE_FILL_MS);
+      setBattery(Math.round(from + (100 - from) * t));
+      if (t >= 1) stopCharge();
+    }, 50);
+  }, [stopCharge]);
+  useEffect(() => {
+    rollBattery();
+    return stopCharge;
+  }, [rollBattery, stopCharge]);
+  const onAssetShown = useCallback(
+    (asset: Record<string, unknown>, step: number) => {
+      // 서버가 끼워 넣은 태블릿 완료 표시("수소 충전 완료" 등)는 실제 충전 진행이 아니다
+      if (step < 2 || asset.origin === "tablet") return;
+      const text = ["description", "subtext_popup", "text", "title"]
+        .map((k) => (typeof asset[k] === "string" ? (asset[k] as string) : ""))
+        .join(" ");
+      if (/충전\s*(이|을)?\s*(모두\s*)?완료/.test(text)) chargeToFull();
+    },
+    [chargeToFull],
+  );
+  // 디버그 '시계 표시' — 우상단 시각을 보일지(이 브라우저에 기억, 기본 표시).
+  const [showClock, setShowClock] = useState(true);
+  useEffect(() => {
+    try {
+      setShowClock(localStorage.getItem("ftcar_show_clock") !== "false");
+    } catch {
+      // 저장소 차단 — 기본(표시)
+    }
+  }, []);
+  const toggleShowClock = (next: boolean) => {
+    setShowClock(next);
+    try {
+      localStorage.setItem("ftcar_show_clock", String(next));
+    } catch {
+      // 저장 실패해도 이번 화면에서는 동작한다
+    }
+  };
   // 엔딩 화면에 보여줄 최종 목적지(한글) — next=exit state 의 next_place 에서 받는다.
   const [endingPlace, setEndingPlace] = useState<string | null>(null);
   // 서버 state.ending(2026-09-26): 마지막 step 렌더 완료에만 실린다 — 최종 목적지 영상(file_name)과 하차 문구.
@@ -492,6 +552,11 @@ export default function AmbientScreen() {
         switch (msg.type) {
           case "step":
             setStepInfo(msg.data as StepInfo);
+            // step3 부터 시작(복제 '시작 스텝')·충전 이후 스텝은 이미 충전된 상태
+            if (((msg.data as StepInfo)?.step ?? 0) >= 3) {
+              stopCharge();
+              setBattery(100);
+            }
             setScreen("step");
             setVisitorTurn(false); // 재생 시작 — 우리 소리를 받아 적지 않도록 마이크를 닫는다
             setStepQuestionActive(false); // 직전 질문 구간 종료 — 폴백 타이머 오발동 방지
@@ -503,6 +568,7 @@ export default function AmbientScreen() {
             break;
           case "state":
             if (msg.phase === "idle") {
+              rollBattery(); // 새 여정 — 배터리 다시 뽑기
               // 새 plan 도착 → 클라 세션 리프레시
               reStart();
               setScreen("standby");   // plan 만 도착 — enter 전. 조용한 대기 화면
@@ -570,7 +636,7 @@ export default function AmbientScreen() {
       clearTimeout(retry);
       wsRef.current?.close();
     };
-  }, [sid, setStepInfo, reStart, setVideoPath]);
+  }, [sid, setStepInfo, reStart, setVideoPath, rollBattery, stopCharge]); // 배터리 콜백은 안정 참조 — 재연결 안 일으킴
 
   // 고정 세션 모드면 sid, 와일드카드 모드면 지금 추종 중인 activeSid를 사용
   const controlSid = sid ?? activeSid;
@@ -764,6 +830,7 @@ export default function AmbientScreen() {
   // 태블릿 조작은 여전히 가능해야 하기 때문.
   const notifyStepRendered = useCallback(
     (step: number) => {
+      if (step >= 2) chargeToFull(); // step2(무인 수소 충전) 재생 완료 — "충전 완료" 말이 없었어도 이때 차오른다
       const sessionId = sid ?? activeSidRef.current;
       if (!sessionId) {
         console.warn("[ambient] session_id 없음 — 렌더 완료 보고 생략", step);
@@ -808,7 +875,7 @@ export default function AmbientScreen() {
         });
       });
     },
-    [sid],
+    [sid, chargeToFull],
   );
 
   // 차량 마이크 STT 발화 → 서버. 서버가 수집(collected)했으면 이 창에서는 더 듣지 않는다.
@@ -901,7 +968,7 @@ export default function AmbientScreen() {
           ambient 는 step1 부터 정식 연출이라 hud 를 강제로 켠다. */}
       {screen === "step" && (
         <>
-          <TopLayout hud totalSteps={3} />
+          <TopLayout hud totalSteps={3} battery={battery} showClock={showClock} />
           <BottomLayout />
         </>
       )}
@@ -980,7 +1047,7 @@ export default function AmbientScreen() {
             exit="exit"
             transition={{ duration: 0.3 }}
           >
-            <StepRepeat onTimelineComplete={notifyStepRendered} />
+            <StepRepeat onTimelineComplete={notifyStepRendered} onAssetShown={onAssetShown} />
           </motion.div>
         )}
 
@@ -1134,6 +1201,19 @@ export default function AmbientScreen() {
               className="h-3 w-3 accent-teal-500"
             />
             리뷰 생성하기
+          </label>
+          {/* 시계 표시 — 우상단 시각을 끄고 켠다(이 브라우저에 기억) */}
+          <label
+            title="차량 화면 우상단에 현재 시각을 보일지 정합니다 (이 브라우저에만 기억)"
+            className="flex cursor-pointer items-center gap-1.5 rounded px-1 py-0.5 text-[11px] text-neutral-200 hover:bg-neutral-800"
+          >
+            <input
+              type="checkbox"
+              checked={showClock}
+              onChange={(e) => toggleShowClock(e.target.checked)}
+              className="h-3 w-3 accent-teal-500"
+            />
+            시계 표시
           </label>
           {/* 전송 대기(2초 디바운스) 중인 발화를 버리고 다시 듣는다. 이미 전송된 발화는
               서버가 수집 즉시 다음 스텝 생성을 시작하므로 되돌릴 수 없다. */}

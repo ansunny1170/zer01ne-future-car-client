@@ -11,9 +11,11 @@ import BriefingPopup from "../ambient/briefing-popup";
 
 // onTimelineComplete: ambient(전시) 전용 — 이 스텝의 asset 을 전부 렌더·재생했음을
 // 상위(→ 서버)에 알린다. 클래식(/) 경로는 이 prop 을 넘기지 않으므로 동작 변화 없음.
-export default function StepRepeat({ dafultComment, onTimelineComplete }: {
+// onAssetShown: ambient 전용 — 타임라인이 다음 asset 으로 넘어갈 때마다 그 asset 을 알린다(배터리 '충전 완료' 감지 등).
+export default function StepRepeat({ dafultComment, onTimelineComplete, onAssetShown }: {
     dafultComment?: string,
     onTimelineComplete?: (step: number) => void,
+    onAssetShown?: (asset: Record<string, unknown>, step: number) => void,
 }) {
     const BASE_URL = BASE_S3_LINK;
     const { stepInfo, setSfxPath, setOnSfxComplete, setPreloadedAudio } = useScene();
@@ -133,6 +135,13 @@ export default function StepRepeat({ dafultComment, onTimelineComplete }: {
         renderedNotifiedRef.current = stepInfo;
         onTimelineComplete(stepInfo.step);
     }, [idxIsFresh, isTimelineFinished, stepInfo, onTimelineComplete]);
+
+    useEffect(() => {
+        if (!onAssetShown || !stepInfo?.step || !assets_timeline) return;
+        if (!idxIsFresh || isTimelineFinished) return;
+        const asset = assets_timeline[currentIdx]?.assets;
+        if (asset) onAssetShown(asset as unknown as Record<string, unknown>, stepInfo.step);
+    }, [currentIdx, idxIsFresh, isTimelineFinished, stepInfo, assets_timeline, onAssetShown]);
 
     // 타임라인이 끝났을 때 questionFlag를 true로 설정
     useEffect(() => {
