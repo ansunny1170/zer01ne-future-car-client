@@ -17,7 +17,7 @@ export default function StepVideoPlayer({ className, ambient = false, clear = fa
         // clear: 블러를 끈다 — 엔딩 화면에서 최종 목적지 영상(state.ending.video)을 주인공으로 보여줄 때 (2026-09-26)
         clear?: boolean
     }) {
-    const { videoPath, stepInfo } = useScene();
+    const { videoPath, stepInfo, setPlayingVideoPath, setFailedVideoPath } = useScene();
     const BASE_URL = BASE_S3_LINK;
     const nextVideoPath = videoPath ? `${videoPath}` : null;
     const [currentVideoPath, setCurrentVideoPath] = useState<string | null>(nextVideoPath);
@@ -27,6 +27,8 @@ export default function StepVideoPlayer({ className, ambient = false, clear = fa
     const [hasCurrentPlayedOnce, setHasCurrentPlayedOnce] = useState(false);
     const [hasPreviousPlayedOnce, setHasPreviousPlayedOnce] = useState(false);
     const [isVideoActive, setIsVideoActive] = useState(ambient);
+    // 새 영상이 실제로 재생 중인가(playing) — 이전 영상 크로스페이드까지 끝나야 '보이는 영상' 으로 알린다
+    const [isCurrentPlaying, setIsCurrentPlaying] = useState(false);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
     const currentVideoRef = useRef<HTMLVideoElement | null>(null);
     const previousVideoRef = useRef<HTMLVideoElement | null>(null);
@@ -102,6 +104,7 @@ export default function StepVideoPlayer({ className, ambient = false, clear = fa
                     setPreviousVideoPath(currentVideoPath);
                     setCurrentVideoPath(nextVideoPath);
                     setIsCurrentReady(false);
+                    setIsCurrentPlaying(false);
                     setHasCurrentPlayedOnce(false);
                     setHasPreviousPlayedOnce(false);
                     setIsTransitioning(false);
@@ -118,6 +121,12 @@ export default function StepVideoPlayer({ className, ambient = false, clear = fa
         if (currentVideoRef.current) currentVideoRef.current.muted = videoMuted;
         if (previousVideoRef.current) previousVideoRef.current.muted = videoMuted;
     }, [currentVideoPath, previousVideoPath, videoMuted]);
+
+    // 새 영상이 재생 중이고 이전 영상이 다 사라졌으면(크로스페이드 0.8초 끝) 그 파일을 '보이는 영상' 으로 알린다.
+    // /ambient 는 이 신호 뒤에 그 스텝 대사를 시작한다 — 이전 스텝 영상 위에 새 대사가 뜨지 않게(2026-10-05 현장 제보).
+    useEffect(() => {
+        if (isCurrentPlaying && !previousVideoPath) setPlayingVideoPath(currentVideoPath);
+    }, [isCurrentPlaying, previousVideoPath, currentVideoPath, setPlayingVideoPath]);
 
     // 새 비디오가 준비되면 crossfade 시작
     useEffect(() => {
@@ -175,6 +184,8 @@ export default function StepVideoPlayer({ className, ambient = false, clear = fa
                     if (currentVideoRef.current) currentVideoRef.current.muted = videoMuted;
                     console.log('Current video started playing successfully');
                 }}
+                onPlaying={() => setIsCurrentPlaying(true)}
+                onError={() => setFailedVideoPath(currentVideoPath)}
                 onLoadedData={() => {
                     console.log('Current video data loaded');
                     if (currentVideoRef.current) currentVideoRef.current.muted = videoMuted;

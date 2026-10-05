@@ -19,6 +19,12 @@ export type SceneContextType = {
   goNextStep: () => void;
   videoPath: string | null;
   setVideoPath: (v: string | null) => void;
+  // 지금 실제로 재생 중인(playing 이벤트가 온) 배경 영상 파일 — /ambient 가 '영상 재생 직후 대사' 를 맞추는 기준
+  playingVideoPath: string | null;
+  setPlayingVideoPath: (v: string | null) => void;
+  // 불러오다 오류 난 배경 영상(없는 파일·네트워크 실패) — /ambient 가 기다리지 않고 대사를 시작하는 기준
+  failedVideoPath: string | null;
+  setFailedVideoPath: (v: string | null) => void;
   uiPath: string | null;
   setUiPath: (u: string | null) => void;
   bgmPath: string | null;
@@ -48,6 +54,8 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
   const [categoryNumber, setCategoryNumber] = useState<number | null>(1);
   const [stepNumber, setStepNumber] = useState(0);
   const [videoPath, setVideoPath] = useState<string | null>(null);
+  const [playingVideoPath, setPlayingVideoPath] = useState<string | null>(null);
+  const [failedVideoPath, setFailedVideoPath] = useState<string | null>(null);
   const [uiPath, setUiPath] = useState<string | null>(null);
   const [bgmPath, setBgmPath] = useState<string | null>(null);
   const [sfxPath, setSfxPath] = useState<string[] | null>(null);
@@ -152,6 +160,10 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
         goNextStep,
         videoPath,
         setVideoPath,
+        playingVideoPath,
+        setPlayingVideoPath,
+        failedVideoPath,
+        setFailedVideoPath,
         uiPath,
         setUiPath,
         bgmPath,
