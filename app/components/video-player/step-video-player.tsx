@@ -17,7 +17,7 @@ export default function StepVideoPlayer({ className, ambient = false, clear = fa
         // clear: 블러를 끈다 — 엔딩 화면에서 최종 목적지 영상(state.ending.video)을 주인공으로 보여줄 때 (2026-09-26)
         clear?: boolean
     }) {
-    const { videoPath, stepInfo } = useScene();
+    const { videoPath, stepInfo, setPlayingVideoPath } = useScene();
     const BASE_URL = BASE_S3_LINK;
     const nextVideoPath = videoPath ? `${videoPath}` : null;
     const [currentVideoPath, setCurrentVideoPath] = useState<string | null>(nextVideoPath);
@@ -174,6 +174,10 @@ export default function StepVideoPlayer({ className, ambient = false, clear = fa
                     // 재생이 실제로 시작되는 순간에도 한 번 더 박는다(소리 유출 최종 방어).
                     if (currentVideoRef.current) currentVideoRef.current.muted = videoMuted;
                     console.log('Current video started playing successfully');
+                }}
+                onPlaying={() => {
+                    // 프레임이 실제로 흐르기 시작 — /ambient 는 이 신호 뒤에 그 스텝 대사를 시작한다(2026-10-05)
+                    setPlayingVideoPath(currentVideoPath);
                 }}
                 onLoadedData={() => {
                     console.log('Current video data loaded');

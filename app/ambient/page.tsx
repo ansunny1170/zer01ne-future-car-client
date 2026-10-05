@@ -42,6 +42,7 @@ import NoticePopup, { type NoticeMsg } from "@/components/ambient/notice-popup";
 import CloneTalkSplit from "@/components/ui/clone-talk-split";
 
 // 서버와 같은 고정 스텝 수. 마지막 스텝 뒤에는 질문이 없으므로 마이크도 열지 않는다.
+const VIDEO_WAIT_MAX_MS = 8000; // 배경 영상 재생을 기다리는 최대 시간 — 넘으면 대사부터 시작(여정 정지 방지)
 const CHARGE_FILL_MS = 4000; // 배터리가 100% 까지 차오르는 시간
 const TOTAL_STEPS = 3; // 스토리라인(2026-09-13): s1 선픽스 → s2 충전소 무인 → s3 경유지+최종
 
@@ -86,7 +87,35 @@ function truncateSid(v: string): string {
 const isCloneSid = (sessionId: string) => /-t\d+$/.test(sessionId);
 
 export default function AmbientScreen() {
-  const { stepInfo, setStepInfo, reStart, preloadedAudio, videoPath, setVideoPath } = useScene();
+  const { stepInfo, setStepInfo, reStart, preloadedAudio, videoPath, setVideoPath, playingVideoPath } = useScene();
+  // 영상 재생 직후 대사(2026-10-05): 스텝의 배경 영상(bgv)이 실제로 재생을 시작한 뒤에야 타임라인(대사·팝업·효과음)을
+  // 시작한다. 전에는 스텝이 오자마자 대사가 시작돼 영상 준비가 늦으면 이전 영상 위에 새 대사가 먼저 떴다.
+  // 영상이 끝내 안 오면(파일 없음·네트워크) 여정이 멈추지 않게 VIDEO_WAIT_MAX_MS 뒤에는 그냥 시작한다.
+  const stepVideo = stepInfo?.bgv?.file_name || null;
+  const [videoWaitOver, setVideoWaitOver] = useState<object | null>(null);
+  const stepVideoReady = !stepInfo || !stepVideo || playingVideoPath === stepVideo || videoWaitOver === stepInfo;
+  const videoWaitStart = useRef<{ info: object; at: number } | null>(null);
+  useEffect(() => {
+    if (!stepInfo || stepVideoReady) return;
+    videoWaitStart.current = { info: stepInfo, at: Date.now() };
+    const t = setTimeout(() => {
+      setVideoWaitOver(stepInfo);
+      appendDevLog({
+        category: "ambient", stage: "video_wait", level: "warn", source: "client",
+        message: `step ${stepInfo.step} 배경 영상(${stepVideo}) ${VIDEO_WAIT_MAX_MS / 1000}초 안에 재생 안 됨 — 대사 먼저 시작`,
+      });
+    }, VIDEO_WAIT_MAX_MS);
+    return () => clearTimeout(t);
+  }, [stepInfo, stepVideo, stepVideoReady]);
+  useEffect(() => {
+    const w = videoWaitStart.current;
+    if (!stepVideoReady || !w || w.info !== stepInfo) return;
+    videoWaitStart.current = null;
+    appendDevLog({
+      category: "ambient", stage: "video_wait", level: "info", source: "client",
+      message: `step ${stepInfo?.step} 배경 영상 재생 시작 → 대사 시작 (대기 ${Date.now() - w.at}ms)`,
+    });
+  }, [stepVideoReady, stepInfo]);
   // sid === null → 자동 추종(와일드카드) 모드. ?sid= 쿼리가 있으면 그 값으로 고정된다.
   const [sid, setSid] = useState<string | null>(null);
   // 와일드카드 모드에서 지금 화면이 따라가고 있는 session_id
@@ -1047,7 +1076,10 @@ export default function AmbientScreen() {
             exit="exit"
             transition={{ duration: 0.3 }}
           >
-            <StepRepeat onTimelineComplete={notifyStepRendered} onAssetShown={onAssetShown} />
+            {/* 배경 영상이 재생을 시작하기 전에는 타임라인을 띄우지 않는다(영상 재생 직후 대사) */}
+            {stepVideoReady && (
+              <StepRepeat onTimelineComplete={notifyStepRendered} onAssetShown={onAssetShown} />
+            )}
           </motion.div>
         )}
 
