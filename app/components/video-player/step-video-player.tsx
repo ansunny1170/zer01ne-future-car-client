@@ -17,7 +17,7 @@ export default function StepVideoPlayer({ className, ambient = false, clear = fa
         // clear: 블러를 끈다 — 엔딩 화면에서 최종 목적지 영상(state.ending.video)을 주인공으로 보여줄 때 (2026-09-26)
         clear?: boolean
     }) {
-    const { videoPath, stepInfo, setPlayingVideoPath } = useScene();
+    const { videoPath, stepInfo, setPlayingVideoPath, setFailedVideoPath } = useScene();
     const BASE_URL = BASE_S3_LINK;
     const nextVideoPath = videoPath ? `${videoPath}` : null;
     const [currentVideoPath, setCurrentVideoPath] = useState<string | null>(nextVideoPath);
@@ -185,6 +185,7 @@ export default function StepVideoPlayer({ className, ambient = false, clear = fa
                     console.log('Current video started playing successfully');
                 }}
                 onPlaying={() => setIsCurrentPlaying(true)}
+                onError={() => setFailedVideoPath(currentVideoPath)}
                 onLoadedData={() => {
                     console.log('Current video data loaded');
                     if (currentVideoRef.current) currentVideoRef.current.muted = videoMuted;
