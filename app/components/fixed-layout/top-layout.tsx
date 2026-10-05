@@ -10,7 +10,8 @@ import { motion } from "framer-motion";
 //   classic(`/`)은 stepNumber 로 판단하지만(step1 = 음성 입력 화면이라 HUD 없음),
 //   /ambient 는 stepNumber 를 쓰지 않고 step1 부터 정식 연출이라 항상 켠다.
 // totalSteps: 진행바 분모. classic 7, ambient 4.
-export default function TopLayout({ hud, totalSteps }: { hud?: boolean; totalSteps?: number } = {}) {
+// battery: 우상단 배터리 %. /ambient 는 여정마다 33~49% → step2 충전 후 100%, 없으면(classic) 종전 고정 68%.
+export default function TopLayout({ hud, totalSteps, battery }: { hud?: boolean; totalSteps?: number; battery?: number } = {}) {
     const {stepInfo,stepNumber} = useScene();
     // main-2026 은 passenger_state 가 문자열(auto=무인 구간 → 0명 아이콘, onboard=탑승 → 1명),
     // 레거시(main)는 {total: 인원수} 객체 — 두 형식 모두 지원한다.
@@ -34,7 +35,7 @@ export default function TopLayout({ hud, totalSteps }: { hud?: boolean; totalSte
                 <div className="flex justify-end items-center gap-[24px]">
                     <p className="flex items-center">
                         <img src="/assets/images/img_battery.png" alt="fixed-layout" className="w-[28px] opacity-60" />
-                        <span>68%</span>
+                        <span>{battery ?? 68}%</span>
                     </p>
                     <span>{getFormattedTime()}</span>
                 </div>

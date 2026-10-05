@@ -115,6 +115,13 @@ export default function AmbientScreen() {
   }, [gateLatched]);
   // 차 화면 환영 대사 — 서버가 경로 픽스 후 waiting state 에 실어 보낸다(태블릿 AI 가 차로 이어지는 연출).
   const [greeting, setGreeting] = useState<string | null>(null);
+  // 우상단 배터리(2026-10-05): 여정마다 33~49% 중 하나로 시작, step2(수소 충전) 재생이 끝나면 100%.
+  // SSR 과 값이 달라지지 않게 첫 값은 고정, 마운트 후 무작위로 바꾼다.
+  const [battery, setBattery] = useState(41);
+  const rollBattery = useCallback(() => setBattery(33 + Math.floor(Math.random() * 17)), []);
+  useEffect(() => {
+    rollBattery();
+  }, [rollBattery]);
   // 엔딩 화면에 보여줄 최종 목적지(한글) — next=exit state 의 next_place 에서 받는다.
   const [endingPlace, setEndingPlace] = useState<string | null>(null);
   // 서버 state.ending(2026-09-26): 마지막 step 렌더 완료에만 실린다 — 최종 목적지 영상(file_name)과 하차 문구.
@@ -492,6 +499,8 @@ export default function AmbientScreen() {
         switch (msg.type) {
           case "step":
             setStepInfo(msg.data as StepInfo);
+            // step3 부터 시작(복제 '시작 스텝')·충전 이후 스텝은 이미 충전된 상태
+            if (((msg.data as StepInfo)?.step ?? 0) >= 3) setBattery(100);
             setScreen("step");
             setVisitorTurn(false); // 재생 시작 — 우리 소리를 받아 적지 않도록 마이크를 닫는다
             setStepQuestionActive(false); // 직전 질문 구간 종료 — 폴백 타이머 오발동 방지
@@ -503,6 +512,7 @@ export default function AmbientScreen() {
             break;
           case "state":
             if (msg.phase === "idle") {
+              rollBattery(); // 새 여정 — 배터리 다시 뽑기
               // 새 plan 도착 → 클라 세션 리프레시
               reStart();
               setScreen("standby");   // plan 만 도착 — enter 전. 조용한 대기 화면
@@ -570,7 +580,7 @@ export default function AmbientScreen() {
       clearTimeout(retry);
       wsRef.current?.close();
     };
-  }, [sid, setStepInfo, reStart, setVideoPath]);
+  }, [sid, setStepInfo, reStart, setVideoPath, rollBattery]); // rollBattery 는 안정 참조(빈 deps) — 재연결 안 일으킴
 
   // 고정 세션 모드면 sid, 와일드카드 모드면 지금 추종 중인 activeSid를 사용
   const controlSid = sid ?? activeSid;
@@ -764,6 +774,7 @@ export default function AmbientScreen() {
   // 태블릿 조작은 여전히 가능해야 하기 때문.
   const notifyStepRendered = useCallback(
     (step: number) => {
+      if (step >= 2) setBattery(100); // step2(무인 수소 충전) 재생 완료 = 충전 완료
       const sessionId = sid ?? activeSidRef.current;
       if (!sessionId) {
         console.warn("[ambient] session_id 없음 — 렌더 완료 보고 생략", step);
@@ -901,7 +912,7 @@ export default function AmbientScreen() {
           ambient 는 step1 부터 정식 연출이라 hud 를 강제로 켠다. */}
       {screen === "step" && (
         <>
-          <TopLayout hud totalSteps={3} />
+          <TopLayout hud totalSteps={3} battery={battery} />
           <BottomLayout />
         </>
       )}
