@@ -105,6 +105,9 @@ export default function NoticePopup({
             transition={{ duration: 0.35, ease: "easeOut" }}
             className="absolute inset-x-0 top-[32%] flex justify-center"
           >
+            {/* isolate: 박스의 color-dodge 그라데이션이 팝업 안에서만 섞이게 — 등장 페이드(0.35초) 동안은 밝다가
+                끝나면 뒤의 어두운 블러 배경과 섞여 갑자기 어두워져 팝업이 두 개처럼 보였다(2026-10-07) */}
+            <div className="isolate">
             <BasicPopupBox type={preset.type} className="!py-12 min-w-[520px]">
               <div className="text-white [&_svg]:h-16 [&_svg]:w-16">{preset.icon}</div>
               <p className="text-center text-[34px] font-semibold leading-snug">{shown.title}</p>
@@ -112,6 +115,7 @@ export default function NoticePopup({
                 <p className="text-center text-[22px] text-white/70">{shown.subtext}</p>
               )}
             </BasicPopupBox>
+            </div>
           </motion.div>
         </div>
       )}
