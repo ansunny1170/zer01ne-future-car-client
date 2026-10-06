@@ -35,6 +35,7 @@ import HyundaiLoading from "@/components/ui/hyundai-loading";
 import { appendDevLog } from "@/utils/devLog";
 import { BASE_API_LINK, BASE_S3_LINK, STANDBY_VIDEO, STANDBY_VIDEO_STORAGE_KEY, resolveMediaUrl } from "@/constants";
 import { cn } from "@/utils/cn";
+import { fadeOutSessionAudio, installAudioTracker, isSessionSilenced, restoreSessionAudio } from "@/utils/master-audio";
 import { useCarListener } from "@/hooks/useCarListener";
 import ListenIndicator from "@/components/ambient/listen-indicator";
 import PopupPreview, { PreviewItem } from "@/components/ambient/popup-preview";
@@ -221,22 +222,30 @@ export default function AmbientScreen() {
   // 뮤트면 우상단 아이콘이 디버그 여부와 무관하게 항상 보이고, 아니면 아무것도 안 보인다
   // (투명하지만 같은 자리가 토글 버튼이다). 마이크 입력(STT)에는 영향 없다.
   const [muted, setMuted] = useState(false);
+  const mutedRef = useRef(false);
+  mutedRef.current = muted;
   useEffect(() => {
     try {
       setMuted(localStorage.getItem("ftcar_muted") === "true");
     } catch {
       /* 접근 불가 환경 — 기본 소리 켬 */
     }
+    // 재생되는 모든 미디어를 등록 — 세션 종료 후 일괄 무음(master-audio)에 쓴다
+    installAudioTracker();
   }, []);
   const applyMute = useCallback((m: boolean) => {
+    // 세션 종료 무음(master-audio) 중에는 운영자 토글로도 소리를 되살리지 않는다 — 다음 세션 방해 방지
+    const mute = m || isSessionSilenced();
     document.querySelectorAll<HTMLMediaElement>("audio,video").forEach((el) => {
-      el.muted = m;
+      el.muted = mute;
     });
     // COMPANION_VOICE·효과음은 DOM 밖의 프리로드 Audio 로 재생된다 — 맵도 같이 덮는다.
     preloadedAudio?.forEach((el) => {
-      el.muted = m;
+      el.muted = mute;
     });
   }, [preloadedAudio]);
+  // 인사 음성(서버 state.greeting_voice, 피카츄 "이번엔 차로 몸을 옮길게") — 같은 인사에 한 번만 재생
+  const greetingVoiceFor = useRef<string | null>(null);
   useEffect(() => {
     applyMute(muted);
     if (!muted) return;
@@ -605,6 +614,8 @@ export default function AmbientScreen() {
             break;
           case "state":
             if (msg.phase === "idle") {
+              restoreSessionAudio(mutedRef.current); // 새 세션 — 지난 세션 끝에 줄였던 소리를 원래대로
+              greetingVoiceFor.current = null;
               rollBattery(); // 새 여정 — 배터리 다시 뽑기
               // 새 plan 도착 → 클라 세션 리프레시
               reStart();
@@ -613,6 +624,7 @@ export default function AmbientScreen() {
               setGateLatched(false);  // 새 여정 — 게이트 래치 초기화
               setGreeting(null);
             } else if (msg.phase === "waiting") {
+              restoreSessionAudio(mutedRef.current); // 탑승(새 세션 시작) — 소리 복구
               setScreen("waiting");
               // 마이크는 바로 열지 않는다 — 시작 인사(clone talk) 타이핑이 끝나고 1초 뒤에 연다
               // (인사 렌더의 onComplete 경로). 인사가 안 오는 예외(경로판정 실패·구버전)에는
@@ -620,7 +632,15 @@ export default function AmbientScreen() {
               setVisitorTurn(false);
               if (typeof (msg as { greeting?: unknown }).greeting === "string") {
                 if (greetingWaitTimer.current) clearTimeout(greetingWaitTimer.current);
-                setGreeting((msg as { greeting: string }).greeting);
+                const greetingText = (msg as { greeting: string }).greeting;
+                setGreeting(greetingText);
+                const voice = (msg as { greeting_voice?: unknown }).greeting_voice;
+                if (typeof voice === "string" && voice && greetingVoiceFor.current !== greetingText) {
+                  greetingVoiceFor.current = greetingText;
+                  const a = new Audio(`${BASE_S3_LINK}/${voice}`);
+                  a.muted = mutedRef.current;
+                  a.play().catch((err) => console.warn("[ambient] 인사 음성 재생 실패", voice, err));
+                }
               } else if (!greetingWaitTimer.current) {
                 // 25초: 복제 재시작은 인사가 사전 생성(step1 포함) 완료 후에 와서 10~20초
                 // 걸린다 — 폴백이 인사보다 먼저 마이크를 열지 않도록 그보다 길게 잡는다.
@@ -630,6 +650,7 @@ export default function AmbientScreen() {
                 }, 25000);
               }
             } else if (msg.phase === "done") {
+              fadeOutSessionAudio(); // 세션 종료 — 엔딩 없이 끝나도 7초 안에 모든 소리 0
               setScreen("standby");   // exit(또는 태블릿 종료) — 다음 탑승까지 대기
               setVisitorTurn(false);
               setGateLatched(false);
@@ -638,6 +659,9 @@ export default function AmbientScreen() {
               // 태블릿이 exit 버튼을 켜는 동안 화면은 고정 엔딩을 보여준다.
               setScreen("ending");
               setVisitorTurn(false);
+              // 차 세션 종료 — 엔딩 배경음이 흐르다가 7초 안에 브라우저의 모든 소리가 0 으로(다음 세션 방해 방지).
+              // 새 세션(plan·탑승)이 오면 restoreSessionAudio 로 원래 음량.
+              fadeOutSessionAudio();
               setEndingPlace(typeof msg.next_place === "string" && msg.next_place ? msg.next_place : null);
               const ending = msg.ending && typeof msg.ending === "object" ? msg.ending : null;
               setEndingInfo(ending ? { video: typeof ending.video === "string" ? ending.video : null,
