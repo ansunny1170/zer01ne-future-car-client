@@ -109,8 +109,18 @@ export default function StepVideoPlayer({ className, ambient = false, clear = fa
                     setHasPreviousPlayedOnce(false);
                     setIsTransitioning(false);
                 }
+            } else if (ambient) {
+                // ambient 세션 리셋(reStart → videoPath null) — 지난 관람객의 마지막 영상(엔딩·step3)을 버린다.
+                // 남겨 두면 대기·탑승 화면에선 로컬 경로라 안 보이다가, 다음 관람객 step1 이 오는 순간 원래 주소로
+                // 되살아나 step1 영상 위 '이전 영상' 층으로 0.5초쯤 비친다(2026-10-09 현장 제보). 리셋은 대기 화면이
+                // 덮고 있을 때 일어나므로 비우는 것 자체는 안 보이고, step1 은 검은 화면에서 바로 시작한다.
+                setCurrentVideoPath(null);
+                setPreviousVideoPath(null);
+                setIsCurrentReady(false);
+                setIsCurrentPlaying(false);
+                setIsTransitioning(false);
             }
-            // nextVideoPath가 null이면 현재 비디오 유지
+            // classic 은 nextVideoPath가 null이면 현재 비디오 유지
             prevNextVideoPathRef.current = nextVideoPath;
         }
     }, [nextVideoPath, currentVideoPath]);
@@ -227,7 +237,7 @@ export default function StepVideoPlayer({ className, ambient = false, clear = fa
                             setHasPreviousPlayedOnce(true);
                         }
                     }}
-                    className={`w-full h-full object-cover absolute inset-0 transition-all duration-800 z-10 ${
+                    className={`w-full h-full object-cover absolute inset-0 transition-all duration-[800ms] z-10 ${
                         isTransitioning ? 'opacity-0 scale-150' : 'opacity-100 scale-100'
                     } ${hasPreviousPlayedOnce && blurAfterFirst ? 'blur-lg' : ''}`}
                 />

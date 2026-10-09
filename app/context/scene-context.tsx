@@ -141,6 +141,9 @@ export const SceneProvider = ({ children }: { children: React.ReactNode }) => {
     setUiPath(null);
     setBgmPath(null);
     setSfxPath(null);
+    // '보이는 영상' 신호도 지운다 — 다음 관람객 step1 영상이 지난 것과 같은 파일이면 대사가 영상보다 먼저 뜬다.
+    setPlayingVideoPath(null);
+    setFailedVideoPath(null);
   }
 
   return (
