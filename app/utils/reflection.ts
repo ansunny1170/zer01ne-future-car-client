@@ -1,4 +1,4 @@
-import { Reflection } from "@/type";
+import { EmotionPlace, Reflection } from "@/type";
 
 // /review 가 보여줄 엔딩 버전. URL ?editions=2025-car 처럼 골라 볼 수 있고, 여러 개면 OR.
 // 설계: zer01ne-future-car-server docs/superpowers/specs/2026-10-03-ending-reflection-2026-design.md
@@ -26,4 +26,16 @@ export function applyReflectionUpdate(
         (r) => !known.has(r.id) && (!r.edition || editions.includes(r.edition)),
     );
     return { list: [...fresh, ...current], added: fresh.length };
+}
+
+// 2026 일기의 장소별 감정(payload.emotion_places). 작년 일기·구버전 서버·표정 기록이 없는 세션은 [] — 화면은 그래프를 숨긴다.
+export function emotionPlacesOf(item: Reflection | null): EmotionPlace[] {
+    const payload = item?.payload;
+    if (!payload || typeof payload !== "object" || !("emotion_places" in payload)) return [];
+    const places = (payload as { emotion_places?: unknown }).emotion_places;
+    return Array.isArray(places) ? (places as EmotionPlace[]) : [];
+}
+
+export function hasEmotionData(places: EmotionPlace[]): boolean {
+    return places.some((p) => p.dominant);
 }
