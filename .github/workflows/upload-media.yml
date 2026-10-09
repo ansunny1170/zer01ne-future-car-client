@@ -31,6 +31,10 @@ on:
         required: false
         default: ""
 
+# 맥스튜디오 docker 기본 컨텍스트가 바뀌어도(2026-10-09 colima 사고) 운영 데몬인 Docker Desktop 을 보게 고정.
+env:
+  DOCKER_CONTEXT: desktop-linux
+
 jobs:
   upload:
     runs-on: [self-hosted, future-car]
