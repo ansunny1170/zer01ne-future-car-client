@@ -17,6 +17,11 @@ const LIST_LIMIT = 2000;
 // 새 일기가 도착하면 상세에 자동으로 띄워 두는 시간. 지나면 띄우기 전 화면으로 돌아간다.
 // 출구 화면은 관람객이 조작하지 않으므로, 방금 체험을 끝낸 사람이 자기 일기를 바로 보게 하려는 것.
 const SPOTLIGHT_MS = 60_000;
+// WS 재연결 간격 상한(1초부터 두 배씩), 유휴 끊김 방지 핑, 놓친 일기 보충 주기와 건수.
+const RECONNECT_MAX_MS = 15_000;
+const HEARTBEAT_MS = 25_000;
+const POLL_MS = 30_000;
+const CATCH_UP_LIMIT = 20;
 
 export default function Review() {
     const wsRef = useRef<WebSocket | null>(null);
@@ -104,40 +109,94 @@ export default function Review() {
         })();
     }, [editions]);
 
+    // 목록 앞쪽 최신 몇 건을 다시 받아, 아직 없는 일기만 앞에 끼운다(놓친 알림 보충).
+    // WS 가 끊겨 있던 사이에 생긴 일기도 이 경로로 들어온다 — 새로 들어온 게 있으면 강조한다.
+    const catchUp = async (eds: string[]) => {
+        try {
+            const res = await fetch(`${API_BASE}/ending-reflection/?editions=${encodeURIComponent(eds.join(","))}&limit=${CATCH_UP_LIMIT}`);
+            if (!res.ok) return;
+            const data = await res.json();
+            if (!Array.isArray(data) || dataRef.current.length === 0) return; // 첫 목록이 아직이면 그쪽이 채운다
+            receive({ mode: "append", data }, eds);
+        } catch (error) {
+            console.error('Failed to catch up reflections:', error);
+        }
+    };
+
+    const receive = (message: { mode?: string; data: Reflection[] }, eds: string[]) => {
+        const { list, added } = applyReflectionUpdate(dataRef.current, message, eds);
+        dataRef.current = list;
+        setWsData(list);
+        if (added > 0) {
+            setTotal((t) => (t === null ? t : t + added));
+            spotlight(list[0]); // 새로 온 것은 맨 앞에 붙는다
+        }
+    };
+
     // WS 는 이후 실시간 갱신(reflection_update)만 담당한다.
     // 신버전 서버는 새 일기 1건만 mode:"append" 로, 구버전은 전체 목록을 보낸다(applyReflectionUpdate).
+    // 출구 화면은 몇 시간씩 켜 두므로 끊기면 스스로 다시 붙는다 — 예전엔 재연결이 없어서 한 번 끊기면
+    // 새로고침 전까지 새 일기가 안 떴다(2026-10-09 운영: 15:36 끊김 → 15:40·15:42 일기 미표시).
     useEffect(() => {
         if (!editions) return;
-        const ws = new WebSocket(`${WS_BASE}/ws/ending-reflection`);
-        wsRef.current = ws;
+        let closed = false;
+        let retry: ReturnType<typeof setTimeout> | undefined;
+        let attempt = 0;
+        let everOpened = false;
 
-        ws.onopen = () => {
-            console.log('WebSocket connected');
-        };
+        const connect = () => {
+            const ws = new WebSocket(`${WS_BASE}/ws/ending-reflection`);
+            wsRef.current = ws;
 
-        ws.onmessage = (event) => {
-            console.log('Received:', event.data);
-            const message = JSON.parse(event.data);
-            if (message.type === 'reflection_update' && Array.isArray(message.data)) {
-                const { list, added } = applyReflectionUpdate(dataRef.current, message, editions);
-                dataRef.current = list;
-                setWsData(list);
-                if (added > 0) {
-                    setTotal((t) => (t === null ? t : t + added));
-                    spotlight(list[0]); // 새로 온 것은 맨 앞에 붙는다
+            ws.onopen = () => {
+                console.log('WebSocket connected');
+                attempt = 0;
+                if (everOpened) catchUp(editions); // 재연결 — 끊긴 사이 일기 보충
+                everOpened = true;
+            };
+
+            ws.onmessage = (event) => {
+                const message = JSON.parse(event.data);
+                if (message.type === 'reflection_update' && Array.isArray(message.data)) {
+                    console.log('Received:', event.data);
+                    receive(message, editions);
                 }
-            }
-        };
+            };
 
-        ws.onclose = (event) => {
-            console.log('WebSocket closed:', event.code);
-        };
+            ws.onclose = (event) => {
+                console.log('WebSocket closed:', event.code);
+                if (wsRef.current === ws) wsRef.current = null;
+                if (closed) return;
+                const delay = Math.min(RECONNECT_MAX_MS, 1000 * 2 ** attempt);
+                attempt += 1;
+                retry = setTimeout(connect, delay);
+            };
 
-        ws.onerror = (error) => {
-            console.error('WebSocket error:', error);
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
         };
+        connect();
+
+        // 소켓이 열린 척 죽어 있는 경우(중간 장비가 조용히 끊음)에 대비한 두 겹 안전망:
+        // 주기적으로 핑을 보내 유휴 끊김을 막고, 최신 몇 건을 다시 받아 놓친 일기를 채운다.
+        const heartbeat = setInterval(() => {
+            const ws = wsRef.current;
+            if (ws && ws.readyState === WebSocket.OPEN) ws.send("ping");
+        }, HEARTBEAT_MS);
+        const poll = setInterval(() => catchUp(editions), POLL_MS);
+        // 화면이 꺼졌다 켜지면(태블릿 절전) 바로 보충한다.
+        const onVisible = () => {
+            if (document.visibilityState === "visible") catchUp(editions);
+        };
+        document.addEventListener("visibilitychange", onVisible);
 
         return () => {
+            closed = true;
+            if (retry) clearTimeout(retry);
+            clearInterval(heartbeat);
+            clearInterval(poll);
+            document.removeEventListener("visibilitychange", onVisible);
             if (wsRef.current) {
                 wsRef.current.close();
             }
