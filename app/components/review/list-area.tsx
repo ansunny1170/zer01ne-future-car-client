@@ -2,6 +2,7 @@
 import { Reflection } from "@/type";
 import { useEffect, useRef, useState } from "react";
 import { Icons } from "../ui/icons";
+import { cn } from "@/utils/cn";
 
 interface ListAreaProps {
     data: Reflection[];
@@ -10,9 +11,11 @@ interface ListAreaProps {
     selectedItem?: Reflection | null;
     // 값이 바뀌면 목록을 첫 페이지로 올린다(새 일기 자동 강조 때).
     scrollTopSignal?: number;
+    // 한 페이지 열 수(2행 고정). 상세 펼쳐보기 때 1열.
+    columns?: 1 | 3;
 }
 
-export default function ListArea({ data, total, onItemClick, selectedItem, scrollTopSignal }: ListAreaProps) {
+export default function ListArea({ data, total, onItemClick, selectedItem, scrollTopSignal, columns = 3 }: ListAreaProps) {
     const scrollRef = useRef<HTMLDivElement>(null);
     const [currentPage, setCurrentPage] = useState(0);
     
@@ -29,10 +32,11 @@ export default function ListArea({ data, total, onItemClick, selectedItem, scrol
         if (scrollTopSignal) scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
     }, [scrollTopSignal]);
 
-    // 6개씩 페이지로 그룹핑 (제한 없음)
+    // 한 페이지 = 열 수 × 2행씩 그룹핑 (제한 없음)
+    const perPage = columns * 2;
     const groupedData = [];
-    for (let i = 0; i < data.length; i += 6) {
-        groupedData.push(data.slice(i, i + 6));
+    for (let i = 0; i < data.length; i += perPage) {
+        groupedData.push(data.slice(i, i + perPage));
     }
 
     const handleScroll = () => {
@@ -78,7 +82,7 @@ export default function ListArea({ data, total, onItemClick, selectedItem, scrol
                 {groupedData.map((group, groupIndex) => (
                     <div 
                         key={groupIndex}
-                        className="grid grid-cols-3 grid-rows-2 gap-6 snap-start flex-shrink-0 pb-[20px]"
+                        className={cn("grid grid-rows-2 gap-6 snap-start flex-shrink-0 pb-[20px]", columns === 1 ? "grid-cols-1" : "grid-cols-3")}
                         style={{
                             height: '100%',
                             minHeight: '100%',

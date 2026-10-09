@@ -201,3 +201,13 @@ export interface Reflection {
     status?: string;
     payload?: unknown;
 }
+
+// 2026 엔딩 일기 payload.emotion_places — 카메라가 본 실제 방문 순서대로 표정별 머문 초 + 그 장소에서 한 일 (2026-10-09)
+export type EmotionKey = "joy" | "surprise" | "neutral" | "anger";
+export interface EmotionPlace {
+    location_id: string;
+    name: string;
+    seconds: Partial<Record<EmotionKey, number>>;
+    dominant: EmotionKey | "";
+    tasks: string[];
+}

@@ -6,7 +6,7 @@ import { Reflection } from "@/type";
 import { useEffect, useRef, useState } from "react";
 import { BASE_API_LINK } from "@/constants";
 import { useFullscreen } from "@/hooks/useFullscreen";
-import { applyReflectionUpdate, parseEditions } from "@/utils/reflection";
+import { applyReflectionUpdate, emotionPlacesOf, hasEmotionData, parseEditions } from "@/utils/reflection";
 
 // .env(NEXT_PUBLIC_API_URL) 기반으로 REST/WS 주소 생성
 // 예: "https://api.ftcar.org/" → API_BASE="https://api.ftcar.org", WS_BASE="wss://api.ftcar.org"
@@ -39,6 +39,9 @@ export default function Review() {
     }, [selectedItem]);
     const spotlightRef = useRef<{ timer: ReturnType<typeof setTimeout>; previous: Reflection | null } | null>(null);
     const [listTopSignal, setListTopSignal] = useState(0);
+    // 상세 펼쳐보기(감정 그래프 크게) — 펼치면 목록은 한 줄로 줄어든다.
+    const [expanded, setExpanded] = useState(false);
+    const graphShown = hasEmotionData(emotionPlacesOf(selectedItem));
 
     const spotlight = (item: Reflection) => {
         const previous = spotlightRef.current ? spotlightRef.current.previous : selectedRef.current;
@@ -212,8 +215,8 @@ export default function Review() {
         // 100dvh 는 지원 브라우저에서만 적용되고, 미지원 브라우저는 인라인 스타일이
         // 무시되며 h-screen 으로 폴백된다(tailwind 3.3 이라 h-dvh 클래스가 없다).
         <div className="w-full h-screen flex items-stretch" style={{ height: "100dvh" }}>
-            <DetailArea selectedItem={selectedItem} />
-            <ListArea data={safeWsData} total={total ?? safeWsData.length} onItemClick={selectByHand} selectedItem={selectedItem} scrollTopSignal={listTopSignal} />
+            <DetailArea selectedItem={selectedItem} expanded={expanded} onToggleExpand={() => setExpanded((v) => !v)} />
+            <ListArea data={safeWsData} total={total ?? safeWsData.length} onItemClick={selectByHand} selectedItem={selectedItem} scrollTopSignal={listTopSignal} columns={expanded && graphShown ? 1 : 3} />
 
             {/* 전체화면 진입 버튼. 전체화면이 되면 사라져 전시 화면을 가리지 않는다.
                 Fullscreen API 는 사용자 제스처 안에서만 허용되므로 자동 진입은 불가능하다. */}
