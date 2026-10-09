@@ -14,6 +14,9 @@ on:
     branches: [main-2026]
 
 env:
+  # 운영 컨테이너는 Docker Desktop(desktop-linux)에 있다. 2026-10-09 맥스튜디오 docker 기본 컨텍스트가 colima 로
+  # 바뀐 뒤 배포가 colima 에 따로 떠 운영(:8101·:8102)엔 반영되지 않았다 — 이 배포만 Docker Desktop 으로 고정.
+  DOCKER_CONTEXT: desktop-linux
   # 외부(OCI 프록시) 경유 주소 — 담당자가 프록시 경로/포트를 바꾸면 여기만 고친다.
   EXT_API_URL: http://jscouple.site:8080/car1
   EXT_S3_BASE: http://jscouple.site:8080/minio/future-car-media
@@ -54,6 +57,16 @@ jobs:
             sleep 1
           done
           [ "$code" = "200" ] || { echo "::error::ext frontend 가 :$EXT_PORT 에서 200 을 주지 않음 (HTTP $code)"; docker logs --tail 50 future-car-frontend-ext; exit 1; }
+
+      - name: Verify live containers were recreated
+        run: |
+          # 엉뚱한 데몬에 배포되면 :8101·:8102 는 옛 컨테이너가 계속 받아 위 curl 확인도 통과한다 — 컨테이너 자체를 본다.
+          for c in future-car-frontend future-car-frontend-ext; do
+            created=$(docker inspect -f '{{.Created}}' "$c")
+            age=$(( $(date -u +%s) - $(date -u -j -f "%Y-%m-%dT%H:%M:%S" "${created%%.*}" +%s) ))
+            echo "$c created=$created (${age}s 전, context=$DOCKER_CONTEXT)"
+            [ "$age" -lt 900 ] || { echo "::error::$c 가 새로 만들어지지 않음"; exit 1; }
+          done
 
       - name: Prune dangling images
         if: always()
