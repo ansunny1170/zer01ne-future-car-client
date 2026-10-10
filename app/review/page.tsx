@@ -72,9 +72,51 @@ export default function Review() {
     // 보여줄 엔딩 버전(작년 2025-car / 올해 2026-ambient). ?editions=2025-car 처럼 골라 본다. 기본은 둘 다.
     // useSearchParams 는 정적 빌드에서 Suspense 경계를 요구해서, 마운트 후 location 에서 한 번 읽는다.
     const [editions, setEditions] = useState<string[] | null>(null);
+    // 상세 링크(2026-10-10) — /review?id=384(&expand=1) 로 열면 그 일기 상세(펼쳐보기)로 연다.
+    // 고르거나 펼치면 주소도 그 상태로 바뀐다(replaceState — 방문 기록은 쌓지 않는다).
+    const deepLinkRef = useRef<{ id: number | null; expand: boolean; applied: boolean }>({ id: null, expand: false, applied: false });
+    const [listLoaded, setListLoaded] = useState(false);
+    const [focus, setFocus] = useState<{ id: number; n: number } | null>(null);
     useEffect(() => {
-        setEditions(parseEditions(new URLSearchParams(window.location.search).get("editions")));
+        const q = new URLSearchParams(window.location.search);
+        const id = q.get("id");
+        deepLinkRef.current = { id: id && /^\d+$/.test(id) ? Number(id) : null, expand: q.get("expand") === "1", applied: false };
+        setEditions(parseEditions(q.get("editions")));
     }, []);
+
+    // 첫 목록을 받은 뒤 한 번 — 링크의 일기를 고른다. 목록(최근 LIST_LIMIT 건·고른 버전)에 없으면 단건으로 받는다.
+    useEffect(() => {
+        const link = deepLinkRef.current;
+        if (!listLoaded || link.applied) return;
+        link.applied = true;
+        if (link.id === null) return;
+        const found = dataRef.current.find((r) => r.id === link.id);
+        const open = (item: Reflection) => {
+            setSelectedItem(item);
+            if (link.expand) setExpanded(true);
+            setFocus((f) => ({ id: item.id, n: (f?.n ?? 0) + 1 }));
+        };
+        if (found) return open(found);
+        (async () => {
+            try {
+                const res = await fetch(`${API_BASE}/ending-reflection/${link.id}`);
+                if (res.ok) open(await res.json());
+            } catch (error) {
+                console.error('Failed to fetch linked reflection:', error);
+            }
+        })();
+    }, [listLoaded]);
+
+    // 지금 보이는 상세를 주소에 반영 — 그대로 복사하면 같은 화면이 열리는 링크가 된다.
+    useEffect(() => {
+        if (!deepLinkRef.current.applied) return;
+        const url = new URL(window.location.href);
+        if (selectedItem) url.searchParams.set("id", String(selectedItem.id));
+        else url.searchParams.delete("id");
+        if (selectedItem && expanded && graphShown) url.searchParams.set("expand", "1");
+        else url.searchParams.delete("expand");
+        if (url.href !== window.location.href) window.history.replaceState(null, "", url.href);
+    }, [selectedItem, expanded, graphShown]);
     // 태블릿 전시용 전체화면. 이 화면에는 눈에 보이는 버튼을 둔다(운영자가 직접 켠다).
     // 나머지 화면은 layout 의 FullscreenToggle 이 좌하단 3연속 탭으로 처리한다.
     const { isFullscreen, supported, toggle } = useFullscreen();
@@ -104,10 +146,14 @@ export default function Review() {
                     console.log('Initial data:', data);
 
                     // API 응답 형태가 환경마다 다를 수 있어 방어적으로 처리
-                    setWsData(Array.isArray(data) ? data : []);
+                    const list = Array.isArray(data) ? data : [];
+                    dataRef.current = list;
+                    setWsData(list);
                 }
             } catch (error) {
                 console.error('Failed to fetch initial data:', error);
+            } finally {
+                setListLoaded(true);
             }
         })();
     }, [editions]);
@@ -216,7 +262,7 @@ export default function Review() {
         // 무시되며 h-screen 으로 폴백된다(tailwind 3.3 이라 h-dvh 클래스가 없다).
         <div className="w-full h-screen flex items-stretch" style={{ height: "100dvh" }}>
             <DetailArea selectedItem={selectedItem} expanded={expanded} onToggleExpand={() => setExpanded((v) => !v)} />
-            <ListArea data={safeWsData} total={total ?? safeWsData.length} onItemClick={selectByHand} selectedItem={selectedItem} scrollTopSignal={listTopSignal} columns={expanded && graphShown ? 1 : 3} />
+            <ListArea data={safeWsData} total={total ?? safeWsData.length} onItemClick={selectByHand} selectedItem={selectedItem} scrollTopSignal={listTopSignal} columns={expanded && graphShown ? 1 : 3} focus={focus} />
 
             {/* 전체화면 진입 버튼. 전체화면이 되면 사라져 전시 화면을 가리지 않는다.
                 Fullscreen API 는 사용자 제스처 안에서만 허용되므로 자동 진입은 불가능하다. */}
