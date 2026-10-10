@@ -25,6 +25,7 @@ import { StepInfo } from "@/type";
 import StepRepeat, { type TimelineTrace } from "@/components/steps/step-repeat";
 import StepAudioPlayer from "@/components/audio-player/step-audio-player";
 import StepVideoPlayer from "@/components/video-player/step-video-player";
+import Step0Playlist from "@/components/ambient/step0-playlist";
 import TopLayout from "@/components/fixed-layout/top-layout";
 import BottomLayout from "@/components/fixed-layout/bottom-layout";
 import { useDevTrigger } from "@/hooks/useDevTrigger";
@@ -154,12 +155,12 @@ export default function AmbientScreen() {
   }, [gateLatched]);
   // 차 화면 환영 대사 — 서버가 경로 픽스 후 waiting state 에 실어 보낸다(태블릿 AI 가 차로 이어지는 연출).
   const [greeting, setGreeting] = useState<string | null>(null);
-  // 탑승 인트로 영상(step0, 2026-10-10) — 서버 state.step0_video. 탑승 대기에 들어올 때마다 1회 재생(반복 없음),
-  // 끝나면 마지막 장면에 멈춘다. 인사 갱신으로 waiting 이 다시 와도 처음부터 다시 틀지 않게 진입 순번으로 키를 준다.
-  const [step0Video, setStep0Video] = useState<string | null>(null);
+  // 탑승 대기 영상(step0, 2026-10-10) — 서버 state.step0_videos 를 순서대로 반복 재생(마지막 다음엔 처음).
+  // 인사 갱신으로 waiting 이 다시 와도 처음부터 다시 틀지 않게 진입 순번으로 키를 준다.
+  const [step0Videos, setStep0Videos] = useState<string[]>([]);
   const [step0Seq, setStep0Seq] = useState(0);
   // 디버그 창 '탑승 인트로 영상' 선택 — 서버 설정(GET/PUT /ambient/step0-video), 관리 화면 연출 설정과 공용
-  const [step0Cfg, setStep0Cfg] = useState<{ file: string; choices: { file: string; label: string }[] } | null>(null);
+  const [step0Cfg, setStep0Cfg] = useState<{ enabled: boolean; files: string[] } | null>(null);
   // 우상단 배터리(2026-10-05): 여정마다 33~49% 중 하나로 시작한다. step2 이후 CLONE_TALKS·팝업에
   // "충전 완료"가 보이는 즉시 100% 까지 차오르고, 그런 말이 없으면 step2 재생이 끝날 때 차오른다.
   // SSR 과 값이 달라지지 않게 첫 값은 고정, 마운트 후 무작위로 바꾼다.
@@ -457,7 +458,7 @@ export default function AmbientScreen() {
       .catch(() => {});
     fetch(`${API}/ambient/step0-video`)
       .then((r) => (r.ok ? r.json() : null))
-      .then((cfg) => cfg && typeof cfg.file === "string" && setStep0Cfg(cfg))
+      .then((cfg) => cfg && typeof cfg.enabled === "boolean" && setStep0Cfg(cfg))
       .catch(() => {});
     fetch(`${API}/ambient/llm-config`)
       .then((r) => (r.ok ? r.json() : null))
@@ -636,8 +637,12 @@ export default function AmbientScreen() {
             } else if (msg.phase === "waiting") {
               restoreSessionAudio(mutedRef.current); // 탑승(새 세션 시작) — 소리 복구
               if (screenRef.current !== "waiting") {
-                const v = (msg as { step0_video?: unknown }).step0_video;
-                setStep0Video(typeof v === "string" && v ? v : null);
+                const list = (msg as { step0_videos?: unknown }).step0_videos;
+                const one = (msg as { step0_video?: unknown }).step0_video;
+                setStep0Videos(
+                  Array.isArray(list) ? list.filter((x): x is string => typeof x === "string" && !!x)
+                    : typeof one === "string" && one ? [one] : [],
+                );
                 setStep0Seq((n) => n + 1);
               }
               setScreen("waiting");
@@ -1107,19 +1112,8 @@ export default function AmbientScreen() {
                 clone talk UI(CloneTalkSplit — 타자기 효과·글로우·상단 위치)로 보여준다 —
                 태블릿에서 대화하던 AI 가 차로 이어졌다는 연출. keepLastLine 으로 관람객이
                 답할 때까지 문장을 유지한다. 도착 전엔 마이크 인디케이터가 "듣고 있어요" 를 맡는다. */}
-            {step0Video && (
-              <video
-                key={`${step0Seq}-${step0Video}`}
-                ref={(el) => {
-                  if (el) el.muted = true; // 배경 영상은 항상 무음(JSX muted 만으론 React 버그로 소리가 샐 때가 있다)
-                }}
-                src={`${BASE_S3_LINK}/${step0Video}`}
-                autoPlay
-                muted
-                playsInline
-                preload="auto"
-                className="absolute inset-0 h-full w-full object-cover"
-              />
+            {step0Videos.length > 0 && (
+              <Step0Playlist key={`${step0Seq}-${step0Videos.join(",")}`} files={step0Videos} base={BASE_S3_LINK} />
             )}
             {greeting && (
               <CloneTalkSplit
@@ -1507,35 +1501,34 @@ export default function AmbientScreen() {
             <span className="text-neutral-400">— 에셋 렌더 완료 후에만 S 반응</span>
           </div>
           {/* 소리 뮤트는 디버깅 창 상단 '음소거' 버튼(또는 M 키)으로 옮겼다. */}
-          {/* 탑승 인트로 영상(step0) — 서버 설정, 다음 탑승부터 1회 재생. 관리 화면 '연출 설정'과 같은 값 */}
+          {/* 탑승 대기 영상(step0) — 서버 설정(켜기/끄기), 등록 영상 전체 순차 반복. 관리 화면 '연출 설정'과 같은 값 */}
           <div className="mt-2 flex flex-wrap items-center gap-2 rounded border border-neutral-300 bg-neutral-50 px-2 py-1.5 text-[11px]">
-            <span className="font-semibold">탑승 인트로 영상</span>
+            <span className="font-semibold">탑승 대기 영상</span>
             {step0Cfg ? (
-              [...step0Cfg.choices, { file: "", label: "끄기" }].map((c) => (
+              [true, false].map((on) => (
                 <button
-                  key={c.file || "off"}
+                  key={String(on)}
                   type="button"
                   onClick={() => {
                     const API = BASE_API_LINK.replace(/\/+$/, "");
                     fetch(`${API}/ambient/step0-video`, {
                       method: "PUT",
                       headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ file: c.file }),
+                      body: JSON.stringify({ enabled: on }),
                     })
                       .then((r) => (r.ok ? r.json() : null))
                       .then((cfg) => cfg && setStep0Cfg(cfg))
-                      .catch((err) => console.error("[ambient] 탑승 인트로 영상 설정 실패", err));
+                      .catch((err) => console.error("[ambient] 탑승 대기 영상 설정 실패", err));
                   }}
-                  className={cn("rounded px-2 py-0.5", step0Cfg.file === c.file ? "bg-sky-700 font-semibold text-white" : "bg-neutral-200")}
-                  title={c.file || "대기 화면 영상 없음"}
+                  className={cn("rounded px-2 py-0.5", step0Cfg.enabled === on ? "bg-sky-700 font-semibold text-white" : "bg-neutral-200")}
                 >
-                  {c.label}
+                  {on ? `켜기 (${step0Cfg.files.length || "전체"}개 순차 반복)` : "끄기"}
                 </button>
               ))
             ) : (
               <span className="text-neutral-400">불러오는 중…</span>
             )}
-            <span className="text-neutral-400">— 다음 탑승부터 1회 재생</span>
+            <span className="text-neutral-400">— 다음 탑승부터, 첫 발화 전까지 반복</span>
           </div>
           {/* LLM 모델·옵션 — 서버 런타임 값(브라우저 저장 아님). 다음 스텝 생성부터 즉시 반영,
               서버 컨테이너 재시작 시 env 기본값으로 복귀. */}
