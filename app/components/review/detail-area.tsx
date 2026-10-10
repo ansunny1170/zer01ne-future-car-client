@@ -1,7 +1,7 @@
 import { BASE_API_LINK, DIARY_PUBLIC_BASE } from "@/constants";
 import { Reflection } from "@/type";
 import { cn } from "@/utils/cn";
-import { companionOf, emotionPlacesOf, formatReflectionDate, hasEmotionData } from "@/utils/reflection";
+import { companionOf, emotionPlacesOf, formatReflectionDate, formatSessionTime, hasEmotionData } from "@/utils/reflection";
 import { useEffect, useRef, useState } from "react";
 import { Icons } from "../ui/icons";
 import EmotionJourney from "./emotion-journey";
@@ -22,6 +22,7 @@ export default function DetailArea({ selectedItem, expanded, onToggleExpand }: D
     const showGraph = hasEmotionData(places);
     const dateText = formatReflectionDate(selectedItem?.created_at);
     const companion = companionOf(selectedItem);
+    const sessionTime = formatSessionTime(selectedItem);
     const scrollRef = useRef<HTMLDivElement>(null);
     const [showScrollbar, setShowScrollbar] = useState(false);
     const [isScrollable, setIsScrollable] = useState(false);
@@ -111,6 +112,7 @@ export default function DetailArea({ selectedItem, expanded, onToggleExpand }: D
                             <p className="text-[48px] tracking-[-0.96px] break-keep">{selectedItem.event_title}</p>
                             <p className="text-[16px] tracking-[-0.32px]">{selectedItem.nick_name}</p>
                             {dateText && <p className="text-[16px] tracking-[-0.32px]">{dateText}</p>}
+                            {sessionTime && <p className="text-[16px] tracking-[-0.32px]">체험 시간: {sessionTime}</p>}
                             {companion && <p className="text-[16px] tracking-[-0.32px]">내가 만난 AI 동행자: {companion}</p>}
                         </div>
                         <div className="py-[10px] text-[#5e5e5e] text-[20px] leading-[1.4] tracking-[-0.4px] whitespace-pre-wrap">
@@ -135,6 +137,7 @@ export default function DetailArea({ selectedItem, expanded, onToggleExpand }: D
                             </div>
                             {/* 프로필 아래 — 일기 작성 시각과 관람객이 고른 AI 동행자 */}
                             {dateText && <p className="pt-[10px] text-[22.68px] text-[#5e5e5e]">{dateText}</p>}
+                            {sessionTime && <p className="pt-[4px] text-[22.68px] text-[#5e5e5e]">체험 시간: {sessionTime}</p>}
                             {companion && <p className="pt-[4px] text-[22.68px] text-[#5e5e5e]">내가 만난 AI 동행자: {companion}</p>}
                             {showGraph && (
                                 <div className="mt-[52px] bg-[rgba(255,255,255,0.6)] rounded-[16px] p-[20px] flex flex-col gap-[10px]">

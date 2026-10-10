@@ -1,5 +1,5 @@
 import { EmotionKey, Reflection } from "@/type";
-import { companionOf, emotionPlacesOf, formatReflectionDate, hasEmotionData } from "@/utils/reflection";
+import { companionOf, emotionPlacesOf, formatReflectionDate, formatSessionTime, hasEmotionData } from "@/utils/reflection";
 
 // 관람객 휴대폰용 '내 일기' (2026-10-10) — QR 로 여는 /diary 화면과 '내 일기 저장'으로 받는 HTML 파일이
 // 같은 마크업·CSS 를 쓰게 한 곳에서 만든다. 받은 파일은 외부 파일·스크립트 없이 혼자 열린다.
@@ -65,6 +65,7 @@ export function diaryBodyHtml(item: Reflection): string {
         `<h1 class="zd-title">${esc(item.event_title || "오늘의 일기")}</h1>`,
         item.nick_name ? `<p class="zd-meta"><b>${esc(item.nick_name)}</b></p>` : "",
         date ? `<p class="zd-meta">${esc(date)}</p>` : "",
+        formatSessionTime(item) ? `<p class="zd-meta">체험 시간: ${esc(formatSessionTime(item))}</p>` : "",
         companion ? `<p class="zd-meta">내가 만난 AI 동행자: ${esc(companion)}</p>` : "",
         emotions,
         `<div class="zd-body">${esc(item.reflection_text || "")}</div>`,

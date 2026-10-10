@@ -61,3 +61,33 @@ export function companionOf(item: Reflection | null): string {
     const c = (payload as { companion?: unknown }).companion;
     return typeof c === "string" ? c.trim() : "";
 }
+
+// 체험 시간(2026 일기 payload.started_at·ended_at·duration_sec) — "14:02 ~ 14:53 (51분 15초)".
+// 날짜를 넘긴 세션은 끝에 날짜를 붙인다("10월 9일 22:40 ~ 10월 10일 09:12"). 작년 일기는 없어서 "".
+export function formatSessionTime(item: Reflection | null): string {
+    const p = item?.payload;
+    if (!p || typeof p !== "object") return "";
+    const { started_at, ended_at, duration_sec } = p as { started_at?: unknown; ended_at?: unknown; duration_sec?: unknown };
+    if (typeof started_at !== "string" || typeof ended_at !== "string") return "";
+    const a = new Date(started_at), b = new Date(ended_at);
+    if (Number.isNaN(a.getTime()) || Number.isNaN(b.getTime())) return "";
+    const fmt = (d: Date, withDate: boolean) => {
+        const x = Object.fromEntries(new Intl.DateTimeFormat("ko-KR", {
+            timeZone: "Asia/Seoul", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+        }).formatToParts(d).map((t) => [t.type, t.value]));
+        return `${withDate ? `${x.month}월 ${x.day}일 ` : ""}${x.hour}:${x.minute}`;
+    };
+    const sameDay = (d: Date) => d.toLocaleDateString("ko-KR", { timeZone: "Asia/Seoul" });
+    const crosses = sameDay(a) !== sameDay(b);
+    const span = `${fmt(a, crosses)} ~ ${fmt(b, crosses)}`;
+    const sec = typeof duration_sec === "number" ? duration_sec : Math.round((b.getTime() - a.getTime()) / 1000);
+    return sec >= 0 ? `${span} (${formatDuration(sec)})` : span;
+}
+
+export function formatDuration(sec: number): string {
+    const s = Math.max(0, Math.round(sec));
+    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), r = s % 60;
+    if (h > 0) return `${h}시간${m ? ` ${m}분` : ""}`;
+    if (m > 0) return `${m}분${r ? ` ${r}초` : ""}`;
+    return `${r}초`;
+}
