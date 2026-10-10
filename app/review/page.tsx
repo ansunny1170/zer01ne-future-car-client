@@ -41,6 +41,31 @@ export default function Review() {
     const [listTopSignal, setListTopSignal] = useState(0);
     // 상세 펼쳐보기(감정 그래프 크게) — 펼치면 목록은 한 줄로 줄어든다.
     const [expanded, setExpanded] = useState(false);
+    // 펼치기/접기 로딩 표시(2026-10-10) — 전시 기기가 느려 전환이 오래 걸린다. 스피너는 React 상태로 켜면 그것만으로
+    // 페이지 전체(목록 카드 수백 개)를 다시 그려 늦게 뜨므로, 미리 깔아 둔 요소를 직접 보인다. 두 프레임 양보해 스피너가
+    // 먼저 그려진 뒤 무거운 전환을 하고, 새 화면이 그려진 다음 프레임에 내린다. 스피너는 CSS 회전이라 렌더 중에도 돈다.
+    const loadingRef = useRef<HTMLDivElement>(null);
+    const togglingRef = useRef(false);
+    const toggleExpand = () => {
+        const el = loadingRef.current;
+        if (togglingRef.current) return;
+        togglingRef.current = true;
+        if (el) {
+            el.querySelector("p")!.textContent = expanded ? "접는 중…" : "펼치는 중…";
+            el.style.display = "flex";
+        }
+        requestAnimationFrame(() => requestAnimationFrame(() => setExpanded((v) => !v)));
+    };
+    useEffect(() => {
+        if (!togglingRef.current) return;
+        const hide = () => {
+            togglingRef.current = false;
+            if (loadingRef.current) loadingRef.current.style.display = "none";
+        };
+        let id = requestAnimationFrame(() => { id = requestAnimationFrame(hide); });
+        const guard = setTimeout(hide, 8000); // 혹시 못 내리는 경우의 안전장치
+        return () => { cancelAnimationFrame(id); clearTimeout(guard); };
+    }, [expanded]);
     const graphShown = hasEmotionData(emotionPlacesOf(selectedItem));
 
     const spotlight = (item: Reflection) => {
@@ -261,8 +286,15 @@ export default function Review() {
         // 100dvh 는 지원 브라우저에서만 적용되고, 미지원 브라우저는 인라인 스타일이
         // 무시되며 h-screen 으로 폴백된다(tailwind 3.3 이라 h-dvh 클래스가 없다).
         <div className="w-full h-screen flex items-stretch" style={{ height: "100dvh" }}>
-            <DetailArea selectedItem={selectedItem} expanded={expanded} onToggleExpand={() => setExpanded((v) => !v)} />
+            <DetailArea selectedItem={selectedItem} expanded={expanded} onToggleExpand={toggleExpand} />
             <ListArea data={safeWsData} total={total ?? safeWsData.length} onItemClick={selectByHand} selectedItem={selectedItem} scrollTopSignal={listTopSignal} columns={expanded && graphShown ? 1 : 3} focus={focus} />
+
+            <div ref={loadingRef} style={{ display: "none" }} className="fixed inset-0 z-[60] items-center justify-center bg-black/25" aria-live="polite">
+                <div className="flex flex-col items-center gap-[14px] rounded-[20px] bg-white/90 px-[36px] py-[28px] shadow-lg">
+                    <div className="w-[56px] h-[56px] rounded-full border-[6px] border-[#d9d9d9] border-t-[#444] animate-spin" />
+                    <p className="text-[20px] text-[#444]">펼치는 중…</p>
+                </div>
+            </div>
 
             {/* 전체화면 진입 버튼. 전체화면이 되면 사라져 전시 화면을 가리지 않는다.
                 Fullscreen API 는 사용자 제스처 안에서만 허용되므로 자동 진입은 불가능하다. */}
