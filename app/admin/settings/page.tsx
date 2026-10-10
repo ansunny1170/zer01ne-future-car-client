@@ -46,7 +46,7 @@ export default function SettingsPage() {
         <div className="mx-auto max-w-5xl">
             <PageHeader
                 title="연출 설정"
-                desc="코드에 정해 둔 연출 값입니다. 탑승 대기 영상 켜기/끄기만 여기서 바꿀 수 있고, 나머지는 보기 전용(서버 코드를 고쳐 배포)입니다."
+                desc="코드에 정해 둔 연출 값입니다. 탑승 인트로 영상만 여기서 바꿀 수 있고, 나머지는 보기 전용(서버 코드를 고쳐 배포)입니다."
                 right={<button onClick={load} className={btn.secondary}>새로고침</button>}
             />
 
@@ -104,8 +104,8 @@ export default function SettingsPage() {
     );
 }
 
-// 탑승 대기 영상(step0, 2026-10-10) — 이 화면에서 유일하게 바꿀 수 있는 값(켜기/끄기). 디버그 창과 같은 서버 설정.
-type Step0Cfg = { enabled: boolean; files: string[]; choices: { file: string; label: string }[] };
+// 탑승 인트로 영상(step0, 2026-10-10) — 이 화면에서 유일하게 바꿀 수 있는 값. 디버그 창 '탑승 인트로 영상'과 같은 서버 설정.
+type Step0Cfg = { file: string; choices: { file: string; label: string }[] };
 
 function Step0VideoCard() {
     const [cfg, setCfg] = useState<Step0Cfg | null>(null);
@@ -119,12 +119,12 @@ function Step0VideoCard() {
             .catch((e) => setError(e instanceof Error ? e.message : String(e)));
     }, []);
 
-    const save = (enabled: boolean) => {
+    const choose = (file: string) => {
         setSaving(true);
         fetch(`${API}/ambient/step0-video`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ enabled }),
+            body: JSON.stringify({ file }),
         })
             .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`저장 실패 (${r.status})`))))
             .then((d: Step0Cfg) => { setCfg(d); setError(""); })
@@ -134,37 +134,41 @@ function Step0VideoCard() {
 
     return (
         <div className="mb-4">
-            <Card
-                title="탑승 대기 영상 (step0)"
-                right={cfg && (
-                    <div className="flex gap-2">
-                        <button type="button" disabled={saving} onClick={() => !cfg.enabled && save(true)} className={cfg.enabled ? btn.primary : btn.secondary}>
-                            {cfg.enabled ? "켜짐" : "켜기"}
-                        </button>
-                        <button type="button" disabled={saving} onClick={() => cfg.enabled && save(false)} className={!cfg.enabled ? btn.primary : btn.secondary}>
-                            {!cfg.enabled ? "꺼짐" : "끄기"}
-                        </button>
-                    </div>
-                )}
-            >
+            <Card title="탑승 인트로 영상 (step0)">
                 <p className="mb-3 text-sm text-slate-500">
-                    관람객이 탑승(enter)한 뒤 첫 말을 하기 전까지, 아래 영상을 <b>순서대로 이어서 반복</b> 재생합니다(마지막 다음엔 처음으로, 소리 없음).
-                    끄면 예전처럼 검은 화면입니다. 다음 탑승부터 적용되며, 전시 화면 디버그 창에서도 켜고 끌 수 있습니다.
+                    관람객이 탑승(enter)한 뒤 첫 질문 화면에서 <b>한 번만</b> 재생합니다(반복 없음, 끝나면 마지막 장면에 멈춤, 소리 없음).
+                    고르면 다음 탑승부터 바로 적용됩니다. 전시 화면 디버그 창에서도 같은 값을 바꿀 수 있습니다.
                 </p>
                 {error && <p className="mb-3 text-sm text-rose-600">{error}</p>}
                 {!cfg ? (
                     <p className="text-sm text-slate-400">불러오는 중…</p>
                 ) : (
-                    <div className={`grid gap-3 sm:grid-cols-3 ${cfg.enabled ? "" : "opacity-50"}`}>
-                        {cfg.choices.map((c, i) => (
-                            <div key={c.file} className="overflow-hidden rounded-xl border border-slate-200">
-                                <video src={`${BASE_S3_LINK}/${c.file}`} muted playsInline preload="metadata" controls className="aspect-video w-full bg-black object-cover" />
-                                <div className="flex items-center gap-2 px-3 py-2">
-                                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">{i + 1}</span>
-                                    <span className="text-sm font-medium text-slate-700">{c.label}</span>
+                    <div className="grid gap-3 sm:grid-cols-3">
+                        {[...cfg.choices, { file: "", label: "끄기 (영상 없음)" }].map((c) => {
+                            const on = cfg.file === c.file;
+                            return (
+                                <div
+                                    key={c.file || "off"}
+                                    className={`overflow-hidden rounded-xl border ${on ? "border-sky-500 ring-2 ring-sky-200" : "border-slate-200"}`}
+                                >
+                                    {c.file ? (
+                                        <video src={`${BASE_S3_LINK}/${c.file}`} muted playsInline preload="metadata" controls className="aspect-video w-full bg-black object-cover" />
+                                    ) : (
+                                        <div className="flex aspect-video w-full items-center justify-center bg-black text-xs text-slate-400">검은 화면</div>
+                                    )}
+                                    <div className="flex items-center justify-between gap-2 px-3 py-2">
+                                        <span className="text-sm font-medium text-slate-700">{c.label}</span>
+                                        {on ? (
+                                            <span className="rounded-full bg-sky-100 px-2 py-0.5 text-xs font-semibold text-sky-700">사용 중</span>
+                                        ) : (
+                                            <button type="button" disabled={saving} onClick={() => choose(c.file)} className={btn.secondary}>
+                                                이걸로 사용
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 )}
             </Card>
