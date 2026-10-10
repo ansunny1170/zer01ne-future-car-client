@@ -87,7 +87,7 @@ export default function DetailArea({ selectedItem, expanded, onToggleExpand }: D
             ref={scrollRef}
             onScroll={handleScroll}
             className={cn(
-                "h-full bg-[#E9E7E6] shrink-0 overflow-y-auto custom-scrollbar transition-[width] duration-300",
+                "h-full bg-[#E9E7E6] shrink-0 overflow-y-auto custom-scrollbar",
                 expanded && showGraph ? "w-[76.9%]" : "w-[36.35%]",
             )}
             style={{
