@@ -1,6 +1,6 @@
 import { Reflection } from "@/type";
 import { cn } from "@/utils/cn";
-import { emotionPlacesOf, hasEmotionData } from "@/utils/reflection";
+import { companionOf, emotionPlacesOf, formatReflectionDate, hasEmotionData } from "@/utils/reflection";
 import { useEffect, useRef, useState } from "react";
 import { Icons } from "../ui/icons";
 import EmotionJourney from "./emotion-journey";
@@ -19,6 +19,8 @@ const GRAPH_SUB = "비전으로 본 장소마다 가장 오래 지은 표정 · 
 export default function DetailArea({ selectedItem, expanded, onToggleExpand }: DetailAreaProps) {
     const places = emotionPlacesOf(selectedItem);
     const showGraph = hasEmotionData(places);
+    const dateText = formatReflectionDate(selectedItem?.created_at);
+    const companion = companionOf(selectedItem);
     const scrollRef = useRef<HTMLDivElement>(null);
     const [showScrollbar, setShowScrollbar] = useState(false);
     const [isScrollable, setIsScrollable] = useState(false);
@@ -107,6 +109,8 @@ export default function DetailArea({ selectedItem, expanded, onToggleExpand }: D
                         <div className="flex flex-col text-[#5e5e5e] leading-[1.4] py-[10px]">
                             <p className="text-[48px] tracking-[-0.96px] break-keep">{selectedItem.event_title}</p>
                             <p className="text-[16px] tracking-[-0.32px]">{selectedItem.nick_name}</p>
+                            {dateText && <p className="text-[16px] tracking-[-0.32px]">{dateText}</p>}
+                            {companion && <p className="text-[16px] tracking-[-0.32px]">내가 만난 AI 동행자: {companion}</p>}
                         </div>
                         <div className="py-[10px] text-[#5e5e5e] text-[20px] leading-[1.4] tracking-[-0.4px] whitespace-pre-wrap">
                             {selectedItem.reflection_text}
@@ -127,6 +131,9 @@ export default function DetailArea({ selectedItem, expanded, onToggleExpand }: D
                                 <Icons.user />
                                 {selectedItem.nick_name}
                             </div>
+                            {/* 프로필 아래 — 일기 작성 시각과 관람객이 고른 AI 동행자 */}
+                            {dateText && <p className="pt-[10px] text-[22.68px] text-[#5e5e5e]">{dateText}</p>}
+                            {companion && <p className="pt-[4px] text-[22.68px] text-[#5e5e5e]">내가 만난 AI 동행자: {companion}</p>}
                             {showGraph && (
                                 <div className="mt-[52px] bg-[rgba(255,255,255,0.6)] rounded-[16px] p-[20px] flex flex-col gap-[10px]">
                                     <div className="flex items-start justify-between w-full">
