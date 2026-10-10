@@ -5,7 +5,7 @@
 // (코드가 바뀌면 화면도 따라 바뀐다). 값을 바꾸려면 서버 코드를 고쳐 배포한다.
 
 import { useCallback, useEffect, useState } from "react";
-import { BASE_API_LINK } from "@/constants";
+import { BASE_API_LINK, BASE_S3_LINK } from "@/constants";
 
 import { Card, EmptyState, PageHeader, btn } from "../admin-ui";
 
@@ -46,9 +46,11 @@ export default function SettingsPage() {
         <div className="mx-auto max-w-5xl">
             <PageHeader
                 title="연출 설정"
-                desc="코드에 정해 둔 연출 값입니다. 보기 전용이며, 바꾸려면 서버 코드를 고쳐 배포해야 합니다."
+                desc="코드에 정해 둔 연출 값입니다. 탑승 인트로 영상만 여기서 바꿀 수 있고, 나머지는 보기 전용(서버 코드를 고쳐 배포)입니다."
                 right={<button onClick={load} className={btn.secondary}>새로고침</button>}
             />
+
+            <Step0VideoCard />
 
             {error && <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>}
 
@@ -98,6 +100,78 @@ export default function SettingsPage() {
                     ))}
                 </div>
             )}
+        </div>
+    );
+}
+
+// 탑승 인트로 영상(step0, 2026-10-10) — 이 화면에서 유일하게 바꿀 수 있는 값. 디버그 창 '탑승 인트로 영상'과 같은 서버 설정.
+type Step0Cfg = { file: string; choices: { file: string; label: string }[] };
+
+function Step0VideoCard() {
+    const [cfg, setCfg] = useState<Step0Cfg | null>(null);
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState("");
+
+    useEffect(() => {
+        fetch(`${API}/ambient/step0-video`, { cache: "no-store" })
+            .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`조회 실패 (${r.status})`))))
+            .then(setCfg)
+            .catch((e) => setError(e instanceof Error ? e.message : String(e)));
+    }, []);
+
+    const choose = (file: string) => {
+        setSaving(true);
+        fetch(`${API}/ambient/step0-video`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ file }),
+        })
+            .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`저장 실패 (${r.status})`))))
+            .then((d: Step0Cfg) => { setCfg(d); setError(""); })
+            .catch((e) => setError(e instanceof Error ? e.message : String(e)))
+            .finally(() => setSaving(false));
+    };
+
+    return (
+        <div className="mb-4">
+            <Card title="탑승 인트로 영상 (step0)">
+                <p className="mb-3 text-sm text-slate-500">
+                    관람객이 탑승(enter)한 뒤 첫 질문 화면에서 <b>한 번만</b> 재생합니다(반복 없음, 끝나면 마지막 장면에 멈춤, 소리 없음).
+                    고르면 다음 탑승부터 바로 적용됩니다. 전시 화면 디버그 창에서도 같은 값을 바꿀 수 있습니다.
+                </p>
+                {error && <p className="mb-3 text-sm text-rose-600">{error}</p>}
+                {!cfg ? (
+                    <p className="text-sm text-slate-400">불러오는 중…</p>
+                ) : (
+                    <div className="grid gap-3 sm:grid-cols-3">
+                        {[...cfg.choices, { file: "", label: "끄기 (영상 없음)" }].map((c) => {
+                            const on = cfg.file === c.file;
+                            return (
+                                <div
+                                    key={c.file || "off"}
+                                    className={`overflow-hidden rounded-xl border ${on ? "border-sky-500 ring-2 ring-sky-200" : "border-slate-200"}`}
+                                >
+                                    {c.file ? (
+                                        <video src={`${BASE_S3_LINK}/${c.file}`} muted playsInline preload="metadata" controls className="aspect-video w-full bg-black object-cover" />
+                                    ) : (
+                                        <div className="flex aspect-video w-full items-center justify-center bg-black text-xs text-slate-400">검은 화면</div>
+                                    )}
+                                    <div className="flex items-center justify-between gap-2 px-3 py-2">
+                                        <span className="text-sm font-medium text-slate-700">{c.label}</span>
+                                        {on ? (
+                                            <span className="rounded-full bg-sky-100 px-2 py-0.5 text-xs font-semibold text-sky-700">사용 중</span>
+                                        ) : (
+                                            <button type="button" disabled={saving} onClick={() => choose(c.file)} className={btn.secondary}>
+                                                이걸로 사용
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+            </Card>
         </div>
     );
 }
