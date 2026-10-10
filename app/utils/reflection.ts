@@ -39,3 +39,25 @@ export function emotionPlacesOf(item: Reflection | null): EmotionPlace[] {
 export function hasEmotionData(places: EmotionPlace[]): boolean {
     return places.some((p) => p.dominant);
 }
+
+// 상세 화면 날짜 — "yyyy년 mm월 dd일 HH시 mm분", 서울 시각 고정(전시 기기 시간대와 무관하게).
+export function formatReflectionDate(createdAt: string | undefined): string {
+    if (!createdAt) return "";
+    const d = new Date(createdAt);
+    if (Number.isNaN(d.getTime())) return "";
+    const parts = Object.fromEntries(
+        new Intl.DateTimeFormat("ko-KR", {
+            timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit",
+            hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+        }).formatToParts(d).map((p) => [p.type, p.value]),
+    );
+    return `${parts.year}년 ${parts.month}월 ${parts.day}일 ${parts.hour}시 ${parts.minute}분`;
+}
+
+// 2026 일기에서 관람객이 고른 AI 동행자(payload.companion, 예: "어릴적 키우던 강아지"). 작년 일기는 없어서 "".
+export function companionOf(item: Reflection | null): string {
+    const payload = item?.payload;
+    if (!payload || typeof payload !== "object" || !("companion" in payload)) return "";
+    const c = (payload as { companion?: unknown }).companion;
+    return typeof c === "string" ? c.trim() : "";
+}
