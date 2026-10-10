@@ -13,9 +13,11 @@ interface ListAreaProps {
     scrollTopSignal?: number;
     // 한 페이지 열 수(2행 고정). 상세 펼쳐보기 때 1열.
     columns?: 1 | 3;
+    // 값이 바뀌면 그 일기가 있는 페이지로 스크롤한다(상세 링크로 열었을 때).
+    focus?: { id: number; n: number } | null;
 }
 
-export default function ListArea({ data, total, onItemClick, selectedItem, scrollTopSignal, columns = 3 }: ListAreaProps) {
+export default function ListArea({ data, total, onItemClick, selectedItem, scrollTopSignal, columns = 3, focus }: ListAreaProps) {
     const scrollRef = useRef<HTMLDivElement>(null);
     const [currentPage, setCurrentPage] = useState(0);
     
@@ -34,6 +36,16 @@ export default function ListArea({ data, total, onItemClick, selectedItem, scrol
 
     // 한 페이지 = 열 수 × 2행씩 그룹핑 (제한 없음)
     const perPage = columns * 2;
+
+    useEffect(() => {
+        if (!focus || !scrollRef.current) return;
+        const idx = data.findIndex((r) => r.id === focus.id);
+        if (idx < 0) return;
+        const el = scrollRef.current;
+        // 펼쳐보기로 열면 열 수가 바뀐 뒤 그려지므로 한 프레임 미룬다.
+        requestAnimationFrame(() => el.scrollTo({ top: Math.floor(idx / perPage) * el.clientHeight, behavior: "auto" }));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [focus]);
     const groupedData = [];
     for (let i = 0; i < data.length; i += perPage) {
         groupedData.push(data.slice(i, i + perPage));
