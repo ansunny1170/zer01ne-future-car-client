@@ -21,6 +21,8 @@ env:
   EXT_API_URL: http://jscouple.site:8080/car1
   EXT_S3_BASE: http://jscouple.site:8080/minio/future-car-media
   EXT_PORT: "8102"
+  # 관람객 휴대폰이 QR 로 여는 '내 일기'(/diary) 주소 — 휴대폰은 Tailscale 밖이라 두 빌드 모두 외부 프록시 주소를 박는다.
+  DIARY_PUBLIC_BASE: http://jscouple.site:8080/car2
 
 jobs:
   build-and-deploy:
@@ -35,6 +37,7 @@ jobs:
             --build-arg NEXT_PUBLIC_API_URL=http://creator-mac-studio.tail69930a.ts.net:8100 \
             --build-arg NEXT_PUBLIC_IS_PRD=false \
             --build-arg NEXT_PUBLIC_S3_BASE=http://creator-mac-studio.tail69930a.ts.net:9100/future-car-media \
+            --build-arg NEXT_PUBLIC_DIARY_PUBLIC_BASE="$DIARY_PUBLIC_BASE" \
             -t ghcr.io/ansunny1170/future-car-frontend:latest .
           cd ~/Projects/future-car
           docker compose up -d --no-deps --force-recreate future-car-frontend
@@ -46,6 +49,7 @@ jobs:
             --build-arg NEXT_PUBLIC_API_URL="$EXT_API_URL" \
             --build-arg NEXT_PUBLIC_IS_PRD=false \
             --build-arg NEXT_PUBLIC_S3_BASE="$EXT_S3_BASE" \
+            --build-arg NEXT_PUBLIC_DIARY_PUBLIC_BASE="$DIARY_PUBLIC_BASE" \
             -t future-car-frontend-ext:latest .
           docker rm -f future-car-frontend-ext 2>/dev/null || true
           docker run -d --name future-car-frontend-ext --restart unless-stopped \
