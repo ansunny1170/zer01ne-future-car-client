@@ -25,6 +25,7 @@ import { StepInfo } from "@/type";
 import StepRepeat, { type TimelineTrace } from "@/components/steps/step-repeat";
 import StepAudioPlayer from "@/components/audio-player/step-audio-player";
 import StepVideoPlayer from "@/components/video-player/step-video-player";
+import PlaylistVideo from "@/components/ambient/playlist-video";
 import TopLayout from "@/components/fixed-layout/top-layout";
 import BottomLayout from "@/components/fixed-layout/bottom-layout";
 import { useDevTrigger } from "@/hooks/useDevTrigger";
@@ -283,7 +284,6 @@ export default function AmbientScreen() {
   const stepMicFallback = useRef<ReturnType<typeof setTimeout> | null>(null);
   // standby 반복 영상 — 코드 기본값(STANDBY_VIDEO) 위에 이 브라우저의 localStorage 값이 덮는다(현장 설정).
   const [standbyVideo, setStandbyVideo] = useState(STANDBY_VIDEO);
-  const [standbyDraft, setStandbyDraft] = useState("");
   const [standbyChoices, setStandbyChoices] = useState<string[]>([]);
   useEffect(() => {
     try {
@@ -293,26 +293,10 @@ export default function AmbientScreen() {
       /* 접근 불가 환경 — 기본값 유지 */
     }
   }, []);
-  const applyStandbyVideo = (name: string) => {
-    const v = name.trim();
-    try {
-      if (v) localStorage.setItem(STANDBY_VIDEO_STORAGE_KEY, v);
-      else localStorage.removeItem(STANDBY_VIDEO_STORAGE_KEY);
-    } catch {
-      /* noop */
-    }
-    setStandbyVideo(v || STANDBY_VIDEO);
-    setStandbyDraft("");
-  };
   // ── 배경/대기 영상 항상 무음 (2026-09-20) ─────────────────────────────────────
   // 인트로 브금(intro1_1.mp4)은 scene-context 에서 재생 자체를 껐고, 나머지 배경 영상(대기
   // en6.mp4, 스텝 배경)에 박힌 내레이션도 안 나오게 무음 고정. React 의 <video muted> prop 은
   // DOM 에 실제로 안 먹는 버그가 있어(JSX muted 만으로는 소리가 남), ref 로 직접 박는다.
-  const standbyVideoRef = useRef<HTMLVideoElement>(null);
-  useEffect(() => {
-    const el = standbyVideoRef.current;
-    if (el) el.muted = true;
-  }, [standbyVideo, screen]);
   // (2026-09-19) 발화 전송이 침묵 디바운스 → S/D 수동 조작으로 바뀌어 '발화 딜레이' 설정은 제거됐다.
   // LLM 모델·옵션 — 다른 현장 설정과 달리 localStorage 가 아니라 **서버 런타임 값**이다
   // (GET/PUT /ambient/llm-config). 즉시 반영되고, 서버 컨테이너 재시작 시 env 기본값으로 복귀.
@@ -356,17 +340,25 @@ export default function AmbientScreen() {
       .finally(() => setTimeout(() => setLlmState("idle"), 1500));
   };
 
-  // 부팅 때 미디어 저장소의 mp4 목록을 한 번 받아 자동완성 후보로(실패해도 직접 입력은 된다).
-  useEffect(() => {
+  // 탑승 전 대기 영상 = 미디어 저장소(MinIO)의 mp4 **전부**를 이름순(숫자 고려: bg1, bg2 … bg10)으로 이어서 반복(2026-10-10).
+  // 대기 화면에 들어올 때마다 목록을 새로 받아, 영상을 올리거나 지우면 새로고침 없이 다음 대기부터 반영된다.
+  // 목록을 못 받으면(외부 프록시 빌드 등) 예전처럼 기본/현장 설정 영상 하나를 반복한다.
+  const loadStandbyList = () => {
     fetch(`${BASE_S3_LINK}/?list-type=2&max-keys=1000`)
       .then((r) => (r.ok ? r.text() : ""))
       .then((xml) => {
         const keys = Array.from(xml.matchAll(/<Key>([^<]+\.mp4)<\/Key>/g), (m) => m[1]);
-        if (keys.length) setStandbyChoices(keys.sort());
+        if (keys.length) setStandbyChoices(keys.sort((a, b) => a.localeCompare(b, undefined, { numeric: true })));
       })
       .catch(() => {});
-  }, []);
+  };
+  useEffect(() => {
+    if (screen === "standby") loadStandbyList();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [screen]);
   const standbyVideoUrl = resolveMediaUrl(standbyVideo);
+  const mediaUrl = (key: string) => `${BASE_S3_LINK}/${key.split("/").map(encodeURIComponent).join("/")}`;
+  const standbyUrls = standbyChoices.length ? standbyChoices.map(mediaUrl) : [standbyVideoUrl];
   const wsRef = useRef<WebSocket | null>(null);
   // screen 최신값을 이벤트 핸들러에서 참조하기 위한 ref (stale closure 방지)
   const screenRef = useRef<Screen>("standby");
@@ -1068,25 +1060,9 @@ export default function AmbientScreen() {
             transition={{ duration: 0.6 }}
             className="fixed inset-0 flex flex-col items-center justify-center bg-neutral-950"
           >
-            {/* exit ~ enter 사이 대기. 대기 영상(기본 constants.ts STANDBY_VIDEO, 현장에서는 dev 패널로 변경)을
-                무음으로 무한 반복한다. 관람객에게 보이는 글자는 두지 않는다. 영상 로드 실패 시 로더만 남는다. */}
-            <video
-              key={standbyVideoUrl}
-              // 대기 영상은 항상 무음. JSX muted 만으로는 React 버그로 소리가 남아서,
-              // 노드가 붙는 즉시(콜백 ref, paint 전) el.muted=true 를 강제한다.
-              ref={(el) => {
-                standbyVideoRef.current = el;
-                if (el) el.muted = true;
-              }}
-              src={standbyVideoUrl}
-              autoPlay
-              loop
-              muted
-              playsInline
-              preload="auto"
-              className="absolute inset-0 h-full w-full object-cover"
-              onError={(e) => console.warn("[ambient] standby 영상 로드 실패", standbyVideoUrl, e)}
-            />
+            {/* exit ~ enter 사이 대기. 미디어 저장소 mp4 전부를 이름순으로 이어서 무음 반복한다(목록을 못 받으면
+                기본 영상 하나). 관람객에게 보이는 글자는 두지 않는다. 영상 로드 실패는 건너뛴다. */}
+            <PlaylistVideo key={standbyUrls.join("|")} urls={standbyUrls} />
             <div className="relative opacity-60">
               <HyundaiLoading />
             </div>
@@ -1439,42 +1415,18 @@ export default function AmbientScreen() {
             step info 디버깅
           </button>
           {settingsOpen && (<>
-          {/* 현장 설정: 대기(standby) 영상 — 이 브라우저에 저장, 즉시 반영 */}
+          {/* 탑승 전 대기 영상 — 미디어 저장소 mp4 전부를 이름순으로 이어서 반복(2026-10-10). 고르는 설정은 없앴다. */}
           <div className="mt-2 flex flex-wrap items-center gap-2 rounded border border-neutral-300 bg-neutral-50 px-2 py-1.5 text-[11px]">
             <span className="font-semibold">대기 영상</span>
-            <span className="font-mono text-sky-700" title={standbyVideoUrl}>{standbyVideo}</span>
-            {standbyVideo !== STANDBY_VIDEO && <span className="text-neutral-500">(기본 {STANDBY_VIDEO})</span>}
-            <input
-              list="standby-video-choices"
-              value={standbyDraft}
-              onChange={(e) => setStandbyDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") applyStandbyVideo(standbyDraft);
-              }}
-              placeholder="파일명 또는 URL"
-              className="w-44 rounded border border-neutral-300 px-1.5 py-0.5 font-mono"
-            />
-            <datalist id="standby-video-choices">
-              {standbyChoices.map((k) => (
-                <option key={k} value={k} />
-              ))}
-            </datalist>
-            <button
-              type="button"
-              onClick={() => applyStandbyVideo(standbyDraft)}
-              disabled={!standbyDraft.trim()}
-              className="rounded bg-sky-700 px-2 py-0.5 font-semibold text-white disabled:bg-neutral-300"
-            >
-              적용
-            </button>
-            <button
-              type="button"
-              onClick={() => applyStandbyVideo("")}
-              disabled={standbyVideo === STANDBY_VIDEO}
-              className="rounded bg-neutral-200 px-2 py-0.5 disabled:opacity-40"
-            >
-              기본값
-            </button>
+            {standbyChoices.length ? (
+              <span>
+                버킷 mp4 <b>{standbyChoices.length}개</b> 순차 반복
+                <span className="ml-1 font-mono text-neutral-500">({standbyChoices[0]} → … → {standbyChoices[standbyChoices.length - 1]})</span>
+              </span>
+            ) : (
+              <span className="text-neutral-500">목록을 못 받음 — 기본 영상 <span className="font-mono">{standbyVideo}</span> 반복</span>
+            )}
+            <button type="button" onClick={loadStandbyList} className="rounded bg-neutral-200 px-2 py-0.5">목록 새로고침</button>
           </div>
           {/* 현장 설정: 대기(standby) 영상 소리 on/off (2026-09-20 비활성화 — 대기 영상은 항상 무음).
               미래차 설명음이 새로고침·복제 재시작마다 흘러나와서 껐다. 되살리려면 아래 주석 해제.
