@@ -7,6 +7,9 @@ export const BASE_S3_LINK =
     process.env.NEXT_PUBLIC_S3_BASE || "https://ftcar.s3.ap-northeast-2.amazonaws.com"
 export const BASE_API_LINK = `${process.env.NEXT_PUBLIC_API_URL}`
 export const IS_PRD = process.env.NEXT_PUBLIC_IS_PRD === "true"
+// 관람객 휴대폰이 QR 로 여는 '내 일기'(/diary) 주소의 앞부분 — 휴대폰은 Tailscale 밖이라 외부 프록시 주소
+// (예: http://jscouple.site:8080/car2). 비어 있으면 지금 연 화면의 주소를 쓴다(로컬 확인용). 빌드 시점에 박제된다.
+export const DIARY_PUBLIC_BASE = (process.env.NEXT_PUBLIC_DIARY_PUBLIC_BASE || "").replace(/\/+$/, "")
 
 // ─────────────────────────────────────────────────────────────────────────
 // /ambient 대기(standby) 화면 — exit ~ 다음 enter, plan 만 온 idle, 세션 없음 — 에서 무한 반복할 영상.

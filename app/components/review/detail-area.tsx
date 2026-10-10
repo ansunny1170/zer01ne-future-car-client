@@ -1,3 +1,4 @@
+import { BASE_API_LINK, DIARY_PUBLIC_BASE } from "@/constants";
 import { Reflection } from "@/type";
 import { cn } from "@/utils/cn";
 import { companionOf, emotionPlacesOf, formatReflectionDate, hasEmotionData } from "@/utils/reflection";
@@ -125,8 +126,9 @@ export default function DetailArea({ selectedItem, expanded, onToggleExpand }: D
                     </div>
                     {selectedItem ? (
                         // 상세 — 피그마 8805:7825
-                        <div className="pl-[39px] pr-[31px] pt-[60px] pb-[60px]">
-                            <h2 className="text-[48.58px] font-semibold leading-[1.2] break-keep">{selectedItem.event_title}</h2>
+                        <div className="relative pl-[39px] pr-[31px] pt-[60px] pb-[60px]">
+                            <DiaryQr id={selectedItem.id} />
+                            <h2 className="pr-[150px] text-[48.58px] font-semibold leading-[1.2] break-keep">{selectedItem.event_title}</h2>
                             <div className="pt-[30px] text-[22.68px] flex items-center gap-2">
                                 <Icons.user />
                                 {selectedItem.nick_name}
@@ -173,5 +175,22 @@ function ToggleButton({ expanded, onClick }: { expanded: boolean; onClick: () =>
         >
             <img alt="" src={`/assets/review/${expanded ? "btn_collapse" : "btn_expand"}.svg`} className="rotate-90" />
         </button>
+    );
+}
+
+// 우측 상단 QR — 관람객이 휴대폰으로 스캔하면 자기 일기만 보는 /diary 화면이 열리고, 거기서 HTML 로 저장한다.
+// QR 이미지는 서버 /qr 가 그린다(클라에 QR 라이브러리를 두지 않는다).
+function DiaryQr({ id }: { id: number }) {
+    const [origin, setOrigin] = useState("");
+    useEffect(() => setOrigin(window.location.origin), []);
+    const base = DIARY_PUBLIC_BASE || origin;
+    if (!base) return null;
+    const url = `${base}/diary?id=${id}`;
+    const src = `${BASE_API_LINK.replace(/\/+$/, "")}/qr?text=${encodeURIComponent(url)}&scale=6`;
+    return (
+        <div className="absolute right-[31px] top-[48px] flex flex-col items-center gap-[6px]">
+            <img alt="내 일기 QR" src={src} className="w-[124px] h-[124px] bg-white rounded-[8px] p-[4px]" />
+            <p className="text-[12px] leading-[1.3] text-[#5e5e5e] text-center">휴대폰으로 스캔해<br />내 일기 저장</p>
+        </div>
     );
 }
