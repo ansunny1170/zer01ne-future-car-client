@@ -43,10 +43,28 @@ const SIZE = {
     full: { plotH: 382, rowY: (i: number) => 24 + (i * (382 - 48)) / 3, padX: 150, dot: 36, line: 8, glow: 20 },
 };
 
+// 펼쳐보기 말풍선 — 모든 열이 점 14px 왼쪽에서 시작해 오른쪽으로 뻗는다. 폭은 기본 180px 이되 다음 열 말풍선
+// 시작점보다 8px 앞에서 끝나도록 줄인다(열이 많거나 화면이 좁아도 겹치지 않음). 마지막 열은 오른쪽 여백(padX)까지만.
+const BUBBLE = { width: 180, inset: 14, gap: 8 };
+
+// full 양끝 여백 — 피그마 150px. 화면이 좁으면(영역 1000px 미만) 비율로 줄여 열 간격을 확보한다.
+function fullPadX(width: number) {
+    return width >= 1000 ? SIZE.full.padX : Math.round(width * 0.15);
+}
+
+function bubbleWidth(n: number, width: number, last: boolean) {
+    const padX = fullPadX(width);
+    const spacing = n > 1 ? (width - padX * 2) / (n - 1) : Infinity;
+    const toNext = Math.floor(spacing - BUBBLE.gap);
+    const toEdge = padX + BUBBLE.inset;
+    return Math.min(BUBBLE.width, toNext, last ? toEdge : Infinity);
+}
+
 function columnX(i: number, n: number, width: number, size: "compact" | "full") {
     if (size === "full") {
         if (n <= 1) return width / 2;
-        return SIZE.full.padX + (i * (width - SIZE.full.padX * 2)) / (n - 1);
+        const padX = fullPadX(width);
+        return padX + (i * (width - padX * 2)) / (n - 1);
     }
     const pad = SIZE.compact.padX;
     return pad + ((i + 0.5) * (width - pad * 2)) / Math.max(n, 1);
@@ -154,7 +172,7 @@ export default function EmotionJourney({ places, size }: EmotionJourneyProps) {
                                 </svg>
                             )}
                             {points.map((p) => (
-                                <HighlightDot key={p.i} point={p} size={size} last={p.i === n - 1} />
+                                <HighlightDot key={p.i} point={p} size={size} bubbleW={bubbleWidth(n, width, p.i === n - 1)} />
                             ))}
                         </>
                     )}
@@ -171,7 +189,7 @@ interface DotPoint {
     place: EmotionPlace;
 }
 
-function HighlightDot({ point, size, last }: { point: DotPoint; size: "compact" | "full"; last: boolean }) {
+function HighlightDot({ point, size, bubbleW }: { point: DotPoint; size: "compact" | "full"; bubbleW: number }) {
     const emotion = EMOTIONS[point.row];
     const tasks = point.place.tasks ?? [];
     const dot = SIZE[size].dot;
@@ -194,20 +212,20 @@ function HighlightDot({ point, size, last }: { point: DotPoint; size: "compact" 
                 </div>
             )}
 
-            {/* full: 한 일 말풍선 — 위쪽 두 행은 점 아래로, 아래쪽 두 행은 점 위로. 마지막 열은 오른쪽 정렬 */}
+            {/* full: 한 일 말풍선 — 위쪽 두 행은 점 아래로, 아래쪽 두 행은 점 위로. 폭은 bubbleWidth */}
             {size === "full" && tasks.length > 0 && (
                 <div
-                    className={cn("absolute flex flex-col gap-[6px] w-[180px] z-10", point.row < 2 ? "top-[26px]" : "bottom-[26px]")}
-                    style={last ? { left: -166 } : { left: -14 }}
+                    className={cn("absolute flex flex-col gap-[6px] z-10", point.row < 2 ? "top-[26px]" : "bottom-[26px]")}
+                    style={{ width: bubbleW, left: -BUBBLE.inset }}
                 >
                     {tasks.map((t, k) => (
                         <div key={k} className="relative bg-[rgba(255,255,255,0.8)] rounded-[4px] px-[10px] py-[6px] flex items-center justify-center">
                             <p className="text-[#5e5e5e] text-[14px] leading-[1.5] text-center">{t}</p>
                             {point.row < 2 && k === 0 && (
-                                <img alt="" src={`${ASSET}/pointer_up.svg`} className={cn("absolute -top-[8px] w-[12px] h-[12px]", last ? "left-[158px]" : "left-[8px]")} />
+                                <img alt="" src={`${ASSET}/pointer_up.svg`} className="absolute -top-[8px] left-[8px] w-[12px] h-[12px]" />
                             )}
                             {point.row >= 2 && k === tasks.length - 1 && (
-                                <img alt="" src={`${ASSET}/pointer_down.svg`} className={cn("absolute -bottom-[8px] w-[12px] h-[12px] rotate-180", last ? "left-[158px]" : "left-[8px]")} />
+                                <img alt="" src={`${ASSET}/pointer_down.svg`} className="absolute -bottom-[8px] left-[8px] w-[12px] h-[12px] rotate-180" />
                             )}
                         </div>
                     ))}
